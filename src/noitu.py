@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import json
 
+# Load dữ liệu từ file json
 with open("data.json", "r") as f:
     data = json.load(f)
 
@@ -10,16 +11,13 @@ with open("data.json", "r") as f:
 with open('src/assets/tudien.txt', 'r') as f:
     list_words = [word.strip().lower() for word in f.readlines()]
 
-# trích xuất từ cuối cùng của một từ
-def last_word(word):
-    return word.split()[-1]
 
-# trích xuất từ đầu tiên của một từ
-def first_word(word):
-    return word.split()[0]
-
-def get_word_starting_with(start):
-    matching_words = [word for word in list_words if word.split()[0] == start]
+def getnoitu(player_word):
+    """
+    Hàm trả về từ tiếp theo trong trò chơi Nối từ dựa trên từ người chơi nhập vào
+    """
+    matching_words = [word for word in list_words if word.split()[
+        0] == player_word.split()[-1]]
     if matching_words:
         word = random.choice(matching_words)
         return word
@@ -27,13 +25,10 @@ def get_word_starting_with(start):
         return False
 
 
-def getnoitu(player_word):
-    return get_word_starting_with(last_word(player_word))
-
-# http://tudientv.com/dictfunctions.php?action=getmeaning&entry=chào
-
-
 async def tratu(word):
+    """
+    Hàm tra từ trong từ điển
+    """
     url = "http://tudientv.com/dictfunctions.php"
     payload = {
         "action": 'getmeaning',
@@ -52,7 +47,6 @@ async def tratu(word):
         else:
             soup = BeautifulSoup(response.text, 'html.parser')
             text = soup.get_text(separator='\n')
-            print(text)
             return text
     else:
         return "Không thể lấy dữ liệu từ API"
