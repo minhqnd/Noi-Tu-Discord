@@ -188,13 +188,12 @@ def run_discord_bot():
         if not isinstance(message.channel, discord.channel.DMChannel):
             if not str(message.channel.id) in data["channels"]:
                 return
-        if isReplyAll:
-            username = str(message.author)
-            user_message = str(message.content)
-            channel = str(message.channel)
-            logger.info(
-                f"\x1b[31m{username}\x1b[0m : '{user_message}' ({channel})")
-            await sendnoitu(message, user_message)
+        username = str(message.author)
+        user_message = str(message.content)
+        channel = str(message.channel)
+        logger.info(
+            f"\x1b[31m{username}\x1b[0m : '{user_message}' ({channel})")
+        await sendnoitu(message, user_message)
 
     TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
@@ -202,10 +201,6 @@ def run_discord_bot():
 
 
 async def sendnoitu(message, user_message):
-    # if not noitu.current_word:
-    #     print(message.channel.id)
-    #     await message.channel.send(noitu.start())
-    # else:
     await message.channel.send(f'{noitu_bot.check(user_message.lower(), message.channel.id)}')
 
 

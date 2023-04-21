@@ -53,3 +53,5 @@ def tratu(word):
             return text
     else:
         return "Không thể lấy dữ liệu từ API"
+    
+getnoitu('ngữ cảnh')

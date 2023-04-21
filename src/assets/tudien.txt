@@ -877,6 +877,7 @@ Chức Việc
 Co Mạ
 Co Tòng
 Con Cuông
+con cặc
 Con Kha
 Con Voi
 Con kde
@@ -57260,6 +57261,7 @@ yểu điệu
 đần ngu
 đần độn
 đầu bài
+đầu buồi
 đầu bò
 đầu bạc
 đầu bảng
@@ -58022,6 +58024,8 @@ yểu điệu
 định ước
 định ảnh
 địt mẹ
+địt cụ
+địt tổ
 đọ cánh
 đọ gươm
 đọ sức
