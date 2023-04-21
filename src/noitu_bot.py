@@ -1,24 +1,9 @@
 import random
-import requests
-from bs4 import BeautifulSoup
-from src import log
-import json
 import db
-
-with open("data.json", "r") as f:
-    data = json.load(f)
 
 # Load danh sách các từ có 2 từ vào một list
 with open('src/assets/tudien.txt', 'r') as f:
     list_words = [word.strip().lower() for word in f.readlines()]
-
-# Chọn ngẫu nhiên một từ từ danh sách các từ có 2 từ
-# current_word = random.choice(list_words)
-current_word = ''
-player_word = ''
-history = []
-sai = 3
-# trích xuất từ cuối cùng của một từ
 
 
 def last_word(word):
@@ -35,7 +20,6 @@ def get_word_starting_with(start):
     matching_words = [word for word in list_words if word.split()[0] == start]
     if matching_words:
         word = random.choice(matching_words)
-        addHistory(word)
         return word
     else:
         return False
@@ -58,7 +42,6 @@ def check_channel(player_word, id_channel, id_user):
         if player_word in history:
             return 'Đã trả lời từ, vui lòng tìm từ khác'
         if player_word in list_words:
-            addHistory(player_word)
             # Tìm một từ mới từ danh sách các từ có 2 từ để đưa ra
             next_word = get_word_starting_with(last_word(player_word))
             current_word = next_word
@@ -87,13 +70,12 @@ def check_user(player_word, id_user):
         if last_word(current_word) == first_word(player_word) and sai != 3:
             if player_word in history or player_word not in list_words:
                 return f'Đã trả lời từ hoặc từ không hợp lệ, vui lòng tìm từ khác\nTừ hiện tại: **{current_word}**'
-            addHistory(player_word)
             next_word = get_word_starting_with(last_word(player_word))
             current_word = next_word
-            if not next_word:
+            if not next_word or not next_word in history:
                 current_word = random.choice(list_words)
                 db.store(
-                    'users', {id_user: {'word': current_word, 'history': history}})
+                    'users', {id_user: {'word': current_word, 'history': []}})
                 return '**BẠN ĐÃ THẮNG!** Từ mới: **' + current_word + '**'
             response = f'Từ tiếp theo: **{next_word}**'
             history.append(player_word)
@@ -110,65 +92,3 @@ def check_user(player_word, id_user):
         db.store('users', {id_user: {'word': current_word,
                  'history': [current_word], 'sai': 0}})
         return f'Từ hiện tại: **{current_word}**'
-
-
-def win():
-    newgame()
-    return '**BẠN ĐÃ THẮNG!** Từ mới: **' + current_word + '**'
-
-
-def loss():
-    newgame()
-    return '> Thua cuộc, từ đầu bạn đưa ra phải trùng với từ cuối của bot hoặc từ phải có nghĩa! \nTừ mới: **' + current_word + '**'
-
-
-def newgame():
-    global current_word, history, sai
-    sai = 3
-    current_word = randomWord()
-    history = []
-
-
-def start():
-    print('ok3')
-    # TODO ghi người dùng mới
-    newgame()
-    return 'Từ hiện tại: **' + current_word + '**'
-
-
-def randomWord():
-    word = random.choice(list_words)
-    addHistory(word)
-    return word
-
-
-def addHistory(word):
-    history.append(word)
-
-# http://tudientv.com/dictfunctions.php?action=getmeaning&entry=chào
-
-
-async def tratu():
-    global current_word
-    url = "http://tudientv.com/dictfunctions.php"
-    payload = {
-        "action": 'getmeaning',
-        "entry": current_word
-    }
-    headers = {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept-Encoding': 'gzip, deflate, br'
-    }
-    response = requests.post(url, headers=headers, data=payload)
-    response.encoding = 'UTF-8'
-
-    if response.status_code == 200:
-        if len(response.text) < 5:
-            return 'Không tìm thấy từ trong api tudientv, có thể từ ở nguồn khác.'
-        else:
-            soup = BeautifulSoup(response.text, 'html.parser')
-            text = soup.get_text(separator='\n')
-            print(text)
-            return text
-    else:
-        return "Không thể lấy dữ liệu từ API"
