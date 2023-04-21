@@ -16,16 +16,19 @@ def getnoitu(player_word):
     """
     Hàm trả về từ tiếp theo trong trò chơi Nối từ dựa trên từ người chơi nhập vào
     """
-    matching_words = [word for word in list_words if word.split()[
-        0] == player_word.split()[-1]]
-    if matching_words:
-        word = random.choice(matching_words)
-        return word
+    if len(player_word.split()) != 2: 
+        return 'Từ bắt buộc phải gồm 2 từ'
     else:
-        return False
+        matching_words = [word for word in list_words if word.split()[
+            0] == player_word.split()[-1]]
+        if matching_words:
+            word = random.choice(matching_words)
+            return word
+        else:
+            return 'None'
 
 
-async def tratu(word):
+def tratu(word):
     """
     Hàm tra từ trong từ điển
     """

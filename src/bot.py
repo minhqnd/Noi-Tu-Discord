@@ -158,7 +158,7 @@ def run_discord_bot():
             await interaction.response.defer(ephemeral=False)
             await interaction.followup.send("> **Đã xóa phòng game nối từ.**")
             logger.info(f"Xóa phòng {channel}!")
-        else: 
+        else:
             await interaction.response.defer(ephemeral=False)
             await interaction.followup.send("> **Không thể xóa vì chưa thêm phòng.**")
 
@@ -173,15 +173,14 @@ def run_discord_bot():
     async def sendtratu(interaction: discord.Interaction):
         responses = await noitu_bot.tratu()
         await interaction.response.defer(ephemeral=False)
-        embed = discord.Embed(title="Từ điển Tiếng Việt", description=responses)
+        embed = discord.Embed(title="Từ điển Tiếng Việt",
+                              description=responses)
         await interaction.followup.send(embed=embed)
 
         logger.info(f"Tra từ!")
 
-
     @client.event
     async def on_message(message):
-
         if message.author.bot:
             return
         if message.author == client.user:
