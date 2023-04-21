@@ -11,4 +11,4 @@ def store(key, data):
         tempdata = json.load(f)
     tempdata[key] = data
     with open('data.json', 'w') as f:
-        json.dump(tempdata, f)
+        json.dump(tempdata, f, ensure_ascii=False)
