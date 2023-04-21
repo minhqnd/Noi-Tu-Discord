@@ -176,6 +176,12 @@ def run_discord_bot():
         embed = discord.Embed(title="Từ điển Tiếng Việt",
                               description=responses)
         await interaction.followup.send(embed=embed)
+        
+    @client.tree.command(name="newgame", description="Reset nối từ (CHỈ ÁP DỤNG KHI CHAT RIÊNG)")
+    async def sendtratu(interaction: discord.Interaction):
+        # responses = await noitu_bot.tratu()
+        await interaction.response.defer(ephemeral=False)
+        await interaction.followup.send('cc')
 
         logger.info(f"Tra từ!")
 
@@ -185,23 +191,32 @@ def run_discord_bot():
             return
         if message.author == client.user:
             return
-        if not isinstance(message.channel, discord.channel.DMChannel):
-            if not str(message.channel.id) in data["channels"]:
-                return
         username = str(message.author)
         user_message = str(message.content)
         channel = str(message.channel)
-        logger.info(
-            f"\x1b[31m{username}\x1b[0m : '{user_message}' ({channel})")
-        await sendnoitu(message, user_message)
+        # check xem co phai user hay gui trong channel
+        if isinstance(message.channel, discord.channel.DMChannel):
+            logger.info(
+                    f"\x1b[31m{username}\x1b[0m : '{user_message}' ({channel})")
+            await sendnoitu_user(message, user_message)
+        else:
+        # check xem co trong database chua
+            if not str(message.channel.id) in data["channels"]:
+                logger.info(
+                    f"\x1b[31m{username}\x1b[0m : '{user_message}' ({channel})")
+                await sendnoitu_channel(message, user_message)
+                return
 
     TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
     client.run(TOKEN)
 
 
-async def sendnoitu(message, user_message):
-    await message.channel.send(f'{noitu_bot.check(user_message.lower(), message.channel.id)}')
+async def sendnoitu_channel(message, user_message):
+    await message.channel.send(f'{noitu_bot.check_channel(user_message.lower(), message.channel.id, message.author.id)}')
+
+async def sendnoitu_user(message, user_message):
+    await message.channel.send(f'{noitu_bot.check_user(user_message.lower(), message.author.id)}')
 
 
 async def startnoitu(message):

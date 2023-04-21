@@ -36,7 +36,41 @@ def get_word_starting_with(start):
         return False
 
 
-def check(player_word, id):
+def check_channel(player_word, id_channel, id_user):
+    return 'test'
+    global sai, current_word, data
+    id = str(id)
+    if id in data["word"]:
+        print('ok')
+    else:
+        print('ok 2')
+        return start()
+
+    
+    if not current_word:
+        current_word = random.choice(list_words)
+    
+    if last_word(current_word) == first_word(player_word) and sai != 1:
+        if player_word in history:
+            return 'Đã trả lời từ, vui lòng tìm từ khác'
+        if player_word in list_words:
+            addHistory(player_word)
+            # Tìm một từ mới từ danh sách các từ có 2 từ để đưa ra
+            next_word = get_word_starting_with(last_word(player_word))
+            current_word = next_word
+            if not next_word:
+               return win()
+            response = 'Từ tiếp theo: **' + next_word + '**'
+            return response
+        else:
+            print('Không tồn tại từ, vui lòng tìm từ khác')
+            sai -= 1
+            response = 'Không tồn tại từ, vui lòng tìm từ khác, **còn ' + str(sai) + ' lần thử** \nTừ hiện tại: **' + current_word + '**'
+            return response
+    # else:
+    #     return loss()
+    
+def check_user(player_word, id_user):
     global sai, current_word, data
     id = str(id)
     if id in data["word"]:
