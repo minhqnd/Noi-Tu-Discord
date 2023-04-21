@@ -2,7 +2,7 @@ import discord
 import os
 from discord import app_commands
 from src import log
-from src import noitu
+from . import noitu_bot
 import json
 
 logger = log.setup_logger(__name__)
@@ -143,7 +143,7 @@ def run_discord_bot():
             data['channels'].append(channel)
             with open("data.json", "w") as file:
                 json.dump(data, file)
-            noitu.start()
+            noitu_bot.start()
             await interaction.response.defer(ephemeral=False)
             await interaction.followup.send("> **Đã thêm phòng game nối từ, MoiChat sẽ trả lời mọi tin nhắn từ phòng này!**")
             logger.info(f"Thêm phòng mới {channel}!")
@@ -171,7 +171,7 @@ def run_discord_bot():
 
     @client.tree.command(name="tratu", description="Tra từ hiện tại đang nối từ")
     async def sendtratu(interaction: discord.Interaction):
-        responses = await noitu.tratu()
+        responses = await noitu_bot.tratu()
         await interaction.response.defer(ephemeral=False)
         embed = discord.Embed(title="Từ điển Tiếng Việt", description=responses)
         await interaction.followup.send(embed=embed)
@@ -207,8 +207,8 @@ async def sendnoitu(message, user_message):
     #     print(message.channel.id)
     #     await message.channel.send(noitu.start())
     # else:
-    await message.channel.send(f'{noitu.check(user_message.lower(), message.channel.id)}')
+    await message.channel.send(f'{noitu_bot.check(user_message.lower(), message.channel.id)}')
 
 
 async def startnoitu(message):
-    await message.channel.send(noitu.start())
+    await message.channel.send(noitu_bot.start())
