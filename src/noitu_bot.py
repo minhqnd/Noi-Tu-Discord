@@ -91,19 +91,25 @@ def check_user(player_word, id_user):
             next_word = get_word_starting_with(last_word(player_word))
             current_word = next_word
             if not next_word:
-                return win()
+                current_word = random.choice(list_words)
+                db.store(
+                    'users', {id_user: {'word': current_word, 'history': history}})
+                return '**BẠN ĐÃ THẮNG!** Từ mới: **' + current_word + '**'
             response = f'Từ tiếp theo: **{next_word}**'
-            db.store(id_user, {'word': current_word, 'history': history, 'sai': sai})
+            history.append(player_word)
+            history.append(current_word)
+            db.store(
+                'users', {id_user: {'word': current_word, 'history': history}})
             return response
         else:
             current_word = random.choice(list_words)
-            db.store(id_user, {'word': current_word, 'history': [], 'sai': 0})
+            db.store('users', {id_user: {'word': current_word, 'history': []}})
             return f'> Thua cuộc, từ đầu bạn đưa ra phải trùng với từ cuối của bot hoặc từ phải có nghĩa! \nTừ mới: **{current_word}**'
     else:
         current_word = random.choice(list_words)
-        db.store(id_user, {'word': current_word, 'history': [], 'sai': 0})
+        db.store('users', {id_user: {'word': current_word,
+                 'history': [current_word], 'sai': 0}})
         return f'Từ hiện tại: **{current_word}**'
-
 
 
 def win():
