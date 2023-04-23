@@ -87,11 +87,11 @@ def check_user(player_word, id_user):
             current_word = random.choice(list_words)
             db.store('users', {id_user: {'word': current_word,
                      'history': [], 'streak': 0, 'sai': 0}})
-            return f'>Thua cuộc, từ đầu bạn đưa ra phải trùng với từ cuối của bot hoặc từ phải có nghĩa! Chuỗi đúng: **{streak}** \nTừ mới: **{current_word}**'
+            return f'> Thua cuộc, từ đầu bạn đưa ra phải trùng với từ cuối của bot hoặc từ phải có nghĩa! Chuỗi đúng: **{streak}** \nTừ mới: **{current_word}**'
         else:
             db.store('users', {id_user: {'word': current_word,
                      'history': history, 'streak': streak, 'sai': sai}})
-            return f'>Từ đầu bạn đưa ra phải trùng với từ cuối của bot hoặc từ phải có nghĩa!, vui lòng tìm từ khác. Bạn đã trả lời sai {sai} lần.\nTừ hiện tại: **{current_word}**'
+            return f'> Từ đầu bạn đưa ra phải trùng với từ cuối của bot hoặc từ phải có nghĩa!, vui lòng tìm từ khác. Bạn đã trả lời sai {sai} lần.\nTừ hiện tại: **{current_word}**'
 
     # nếu từ không có hoặc đã trả lời
     if player_word in history or player_word not in list_words:
@@ -100,11 +100,11 @@ def check_user(player_word, id_user):
             current_word = random.choice(list_words)
             db.store('users', {id_user: {'word': current_word,
                      'history': [], 'streak': 0, 'sai': 0}})
-            return f'>Thua cuộc, từ của bạn không hợp hoặc đã được trả lời! Chuỗi đúng: **{streak}** \nTừ mới: **{current_word}**'
+            return f'> Thua cuộc, từ của bạn không hợp hoặc đã được trả lời! Chuỗi đúng: **{streak}** \nTừ mới: **{current_word}**'
         else:
             db.store('users', {id_user: {'word': current_word,
                      'history': history, 'streak': streak, 'sai': sai}})
-            return f'>Đã trả lời từ hoặc từ không hợp lệ, vui lòng tìm từ khác. Bạn đã trả lời sai {sai} lần.\nTừ hiện tại: **{current_word}**'
+            return f'> Đã trả lời từ hoặc từ không hợp lệ, vui lòng tìm từ khác. Bạn đã trả lời sai {sai} lần.\nTừ hiện tại: **{current_word}**'
 
     next_word = get_word_starting_with(last_word(player_word))
     current_word = next_word
