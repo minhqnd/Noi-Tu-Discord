@@ -9,6 +9,6 @@ def read(key):
 def store(key, data):
     with open('data.json', 'r') as f:
         tempdata = json.load(f)
-    tempdata[key] = data
+    tempdata[key].update(data)
     with open('data.json', 'w') as f:
         json.dump(tempdata, f, ensure_ascii=False)

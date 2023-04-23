@@ -25,6 +25,11 @@ def get_word_starting_with(start):
         return False
 
 
+def unique_word(start):
+    matching_words = [word for word in list_words if word.split()[0] == start]
+    return True if len(matching_words) == 1 else False
+
+
 def check_channel(player_word, id_channel, id_user):
     return 'test'
     global sai, current_word, data
@@ -59,36 +64,60 @@ def check_channel(player_word, id_channel, id_user):
     #     return loss()
 
 
+
 def check_user(player_word, id_user):
     id_user = str(id_user)
     user_data = db.read('users').get(id_user, {})
-    current_word = user_data.get('word', None)
+    current_word = user_data.get('word')
     history = user_data.get('history', [])
-    sai = int(user_data.get('sai', 0))
+    streak = user_data.get('streak', 0)
+    sai = user_data.get('sai', 0)
 
-    if current_word:
-        if last_word(current_word) == first_word(player_word) and sai != 3:
-            if player_word in history or player_word not in list_words:
-                return f'Đã trả lời từ hoặc từ không hợp lệ, vui lòng tìm từ khác\nTừ hiện tại: **{current_word}**'
-            next_word = get_word_starting_with(last_word(player_word))
-            current_word = next_word
-            if not next_word or not next_word in history:
-                current_word = random.choice(list_words)
-                db.store(
-                    'users', {id_user: {'word': current_word, 'history': []}})
-                return '**BẠN ĐÃ THẮNG!** Từ mới: **' + current_word + '**'
-            response = f'Từ tiếp theo: **{next_word}**'
-            history.append(player_word)
-            history.append(current_word)
-            db.store(
-                'users', {id_user: {'word': current_word, 'history': history}})
-            return response
-        else:
-            current_word = random.choice(list_words)
-            db.store('users', {id_user: {'word': current_word, 'history': []}})
-            return f'> Thua cuộc, từ đầu bạn đưa ra phải trùng với từ cuối của bot hoặc từ phải có nghĩa! \nTừ mới: **{current_word}**'
-    else:
+    # nếu không tồn tại user thì tạo user mới
+    if not current_word:
         current_word = random.choice(list_words)
         db.store('users', {id_user: {'word': current_word,
-                 'history': [current_word], 'sai': 0}})
+                 'history': [current_word], 'streak': 0, 'sai': 0}})
         return f'Từ hiện tại: **{current_word}**'
+
+    # nếu từ cuối không giống từ đầu
+    if last_word(current_word) != first_word(player_word):
+        sai += 1
+        if sai == 3:
+            current_word = random.choice(list_words)
+            db.store('users', {id_user: {'word': current_word,
+                     'history': [], 'streak': 0, 'sai': 0}})
+            return f'> Thua cuộc, từ đầu bạn đưa ra phải trùng với từ cuối của bot hoặc từ phải có nghĩa! Chuỗi đúng: **{streak}** \nTừ mới: **{current_word}**'
+        else:
+            db.store('users', {id_user: {'word': current_word,
+                     'history': history, 'streak': streak, 'sai': sai}})
+            return f'Đã trả lời sai, vui lòng tìm từ khác. Bạn đã trả lời sai {sai} lần.'
+
+    # nếu từ không có hoặc đã trả lời
+    if player_word in history or player_word not in list_words:
+        return f'Đã trả lời từ hoặc từ không hợp lệ, vui lòng tìm từ khác\nTừ hiện tại: **{current_word}**'
+
+    next_word = get_word_starting_with(last_word(player_word))
+    current_word = next_word
+
+    # nếu từ tiếp theo không có trong từ điển
+    if not next_word and not next_word in history:
+        current_word = random.choice(list_words)
+        db.store('users', {id_user: {'word': current_word,
+                 'history': [], 'streak': 0, 'sai': 0}})
+        return f'**BẠN ĐÃ THẮNG!** \nChuỗi đúng: **{streak+1}**\n Từ mới: **{current_word}**'
+
+    response = f'Từ tiếp theo: **{next_word}**'
+
+    # nếu đây là từ duy nhất có thể trả lời
+    if unique_word(first_word(next_word)):
+        current_word = random.choice(list_words)
+        db.store('users', {id_user: {'word': current_word,
+                 'history': [], 'streak': 0, 'sai': 0}})
+        return f'{response}\n> Thua cuộc, đây là từ cuối trong từ điển của bot, Chuỗi đúng: **{streak}**\nTừ mới: **{current_word}**'
+
+    # nếu không thì ra từ tiếp theo và thêm vào lịch sử
+    history.extend([player_word, current_word])
+    db.store(
+        'users', {id_user: {'word': current_word, 'history': history, 'streak': streak+1}})
+    return response
