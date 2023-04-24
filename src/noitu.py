@@ -25,7 +25,7 @@ def getnoitu(player_word):
             word = random.choice(matching_words)
             return word
         else:
-            return 'None'
+            return None
 
 
 def tratu(word):
@@ -53,5 +53,3 @@ def tratu(word):
             return text
     else:
         return "Không thể lấy dữ liệu từ API"
-    
-getnoitu('ngữ cảnh')
