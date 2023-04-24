@@ -48,7 +48,7 @@ def setup_logger(module_name:str) -> logging.Logger:
     console_handler.setFormatter(CustomFormatter())
      # specify that the log file path is the same as `main.py` file path
     grandparent_dir = os.path.abspath(__file__ + "/../../")
-    log_name='chatgpt_discord_bot.log'
+    log_name='bot.log'
     log_path = os.path.join(grandparent_dir, log_name)
     # create local log handler
     log_handler = logging.handlers.RotatingFileHandler(
