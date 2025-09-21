@@ -10,11 +10,20 @@ const logger = setupLogger('bot');
 // Track channels with a pending /newgame vote
 const pendingNewGame = new Set();
 
-require('dotenv').config();
+// Helper function to get current word for display
+function getCurrentWord(interaction) {
+    if (interaction.channel.isDMBased()) {
+        const users = db.read('users') || {};
+        const userData = users[interaction.user.id] || {};
+        return userData.word;
+    } else {
+        const channels = db.read('channels') || {};
+        const channelData = channels[interaction.channel.id.toString()] || {};
+        return channelData.word;
+    }
+}
 
-const isPrivate = false;
-const isReplyAll = true;
-const discordChannelId = process.env.DISCORD_CHANNEL_ID;
+require('dotenv').config();
 
 let data;
 try {
@@ -26,26 +35,11 @@ if (!data.channels || Array.isArray(data.channels)) data.channels = {};
 if (!data.users || Array.isArray(data.users)) data.users = {};
 if (!Array.isArray(data.channelAllowlist)) data.channelAllowlist = data.channelAllowlist ? [data.channelAllowlist].flat() : [];
 
-// Helper function to send current word reminder if in allowed channel and game active
-async function sendWordReminder(interaction) {
-    if (interaction.channel.isDMBased()) return;
-    const channelId = interaction.channel.id.toString();
-    if (!data.channelAllowlist.includes(channelId)) return;
-    const channels = db.read('channels') || {};
-    const ch = channels[channelId];
-    if (!ch || !ch.word) return;
-    try {
-        await interaction.channel.send(`Từ hiện tại: **${ch.word}**`);
-    } catch (e) {
-        logger.error(`Failed to send word reminder: ${e.message}`);
-    }
-}
-
 // Function to update bot status with active games count
 function updateBotStatus() {
-    const channels = db.read('channels') || {};
-    const activeGames = Object.keys(channels).filter(id => channels[id].word).length;
-    const guildCount = client.guilds.cache.size;
+    // const channels = db.read('channels') || {};
+    // const activeGames = Object.keys(channels).filter(id => channels[id].word).length;
+    // const guildCount = client.guilds.cache.size;
     
     client.user.setPresence({
         activities: [{
@@ -182,7 +176,12 @@ client.on('interactionCreate', async interaction => {
             .setTimestamp();
         
         await interaction.reply({ embeds: [helpEmbed], ephemeral: false });
-        await sendWordReminder(interaction);
+        
+        // Show current word after help
+        const currentWord = getCurrentWord(interaction);
+        if (currentWord) {
+            await interaction.channel.send(`Từ hiện tại: **${currentWord}**`);
+        }
         logger.info('Someone need help!');
     } else if (commandName === 'tratu') {
         const word = interaction.options.getString('word');
@@ -196,7 +195,12 @@ client.on('interactionCreate', async interaction => {
                 .setFooter({ text: 'Nguồn: minhqnd.com/api/dictionary/lookup' })
                 .setTimestamp();
             await interaction.editReply({ embeds: [embed] });
-            await sendWordReminder(interaction);
+            
+            // Show current word after dictionary lookup
+            const currentWord = getCurrentWord(interaction);
+            if (currentWord) {
+                await interaction.channel.send(`Từ hiện tại: **${currentWord}**`);
+            }
             logger.info(`${interaction.user.tag} Tra từ: ` + (word || 'từ'));
         } catch (e) {
             try {
@@ -288,11 +292,15 @@ client.on('interactionCreate', async interaction => {
         if (interaction.channel.isDMBased()) {
             const users = require('./src/db').read('users') || {};
             const dataUser = users[userId] || { word: null, history: [], currentStreak: 0, bestStreak: 0, wins: 0, wrongCount: 0 };
-            const heading = `📊 Thống kê của ${interaction.user}`;
-            const wordLine = dataUser.word ? `Từ hiện tại: **${dataUser.word}**` : 'Chưa bắt đầu game.';
+            const heading = `Thống kê của ${interaction.user}`;
+            // const wordLine = dataUser.word ? `Từ hiện tại: **${dataUser.word}**` : 'Chưa bắt đầu game.';
             const stats = `> Chuỗi hiện tại: **${dataUser.currentStreak || 0}** | Cao nhất: **${dataUser.bestStreak || 0}** | Thắng: **${dataUser.wins || 0}**`;
-            await interaction.reply({ content: `${heading}\n${wordLine}\n${stats}`, ephemeral: false });
-            await sendWordReminder(interaction);
+            await interaction.reply({ content: `${heading}\n${stats}`, ephemeral: false });
+            
+            // Show current word after stats for DM
+            if (dataUser.word) {
+                await interaction.channel.send(`Từ hiện tại: **${dataUser.word}**`);
+            }
         } else {
             const channelId = interaction.channel.id.toString();
             const db = require('./src/db');
@@ -300,11 +308,15 @@ client.on('interactionCreate', async interaction => {
             const ch = channels[channelId] || {};
             const players = ch.players || {};
             const me = players[userId] || { currentStreak: 0, bestStreak: 0, wins: 0, wrongCount: 0 };
-            const heading = `📊 Thống kê của ${interaction.user} trong kênh này`;
-            const wordLine = ch.word ? `Từ hiện tại: **${ch.word}**` : 'Chưa bắt đầu game trong kênh này.';
-            const stats = `> Chuỗi hiện tại: **${me.currentStreak || 0}** | Cao nhất: **${me.bestStreak || 0}** | Thắng: **${me.wins || 0}** | Sai: **${me.wrongCount || 0}**`;
-            await interaction.reply({ content: `${heading}\n${wordLine}\n${stats}`, ephemeral: false });
-            await sendWordReminder(interaction);
+            const heading = `Thống kê của ${interaction.user} trong kênh này`;
+            // const wordLine = ch.word ? `Từ hiện tại: **${ch.word}**` : 'Chưa bắt đầu game trong kênh này.';
+            const stats = `> Chuỗi hiện tại: **${me.currentStreak || 0}** | Cao nhất: **${me.bestStreak || 0}** | Thắng: **${me.wins || 0}**`;
+            await interaction.reply({ content: `${heading}\n${stats}`, ephemeral: false });
+            
+            // Show current word after stats for channel
+            if (ch.word) {
+                await interaction.channel.send(`Từ hiện tại: **${ch.word}**`);
+            }
         }
     }
 });
@@ -323,14 +335,23 @@ client.on('messageCreate', async message => {
         if (message.channel.isDMBased()) {
             logger.info(`Processing DM from ${message.author.tag}: '${userMessage}'`);
             const response = noituBot.checkUser(userMessage, userId);
-            await message.reply(response);
+            const embed = new EmbedBuilder()
+                .setDescription(response.message)
+                .setColor(response.type === 'success' ? 0x00FF00 : response.type === 'error' ? 0xFF0000 : 0x0099FF);
+            await message.reply({ embeds: [embed] });
+            if (response.currentWord) {
+                await message.channel.send(`Từ hiện tại: **${response.currentWord}**`);
+            }
             logger.info(`Sent DM response to ${message.author.tag}`);
         } else {
             if (data.channelAllowlist.includes(channelId)) {
                 // Block plays while a /newgame vote is pending
                 if (pendingNewGame.has(channelId)) {
                     try {
-                        const sent = await message.reply('🕓 Đang đợi vote reset game, vui lòng chờ...');
+                        const embed = new EmbedBuilder()
+                            .setDescription('🕓 Đang đợi vote reset game, vui lòng chờ...')
+                            .setColor(0xFFFF00); // vàng cho warning
+                        const sent = await message.reply({ embeds: [embed] });
                         setTimeout(async () => {
                             try { await sent.delete(); } catch {}
                             try { await message.delete(); } catch {}
@@ -342,21 +363,14 @@ client.on('messageCreate', async message => {
                 }
                 logger.info(`Processing channel message from ${message.author.tag}: '${userMessage}'`);
                 const response = noituBot.checkChannel(userMessage, channelId, userId);
-                // Nếu sai định dạng (không đủ 2 từ), reply rồi xóa sau 5s cả reply và tin nhắn gốc
-                if (response && response.startsWith('Từ bắt buộc phải gồm 2 từ')) {
-                    try {
-                        const sent = await message.reply(response);
-                        setTimeout(async () => {
-                            try { await sent.delete(); } catch (e) { /* ignore */ }
-                            try { await message.delete(); } catch (e) { /* ignore */ }
-                        }, 3000);
-                    } catch (e) {
-                        logger.error(`Failed to send/delete format error reply: ${e.message}`);
-                    }
-                } else {
-                    await message.reply(response);
-                    logger.info(`Sent channel response to ${message.author.tag}`);
+                const embed = new EmbedBuilder()
+                    .setDescription(response.message)
+                    .setColor(response.type === 'success' ? 0x00FF00 : response.type === 'error' ? 0xFF0000 : 0x0099FF);
+                await message.reply({ embeds: [embed] });
+                if (response.currentWord) {
+                    await message.channel.send(`Từ hiện tại: **${response.currentWord}**`);
                 }
+                logger.info(`Sent channel response to ${message.author.tag}`);
             } else {
                 // logger.info(`Channel ${channelId} not in allowed list, ignoring message`);
             }
@@ -368,7 +382,6 @@ client.on('messageCreate', async message => {
 });
 
 function runDiscordBot() {
-    // keepAlive(); // Không cần keep alive
     client.login(process.env.DISCORD_BOT_TOKEN);
 }
 

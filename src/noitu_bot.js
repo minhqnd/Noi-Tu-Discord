@@ -5,10 +5,10 @@ const { setupLogger } = require('./log');
 const logger = setupLogger('noitu_bot');
 
 function formatStatsLine(userId, { currentStreak = 0, bestStreak = 0, wins = 0, isDM = false, showWins = false }) {
-    const heading = isDM ? 'Chuỗi hiện tại' : `Chuỗi hiện tại của <@${userId}>`;
-    const parts = [`${heading}: **${currentStreak}**`, `Cao nhất: **${bestStreak}**`];
+    const heading = isDM ? 'Chuỗi hiện tại' : `<@${userId}> trả lời đúng! Chuỗi hiện tại`;
+    const parts = [`${heading}: **${currentStreak}**`, `Kỷ lục: **${bestStreak}**`];
     if (showWins) parts.push(`Thắng: **${wins}**`);
-    return `> ${parts.join(' | ')}`;
+    return `${parts.join(' | ')}`;
 }
 
 function lastWord(word) {
@@ -88,7 +88,11 @@ function checkChannel(playerWord, idChannel, idUser) {
     const normalizedPlayer = normalizeVietnamese(playerWord);
 
     if (normalizedPlayer.split(' ').length !== 2) {
-        return 'Từ bắt buộc phải gồm 2 từ';
+        // Get current word from database if available
+        const channels = db.read('channels') || {};
+        const channelData = channels[idChannel] || {};
+        const currentWord = channelData.word;
+        return { type: 'error', message: 'Từ bắt buộc phải gồm 2 từ', currentWord: currentWord };
     }
 
     const channels = db.read('channels') || {};
@@ -103,12 +107,12 @@ function checkChannel(playerWord, idChannel, idUser) {
         channelData = { word: currentWord, history: [currentWord], players };
         db.store('channels', { [idChannel]: channelData });
         logger.info(`Channel [${idChannel}] NEW '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
-        return `Từ hiện tại: **${currentWord}**`;
+        return { type: 'info', message: '', currentWord: currentWord };
     }
 
     if (lastWord(currentWord) !== firstWord(normalizedPlayer)) {
         logger.info(`Channel [${idChannel}] MISMATCH '${playerWord}' -> needs '${lastWord(currentWord)}' [${(Date.now() - startTime) / 1000}s]`);
-        return `> **Từ đầu của bạn phải là "${lastWord(currentWord)}"!** Vui lòng thử lại.\nTừ hiện tại: **${currentWord}**`;
+        return { type: 'error', message: `**Từ đầu của bạn phải là "${lastWord(currentWord)}"!** Vui lòng thử lại.`, currentWord: currentWord };
     }
 
     // Kiểm tra từ đã được trả lời chưa
@@ -122,12 +126,12 @@ function checkChannel(playerWord, idChannel, idUser) {
             channelData.players = players;
             db.store('channels', { [idChannel]: channelData });
             logger.info(`Channel [${idChannel}] USER_LOSS '${playerWord}' -> keep '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
-            return `> Thua cuộc, từ đã được trả lời trước đó! Chuỗi của bạn đã reset!\nChuỗi đạt được: **${userStats.currentStreak}**, cao nhất: **${userStats.bestStreak}**\nTừ hiện tại: **${currentWord}**`;
+            return { type: 'error', message: `Thua cuộc, từ đã được trả lời trước đó!\nChuỗi đạt được: **${userStats.currentStreak}**, kỷ lục: **${userStats.bestStreak}**`, currentWord: currentWord };
         } else {
             channelData.players = players;
             db.store('channels', { [idChannel]: channelData });
             logger.info(`Channel [${idChannel}] ERROR '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
-            return `> **Từ này đã được trả lời trước đó!** Vui lòng tìm từ khác. Bạn đã trả lời sai **${userStats.wrongCount}** lần.\nTừ hiện tại: **${currentWord}**`;
+            return { type: 'error', message: `**Từ này đã được trả lời trước đó!**. Bạn còn **${userStats.wrongCount}** lần đoán.`, currentWord: currentWord };
         }
     }
 
@@ -141,12 +145,12 @@ function checkChannel(playerWord, idChannel, idUser) {
             channelData.players = players;
             db.store('channels', { [idChannel]: channelData });
             logger.info(`Channel [${idChannel}] USER_LOSS '${playerWord}' -> keep '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
-            return `> Thua cuộc, từ không có trong bộ từ điển! Chuỗi của bạn đã reset!\nChuỗi đạt được: **${userStats.currentStreak}**, cao nhất: **${userStats.bestStreak}**\nTừ hiện tại: **${currentWord}**`;
+            return { type: 'error', message: `Thua cuộc, từ không có trong bộ từ điển! Chuỗi: **${userStats.currentStreak}**, kỷ lục: **${userStats.bestStreak}**`, currentWord: currentWord };
         } else {
             channelData.players = players;
             db.store('channels', { [idChannel]: channelData });
             logger.info(`Channel [${idChannel}] ERROR '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
-            return `> **Từ không có trong bộ từ điển!** Vui lòng tìm từ khác. Bạn đã trả lời sai **${userStats.wrongCount}** lần.\nTừ hiện tại: **${currentWord}**`;
+            return { type: 'error', message: `**Từ không có trong bộ từ điển!** Bạn đã trả lời sai **${userStats.wrongCount}** lần.`, currentWord: currentWord };
         }
     }
 
@@ -164,10 +168,8 @@ function checkChannel(playerWord, idChannel, idUser) {
         db.store('channels', { [idChannel]: channelData });
         logger.info(`Channel [${idChannel}] WIN '${playerWord}' -> '${newStart}' [${(Date.now() - startTime) / 1000}s]`);
         const statsLine = formatStatsLine(idUser, { currentStreak: nextStreak, bestStreak: best });
-        return `${statsLine}\n> **BẠN ĐÃ THẮNG!** Từ cuối "${lastWord(normalizedPlayer)}" không còn từ nào để nối tiếp.\nTừ mới: **${newStart}**`;
+        return { type: 'success', message: `${statsLine}\n**BẠN ĐÃ THẮNG!** Từ cuối "${lastWord(normalizedPlayer)}" không còn từ nào để nối tiếp.`, currentWord: newStart };
     }
-
-    const response = `Từ tiếp theo: **${nextWord}**`;
 
     if (uniqueWord(lastWord(nextWord))) {
         const newStart = newWord();
@@ -178,7 +180,7 @@ function checkChannel(playerWord, idChannel, idUser) {
         db.store('channels', { [idChannel]: channelData });
         logger.info(`Channel [${idChannel}] LOSS '${playerWord}' -> '${newStart}' [${(Date.now() - startTime) / 1000}s]`);
         const statsLine = formatStatsLine(idUser, { currentStreak: userStats.currentStreak || 0, bestStreak: preserved.bestStreak });
-        return `${statsLine}\n> **Thua cuộc!** Từ cuối "${lastWord(nextWord)}" cũng không còn từ nào để nối tiếp.\nTừ mới: **${newStart}**`;
+        return { type: 'error', message: `${statsLine}\n**Thua cuộc!** Từ cuối "${lastWord(nextWord)}" cũng không còn từ nào để nối tiếp.`, currentWord: newStart };
     }
 
     history.push(normalizedPlayer, currentWord);
@@ -194,7 +196,7 @@ function checkChannel(playerWord, idChannel, idUser) {
     db.store('channels', { [idChannel]: channelData });
     logger.info(`Channel [${idChannel}] NEXT '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
     const statsLine = formatStatsLine(idUser, { currentStreak: userStats.currentStreak || 0, bestStreak: userStats.bestStreak || 0 });
-    return `${statsLine}\n${response}`;
+    return { type: 'success', message: statsLine, currentWord: currentWord };
 }
 
 function checkUser(playerWord, idUser) {
@@ -204,7 +206,7 @@ function checkUser(playerWord, idUser) {
     const normalizedPlayer = normalizeVietnamese(playerWord);
 
     if (normalizedPlayer.split(' ').length !== 2) {
-        return 'Từ bắt buộc phải gồm 2 từ';
+        return { type: 'error', message: 'Từ bắt buộc phải gồm 2 từ' };
     }
 
     const users = db.read('users') || {};
@@ -221,12 +223,12 @@ function checkUser(playerWord, idUser) {
         userData = { word: currentWord, history: [currentWord], currentStreak: 0, bestStreak: 0, wins: 0, wrongCount: 0 };
         db.store('users', { [idUser]: userData });
         logger.info(`DM: [${idUser}] NEW '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
-        return `Từ hiện tại: **${currentWord}**`;
+        return { type: 'info', message: '', currentWord: currentWord };
     }
 
     if (lastWord(currentWord) !== firstWord(normalizedPlayer)) {
         logger.info(`DM: [${idUser}] MISMATCH '${playerWord}' -> needs '${lastWord(currentWord)}' [${(Date.now() - startTime) / 1000}s]`);
-        return `> **Từ đầu của bạn phải là "${lastWord(currentWord)}"!** Vui lòng thử lại.\nTừ hiện tại: **${currentWord}**`;
+        return { type: 'error', message: `**Từ đầu của bạn phải là "${lastWord(currentWord)}"!** Vui lòng thử lại.`, currentWord: currentWord };
     }
 
     // Kiểm tra từ đã được trả lời chưa
@@ -239,12 +241,12 @@ function checkUser(playerWord, idUser) {
             userData = { word: currentWord, history: [], currentStreak: 0, bestStreak: preserveBest, wins: preserveWins, wrongCount: 0 };
             db.store('users', { [idUser]: userData });
             logger.info(`DM: [${idUser}] LOSS '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
-            return `> Thua cuộc, từ đã được trả lời trước đó! Chuỗi đúng: **${currentStreak}** \nTừ mới: **${currentWord}**`;
+            return { type: 'error', message: `Thua cuộc, từ đã được trả lời trước đó! Chuỗi đúng: **${currentStreak}**`, currentWord: currentWord };
         } else {
             userData.wrongCount = wrongCount;
             db.store('users', { [idUser]: userData });
             logger.info(`DM: [${idUser}] ERROR '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
-            return `> **Từ này đã được trả lời trước đó!** Vui lòng tìm từ khác. Bạn đã trả lời sai **${wrongCount}** lần.\nTừ hiện tại: **${currentWord}**`;
+            return { type: 'error', message: `**Từ này đã được trả lời trước đó!** Bạn đã trả lời sai **${wrongCount}** lần.`, currentWord: currentWord };
         }
     }
 
@@ -258,12 +260,12 @@ function checkUser(playerWord, idUser) {
             userData = { word: currentWord, history: [], currentStreak: 0, bestStreak: preserveBest, wins: preserveWins, wrongCount: 0 };
             db.store('users', { [idUser]: userData });
             logger.info(`DM: [${idUser}] LOSS '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
-            return `> Thua cuộc, từ không có trong bộ từ điển! Chuỗi đúng: **${currentStreak}** \nTừ mới: **${currentWord}**`;
+            return { type: 'error', message: `Thua cuộc, từ không có trong bộ từ điển! Chuỗi đúng: **${currentStreak}**`, currentWord: currentWord };
         } else {
             userData.wrongCount = wrongCount;
             db.store('users', { [idUser]: userData });
             logger.info(`DM: [${idUser}] ERROR '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
-            return `> **Từ không có trong bộ từ điển!** Vui lòng tìm từ khác. Bạn đã trả lời sai **${wrongCount}** lần.\nTừ hiện tại: **${currentWord}**`;
+            return { type: 'error', message: `**Từ không có trong bộ từ điển!** Bạn đã trả lời sai **${wrongCount}** lần.`, currentWord: currentWord };
         }
     }
 
@@ -280,10 +282,8 @@ function checkUser(playerWord, idUser) {
         db.store('users', { [idUser]: userData });
         logger.info(`DM: [${idUser}] WIN '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
         const statsLineDM = formatStatsLine(idUser, { currentStreak: nextStreak, bestStreak, isDM: true });
-        return `${statsLineDM}\n> **BẠN ĐÃ THẮNG!** Từ cuối "${lastWord(normalizedPlayer)}" không còn từ nào để nối tiếp.\nTừ mới: **${currentWord}**`;
+        return { type: 'success', message: `${statsLineDM}\n**BẠN ĐÃ THẮNG!** Từ cuối "${lastWord(normalizedPlayer)}" không còn từ nào để nối tiếp.`, currentWord: currentWord };
     }
-
-    const response = `Từ tiếp theo: **${nextWord}**`;
 
     if (uniqueWord(lastWord(nextWord))) {
         const preserveBest = bestStreak || 0;
@@ -293,7 +293,7 @@ function checkUser(playerWord, idUser) {
         db.store('users', { [idUser]: userData });
         logger.info(`DM: [${idUser}] LOSS '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
         const statsLineDM = formatStatsLine(idUser, { currentStreak, bestStreak: preserveBest, isDM: true });
-        return `${statsLineDM}\n> **Thua cuộc!** Từ cuối "${lastWord(nextWord)}" cũng không còn từ nào để nối tiếp.\nTừ mới: **${currentWord}**`;
+        return { type: 'error', message: `${statsLineDM}\n**Thua cuộc!** Từ cuối "${lastWord(nextWord)}" cũng không còn từ nào để nối tiếp.`, currentWord: currentWord };
     }
 
     history.push(normalizedPlayer, currentWord);
@@ -308,7 +308,7 @@ function checkUser(playerWord, idUser) {
     db.store('users', { [idUser]: userData });
     logger.info(`DM: [${idUser}] NEXT '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
     const statsLineDM = formatStatsLine(idUser, { currentStreak, bestStreak, isDM: true });
-    return `${statsLineDM}\n${response}`;
+    return { type: 'success', message: statsLineDM, currentWord: currentWord };
 }
 
 async function tratu() {
