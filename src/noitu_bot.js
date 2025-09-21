@@ -145,23 +145,7 @@ function checkChannel(playerWord, idChannel, idUser) {
     if (!nextWord) {
         const nextStreak = (userStats.currentStreak || 0) + 1;
         const newStart = newWord();
-        // update user's best and wins, but since it's loss, don't increment wins
-        const best = Math.max(userStats.bestStreak || 0, nextStreak);
-        // wins remain the same
-        players[idUser] = { currentStreak: 0, bestStreak: best, wins: userStats.wins || 0, wrongCount: 0 };
-        channelData = { word: newStart, history: [], players };
-        db.store('channels', { [idChannel]: channelData });
-        logger.info(`Channel [${idChannel}] LOSS '${playerWord}' -> '${newStart}' [${(Date.now() - startTime) / 1000}s]`);
-        const statsLine = formatStatsLine(idUser, { currentStreak: nextStreak, bestStreak: best });
-        return `${statsLine}\n> **Thua cuộc!** Từ cuối "${lastWord(normalizedPlayer)}" không còn từ nào để nối tiếp.\nTừ mới: **${newStart}**`;
-    }
-
-    const response = `Từ tiếp theo: **${nextWord}**`;
-
-    if (uniqueWord(lastWord(nextWord))) {
-        const newStart = newWord();
-        // terminal path: update best/wins, reset counters
-        const nextStreak = (userStats.currentStreak || 0) + 1;
+        // update user's best and wins - USER WINS when bot can't continue!
         const best = Math.max(userStats.bestStreak || 0, nextStreak);
         const wins = (userStats.wins || 0) + 1;
         players[idUser] = { currentStreak: 0, bestStreak: best, wins, wrongCount: 0 };
@@ -169,7 +153,21 @@ function checkChannel(playerWord, idChannel, idUser) {
         db.store('channels', { [idChannel]: channelData });
         logger.info(`Channel [${idChannel}] WIN '${playerWord}' -> '${newStart}' [${(Date.now() - startTime) / 1000}s]`);
         const statsLine = formatStatsLine(idUser, { currentStreak: nextStreak, bestStreak: best });
-        return `${statsLine}\n> **BẠN ĐÃ THẮNG!** Từ cuối "${lastWord(nextWord)}" không còn từ nào để nối tiếp.\nTừ mới: **${newStart}**`;
+        return `${statsLine}\n> **BẠN ĐÃ THẮNG!** Từ cuối "${lastWord(normalizedPlayer)}" không còn từ nào để nối tiếp.\nTừ mới: **${newStart}**`;
+    }
+
+    const response = `Từ tiếp theo: **${nextWord}**`;
+
+    if (uniqueWord(lastWord(nextWord))) {
+        const newStart = newWord();
+        // terminal path: user loses because bot's word also ends the chain
+        const preserved = { bestStreak: userStats.bestStreak || 0, wins: userStats.wins || 0 };
+        players[idUser] = { currentStreak: 0, bestStreak: preserved.bestStreak, wins: preserved.wins, wrongCount: 0 };
+        channelData = { word: newStart, history: [], players };
+        db.store('channels', { [idChannel]: channelData });
+        logger.info(`Channel [${idChannel}] LOSS '${playerWord}' -> '${newStart}' [${(Date.now() - startTime) / 1000}s]`);
+        const statsLine = formatStatsLine(idUser, { currentStreak: userStats.currentStreak || 0, bestStreak: preserved.bestStreak });
+        return `${statsLine}\n> **Thua cuộc!** Từ cuối "${lastWord(nextWord)}" cũng không còn từ nào để nối tiếp.\nTừ mới: **${newStart}**`;
     }
 
     history.push(normalizedPlayer, currentWord);
@@ -263,20 +261,7 @@ function checkUser(playerWord, idUser) {
 
     if (!nextWord) {
         const nextStreak = (currentStreak || 0) + 1;
-        // update best, but no win increment since loss
-        bestStreak = Math.max(bestStreak || 0, nextStreak);
-        currentWord = newWord();
-        userData = { word: currentWord, history: [], currentStreak: 0, bestStreak, wins, wrongCount: 0 };
-        db.store('users', { [idUser]: userData });
-        logger.info(`DM: [${idUser}] LOSS '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
-        const statsLineDM = formatStatsLine(idUser, { currentStreak: nextStreak, bestStreak, isDM: true });
-        return `${statsLineDM}\n> **Thua cuộc!** Từ cuối "${lastWord(normalizedPlayer)}" không còn từ nào để nối tiếp.\nTừ mới: **${currentWord}**`;
-    }
-
-    const response = `Từ tiếp theo: **${nextWord}**`;
-
-    if (uniqueWord(lastWord(nextWord))) {
-        const nextStreak = (currentStreak || 0) + 1;
+        // update best and wins - USER WINS when bot can't continue!
         bestStreak = Math.max(bestStreak || 0, nextStreak);
         wins = (wins || 0) + 1;
         currentWord = newWord();
@@ -284,7 +269,20 @@ function checkUser(playerWord, idUser) {
         db.store('users', { [idUser]: userData });
         logger.info(`DM: [${idUser}] WIN '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
         const statsLineDM = formatStatsLine(idUser, { currentStreak: nextStreak, bestStreak, isDM: true });
-        return `${statsLineDM}\n> **BẠN ĐÃ THẮNG!** Từ cuối "${lastWord(nextWord)}" không còn từ nào để nối tiếp.\nTừ mới: **${currentWord}**`;
+        return `${statsLineDM}\n> **BẠN ĐÃ THẮNG!** Từ cuối "${lastWord(normalizedPlayer)}" không còn từ nào để nối tiếp.\nTừ mới: **${currentWord}**`;
+    }
+
+    const response = `Từ tiếp theo: **${nextWord}**`;
+
+    if (uniqueWord(lastWord(nextWord))) {
+        const preserveBest = bestStreak || 0;
+        const preserveWins = wins || 0;
+        currentWord = newWord();
+        userData = { word: currentWord, history: [], currentStreak: 0, bestStreak: preserveBest, wins: preserveWins, wrongCount: 0 };
+        db.store('users', { [idUser]: userData });
+        logger.info(`DM: [${idUser}] LOSS '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
+        const statsLineDM = formatStatsLine(idUser, { currentStreak, bestStreak: preserveBest, isDM: true });
+        return `${statsLineDM}\n> **Thua cuộc!** Từ cuối "${lastWord(nextWord)}" cũng không còn từ nào để nối tiếp.\nTừ mới: **${currentWord}**`;
     }
 
     history.push(normalizedPlayer, currentWord);
