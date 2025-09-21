@@ -69,21 +69,28 @@ function getnoitu(playerWord) {
 
 async function tratu(word) {
   try {
-    const response = await axios.post('http://tudientv.com/dictfunctions.php', {
-      action: 'getmeaning',
-      entry: word
-    }, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept-Encoding': 'gzip, deflate, br'
+    const response = await axios.get(`https://minhqnd.com/api/dictionary/lookup?word=${encodeURIComponent(word)}`);
+    if (response.status === 200 && response.data) {
+      const data = response.data;
+      if (data.error || !data.meanings || data.meanings.length === 0) {
+        return `Không tìm thấy định nghĩa cho từ "${word}".`;
       }
-    });
-    if (response.status === 200) {
-      if (response.data.length < 5) {
-        return 'Không tìm thấy từ trong api tudientv, có thể từ ở nguồn khác.';
-      } else {
-        return response.data.replace(/<[^>]*>/g, '').replace(/\n+/g, '\n');
-      }
+      // Format similar to the React component
+      let formatted = `**Giải nghĩa:**\n`;
+      data.meanings.forEach((m, idx) => {
+        formatted += `• **${m.definition}**\n`;
+        let details = [];
+        if (m.pos) details.push(`**Loại:** ${m.pos}`);
+        if (m.sub_pos) details.push(`**Nhóm:** ${m.sub_pos}`);
+        if (details.length > 0) {
+          formatted += `  ${details.join(' · ')}\n`;
+        }
+        if (m.example) {
+          formatted += `  **VD:** ${m.example}\n`;
+        }
+        formatted += '\n';
+      });
+      return `**Từ tra cứu: "${data.word || word}"**\n\n${formatted.trim()}`;
     } else {
       return "Không thể lấy dữ liệu từ API";
     }
