@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, EmbedBuilder, ChannelType, Partials, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder, ChannelType, Partials, ActionRowBuilder, ButtonBuilder, ButtonStyle, ActivityType } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const { setupLogger } = require('./src/log');
@@ -41,6 +41,23 @@ async function sendWordReminder(interaction) {
     }
 }
 
+// Function to update bot status with active games count
+function updateBotStatus() {
+    const channels = db.read('channels') || {};
+    const activeGames = Object.keys(channels).filter(id => channels[id].word).length;
+    const guildCount = client.guilds.cache.size;
+    
+    client.user.setPresence({
+        activities: [{
+            name: '🎮 Nối từ Tiếng Việt',
+            type: ActivityType.Playing,
+            // details: `📋 ${client.application?.commands.cache.size || 6} lệnh | 🏠 ${guildCount} server`,
+            state: `Chat riêng với bot cũng chơi được nhe hehe`,
+        }],
+        status: 'online'
+    });
+}
+
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -73,7 +90,7 @@ client.once('clientReady', async () => {
                     name: 'word',
                     description: 'Từ cần tra cứu',
                     type: 3, // STRING
-                    required: false
+                    required: true
                 }
             ]
         },
@@ -86,6 +103,23 @@ client.once('clientReady', async () => {
             description: 'Xem thống kê nối từ hiện tại'
         }
     ]);
+    
+    // Update application info for better bot profile
+    try {
+        await client.application.edit({
+            description: 'Bot game nối từ Tiếng Việt bởi @minhqnd. Sử dụng /noitu_add để bắt đầu chơi!',
+            tags: ['game', 'vietnamese', 'word-chain', 'entertainment', 'educational']
+        });
+        // logger.info('Updated application info successfully');
+    } catch (error) {
+        logger.error('Failed to update application info:', error.message);
+    }
+    
+    // Set initial bot status and activity
+    updateBotStatus();
+    
+    // Log commands info
+    // const commandCount = client.application.commands.cache.size;
     logger.info(`${client.user.tag} is now running!`);
 });
 
@@ -123,10 +157,31 @@ client.on('interactionCreate', async interaction => {
             await interaction.reply({ content: '> **Không thể xóa vì chưa thêm phòng.**', ephemeral: false });
         }
     } else if (commandName === 'help') {
-        await interaction.reply({
-            content: ":star:**BASIC COMMANDS** \n\n    - `/chatadd` Thêm phòng chat tự động!\n    - `/chatremove` Xóa phòng chat tự động.\n    - `/noituadd` Thêm phòng game nối từ.\n    - `/noituremove` Xóa phòng game nối từ.",
-            ephemeral: false
-        });
+        const helpEmbed = new EmbedBuilder()
+            .setTitle('🎮 Moi Nối Từ - Hướng dẫn sử dụng')
+            .setDescription('Bot game nối từ Tiếng Việt với từ gồm 2 chữ')
+            .setColor(0x00ff00)
+            .addFields(
+                {
+                    name: '🎯 Commands Chính',
+                    value: '`/noitu_add` - Thêm phòng game nối từ\n`/noitu_remove` - Xóa phòng game nối từ\n`/newgame` - Bắt đầu game mới\n`/stats` - Xem thống kê cá nhân',
+                    inline: false
+                },
+                {
+                    name: '📚 Tiện ích',
+                    value: '`/tratu [từ]` - Tra cứu từ điển\n`/help` - Hiển thị hướng dẫn này',
+                    inline: false
+                },
+                {
+                    name: '🎮 Cách chơi',
+                    value: 'Nhập từ gồm 2 chữ, từ đầu phải trùng với từ cuối của bot\nVí dụ: Bot nói "**nối từ**" → Bạn phải nói từ bắt đầu bằng "**từ**"',
+                    inline: false
+                }
+            )
+            .setFooter({ text: 'Tạo bởi moi - Game nối từ Tiếng Việt' })
+            .setTimestamp();
+        
+        await interaction.reply({ embeds: [helpEmbed], ephemeral: false });
         await sendWordReminder(interaction);
         logger.info('Someone need help!');
     } else if (commandName === 'tratu') {
@@ -235,7 +290,7 @@ client.on('interactionCreate', async interaction => {
             const dataUser = users[userId] || { word: null, history: [], currentStreak: 0, bestStreak: 0, wins: 0, wrongCount: 0 };
             const heading = `📊 Thống kê của ${interaction.user}`;
             const wordLine = dataUser.word ? `Từ hiện tại: **${dataUser.word}**` : 'Chưa bắt đầu game.';
-            const stats = `> Chuỗi hiện tại: **${dataUser.currentStreak || 0}** | Cao nhất: **${dataUser.bestStreak || 0}** | Thắng: **${dataUser.wins || 0}** | Sai: **${dataUser.wrongCount || 0}**`;
+            const stats = `> Chuỗi hiện tại: **${dataUser.currentStreak || 0}** | Cao nhất: **${dataUser.bestStreak || 0}** | Thắng: **${dataUser.wins || 0}**`;
             await interaction.reply({ content: `${heading}\n${wordLine}\n${stats}`, ephemeral: false });
             await sendWordReminder(interaction);
         } else {

@@ -111,7 +111,7 @@ function checkChannel(playerWord, idChannel, idUser) {
             channelData.players = players;
             db.store('channels', { [idChannel]: channelData });
             logger.info(`Channel [${idChannel}] USER_LOSS '${playerWord}' -> keep '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
-            return `> Thua cuộc, từ đã được trả lời trước đó! Chuỗi của bạn đã reset.\nTừ hiện tại: **${currentWord}**`;
+            return `> Thua cuộc, từ đã được trả lời trước đó! Chuỗi của bạn đã reset!\nChuỗi đạt được: **${userStats.currentStreak}**, cao nhất: **${userStats.bestStreak}**\nTừ hiện tại: **${currentWord}**`;
         } else {
             channelData.players = players;
             db.store('channels', { [idChannel]: channelData });
@@ -130,7 +130,7 @@ function checkChannel(playerWord, idChannel, idUser) {
             channelData.players = players;
             db.store('channels', { [idChannel]: channelData });
             logger.info(`Channel [${idChannel}] USER_LOSS '${playerWord}' -> keep '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
-            return `> Thua cuộc, từ không có trong bộ từ điển! Chuỗi của bạn đã reset.\nTừ hiện tại: **${currentWord}**`;
+            return `> Thua cuộc, từ không có trong bộ từ điển! Chuỗi của bạn đã reset!\nChuỗi đạt được: **${userStats.currentStreak}**, cao nhất: **${userStats.bestStreak}**\nTừ hiện tại: **${currentWord}**`;
         } else {
             channelData.players = players;
             db.store('channels', { [idChannel]: channelData });
