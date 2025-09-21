@@ -95,6 +95,22 @@ client.once('clientReady', async () => {
         {
             name: 'stats',
             description: 'Xem thống kê nối từ hiện tại'
+        },
+        {
+            name: 'feedback',
+            description: 'Gửi phản hồi về từ thiếu, lỗi hoặc đề xuất',
+            options: [
+                {
+                    name: 'content',
+                    description: 'Nội dung phản hồi (từ thiếu, lỗi, đề xuất...)',
+                    type: 3, // STRING
+                    required: true
+                }
+            ]
+        },
+        {
+            name: 'viewfeedback',
+            description: '[ADMIN] Xem tất cả phản hồi từ người dùng'
         }
     ]);
     
@@ -163,7 +179,12 @@ client.on('interactionCreate', async interaction => {
                 },
                 {
                     name: '📚 Tiện ích',
-                    value: '`/tratu [từ]` - Tra cứu từ điển\n`/help` - Hiển thị hướng dẫn này',
+                    value: '`/tratu [từ]` - Tra cứu từ điển\n`/feedback [nội dung]` - Gửi phản hồi về từ thiếu/lỗi\n`/help` - Hiển thị hướng dẫn này',
+                    inline: false
+                },
+                {
+                    name: '👮 Moderator/Admin',
+                    value: '`/viewfeedback` - Xem phản hồi từ người dùng',
                     inline: false
                 },
                 {
@@ -317,6 +338,92 @@ client.on('interactionCreate', async interaction => {
             if (ch.word) {
                 await interaction.channel.send(`Từ hiện tại: **${ch.word}**`);
             }
+        }
+    } else if (commandName === 'feedback') {
+        const content = interaction.options.getString('content');
+        const userId = interaction.user.id;
+        const username = interaction.user.tag;
+        const channelId = interaction.channel.isDMBased() ? null : interaction.channel.id;
+        
+        try {
+            const feedbackId = noituBot.storeFeedback(userId, username, content, channelId);
+            const embed = new EmbedBuilder()
+                .setTitle('✅ Phản hồi đã được gửi')
+                .setDescription(`Cảm ơn bạn đã gửi phản hồi! Chúng tôi sẽ xem xét và cải thiện.\n\n**ID phản hồi:** ${feedbackId}`)
+                .setColor(0x00FF00)
+                .setFooter({ text: 'Phản hồi của bạn rất quan trọng đối với chúng tôi!' })
+                .setTimestamp();
+            
+            await interaction.reply({ embeds: [embed], ephemeral: true });
+            logger.info(`Feedback received from ${username}: ${content.substring(0, 100)}...`);
+        } catch (error) {
+            await interaction.reply({ 
+                content: '❌ Có lỗi xảy ra khi gửi phản hồi. Vui lòng thử lại sau.', 
+                ephemeral: true 
+            });
+            logger.error(`Failed to store feedback: ${error.message}`);
+        }
+    } else if (commandName === 'viewfeedback') {
+        // Check if user has moderator, admin permissions, or is in DM (for bot owner)
+        const hasModPermissions = interaction.member?.permissions?.has('ModerateMembers') || 
+                                 interaction.member?.permissions?.has('Administrator') ||
+                                 interaction.member?.permissions?.has('ManageMessages') ||
+                                 interaction.member?.permissions?.has('ManageGuild');
+        
+        // Allow in DMs for bot owner or if no member object (DM context)
+        const isDMOwner = interaction.channel.isDMBased() && 
+                         interaction.user.id === '319857617060478976'; // Replace with your user ID if needed
+        
+        const canView = hasModPermissions || isDMOwner;
+        
+        if (!canView) {
+            await interaction.reply({ 
+                content: '❌ Bạn không có quyền sử dụng lệnh này. Chỉ Moderator/Admin mới có thể xem phản hồi.', 
+                ephemeral: true 
+            });
+            return;
+        }
+        
+        try {
+            const feedbacks = noituBot.getAllFeedbacks();
+            
+            if (feedbacks.length === 0) {
+                await interaction.reply({ 
+                    content: '📭 Chưa có phản hồi nào từ người dùng.', 
+                    ephemeral: true 
+                });
+                return;
+            }
+            
+            // Show latest 10 feedbacks
+            const recentFeedbacks = feedbacks.slice(-10).reverse();
+            
+            const embed = new EmbedBuilder()
+                .setTitle('📋 Phản hồi từ người dùng')
+                .setDescription(`Hiển thị ${recentFeedbacks.length} phản hồi gần nhất (tổng: ${feedbacks.length})`)
+                .setColor(0x0099FF)
+                .setTimestamp();
+            
+            recentFeedbacks.forEach((feedback, index) => {
+                const date = new Date(feedback.timestamp).toLocaleString('vi-VN');
+                const status = feedback.status === 'pending' ? '🟡 Chờ xử lý' : 
+                              feedback.status === 'reviewed' ? '🟢 Đã xem' : '✅ Đã giải quyết';
+                
+                embed.addFields({
+                    name: `${index + 1}. ${feedback.username} - ${date}`,
+                    value: `**ID:** ${feedback.id}\n**Nội dung:** ${feedback.content.substring(0, 200)}${feedback.content.length > 200 ? '...' : ''}\n**Trạng thái:** ${status}`,
+                    inline: false
+                });
+            });
+            
+            await interaction.reply({ embeds: [embed], ephemeral: true });
+            logger.info(`Admin ${interaction.user.tag} viewed feedbacks`);
+        } catch (error) {
+            await interaction.reply({ 
+                content: '❌ Có lỗi xảy ra khi lấy phản hồi. Vui lòng thử lại sau.', 
+                ephemeral: true 
+            });
+            logger.error(`Failed to get feedbacks: ${error.message}`);
         }
     }
 });

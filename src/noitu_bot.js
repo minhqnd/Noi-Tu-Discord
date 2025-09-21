@@ -337,4 +337,36 @@ function resetChannelGame(idChannel) {
     return currentWord;
 }
 
-module.exports = { checkChannel, checkUser, tratu, resetUserGame, resetChannelGame, uniqueWord };
+function storeFeedback(userId, username, content, channelId) {
+    const feedbacks = db.read('feedbacks') || [];
+    const feedback = {
+        id: Date.now().toString(),
+        userId: userId.toString(),
+        username: username,
+        content: content,
+        channelId: channelId ? channelId.toString() : null,
+        timestamp: new Date().toISOString(),
+        status: 'pending' // pending, reviewed, resolved
+    };
+    feedbacks.push(feedback);
+    db.store('feedbacks', feedbacks);
+    logger.info(`New feedback from ${username} (${userId}): ${content.substring(0, 50)}...`);
+    return feedback.id;
+}
+
+function getAllFeedbacks() {
+    return db.read('feedbacks') || [];
+}
+
+function markFeedbackAsReviewed(feedbackId) {
+    const feedbacks = db.read('feedbacks') || [];
+    const feedback = feedbacks.find(f => f.id === feedbackId);
+    if (feedback) {
+        feedback.status = 'reviewed';
+        db.store('feedbacks', feedbacks);
+        return true;
+    }
+    return false;
+}
+
+module.exports = { checkChannel, checkUser, tratu, resetUserGame, resetChannelGame, uniqueWord, storeFeedback, getAllFeedbacks, markFeedbackAsReviewed };
