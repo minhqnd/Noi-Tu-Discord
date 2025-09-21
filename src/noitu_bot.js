@@ -37,11 +37,21 @@ function getWordStartingWith(start, history = []) {
         return false;
     }
 
+    // Lọc thêm: chỉ chọn từ mà từ cuối (secondWord) có từ tiếp theo
+    const validWords = availableWords.filter(secondWord => {
+        return wordPairs[secondWord] && wordPairs[secondWord].length > 0;
+    });
+
+    // Nếu không còn từ hợp lệ, trả về false
+    if (validWords.length === 0) {
+        return false;
+    }
+
     // Tránh chọn từ giống nhau (ví dụ: "phới phới")
-    const nonRepeatingWords = availableWords.filter(secondWord => secondWord !== start);
+    const nonRepeatingWords = validWords.filter(secondWord => secondWord !== start);
 
     // Ưu tiên từ không lặp, nếu không có thì dùng từ có sẵn
-    const wordsToChoose = nonRepeatingWords.length > 0 ? nonRepeatingWords : availableWords;
+    const wordsToChoose = nonRepeatingWords.length > 0 ? nonRepeatingWords : validWords;
 
     const secondWord = wordsToChoose[Math.floor(Math.random() * wordsToChoose.length)];
     return `${start} ${secondWord}`;
@@ -96,13 +106,12 @@ function checkChannel(playerWord, idChannel, idUser) {
         players[idUser] = userStats;
         if (userStats.wrongCount === 3) {
             const preserved = { bestStreak: userStats.bestStreak || 0, wins: userStats.wins || 0 };
-            currentWord = newWord();
-            // reset only this user's counters, preserve best/wins
+            // reset only this user's counters, preserve best/wins, keep game going
             players[idUser] = { currentStreak: 0, bestStreak: preserved.bestStreak, wins: preserved.wins, wrongCount: 0 };
-            channelData = { word: currentWord, history: [], players };
+            channelData.players = players;
             db.store('channels', { [idChannel]: channelData });
-            logger.info(`Channel [${idChannel}] LOSS '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
-            return `> Thua cuộc, từ đã được trả lời trước đó! Chuỗi đúng: **${userStats.currentStreak || 0}** \nTừ mới: **${currentWord}**`;
+            logger.info(`Channel [${idChannel}] USER_LOSS '${playerWord}' -> keep '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
+            return `> Thua cuộc, từ đã được trả lời trước đó! Chuỗi của bạn đã reset.\nTừ hiện tại: **${currentWord}**`;
         } else {
             channelData.players = players;
             db.store('channels', { [idChannel]: channelData });
@@ -117,12 +126,11 @@ function checkChannel(playerWord, idChannel, idUser) {
         players[idUser] = userStats;
         if (userStats.wrongCount === 3) {
             const preserved = { bestStreak: userStats.bestStreak || 0, wins: userStats.wins || 0 };
-            currentWord = newWord();
             players[idUser] = { currentStreak: 0, bestStreak: preserved.bestStreak, wins: preserved.wins, wrongCount: 0 };
-            channelData = { word: currentWord, history: [], players };
+            channelData.players = players;
             db.store('channels', { [idChannel]: channelData });
-            logger.info(`Channel [${idChannel}] LOSS '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
-            return `> Thua cuộc, từ không có trong bộ từ điển! Chuỗi đúng: **${userStats.currentStreak || 0}** \nTừ mới: **${currentWord}**`;
+            logger.info(`Channel [${idChannel}] USER_LOSS '${playerWord}' -> keep '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
+            return `> Thua cuộc, từ không có trong bộ từ điển! Chuỗi của bạn đã reset.\nTừ hiện tại: **${currentWord}**`;
         } else {
             channelData.players = players;
             db.store('channels', { [idChannel]: channelData });
@@ -137,29 +145,31 @@ function checkChannel(playerWord, idChannel, idUser) {
     if (!nextWord) {
         const nextStreak = (userStats.currentStreak || 0) + 1;
         const newStart = newWord();
-        // update user's best and wins, then reset counters
+        // update user's best and wins, but since it's loss, don't increment wins
         const best = Math.max(userStats.bestStreak || 0, nextStreak);
-        const wins = (userStats.wins || 0) + 1;
-        players[idUser] = { currentStreak: 0, bestStreak: best, wins, wrongCount: 0 };
+        // wins remain the same
+        players[idUser] = { currentStreak: 0, bestStreak: best, wins: userStats.wins || 0, wrongCount: 0 };
         channelData = { word: newStart, history: [], players };
         db.store('channels', { [idChannel]: channelData });
-        logger.info(`Channel [${idChannel}] WIN '${playerWord}' -> '${newStart}' [${(Date.now() - startTime) / 1000}s]`);
-    const statsLine = formatStatsLine(idUser, { currentStreak: nextStreak, bestStreak: best });
-        return `${statsLine}\n**BẠN ĐÃ THẮNG!**, không còn từ nào bắt đầu bằng "${lastWord(normalizedPlayer)}"\n Từ mới: **${newStart}**`;
+        logger.info(`Channel [${idChannel}] LOSS '${playerWord}' -> '${newStart}' [${(Date.now() - startTime) / 1000}s]`);
+        const statsLine = formatStatsLine(idUser, { currentStreak: nextStreak, bestStreak: best });
+        return `${statsLine}\n> **Thua cuộc!** Từ cuối "${lastWord(normalizedPlayer)}" không còn từ nào để nối tiếp.\nTừ mới: **${newStart}**`;
     }
 
     const response = `Từ tiếp theo: **${nextWord}**`;
 
     if (uniqueWord(lastWord(nextWord))) {
         const newStart = newWord();
-        // terminal path: reset counters, keep best/wins
-        const preserved = { bestStreak: userStats.bestStreak || 0, wins: userStats.wins || 0 };
-        players[idUser] = { currentStreak: 0, bestStreak: preserved.bestStreak, wins: preserved.wins, wrongCount: 0 };
+        // terminal path: update best/wins, reset counters
+        const nextStreak = (userStats.currentStreak || 0) + 1;
+        const best = Math.max(userStats.bestStreak || 0, nextStreak);
+        const wins = (userStats.wins || 0) + 1;
+        players[idUser] = { currentStreak: 0, bestStreak: best, wins, wrongCount: 0 };
         channelData = { word: newStart, history: [], players };
         db.store('channels', { [idChannel]: channelData });
-        logger.info(`Channel [${idChannel}] LOSS '${playerWord}' -> '${newStart}' [${(Date.now() - startTime) / 1000}s]`);
-    const statsLine = formatStatsLine(idUser, { currentStreak: userStats.currentStreak || 0, bestStreak: preserved.bestStreak });
-        return `${statsLine}\n> Thua cuộc, đây là từ cuối trong từ điển của bot\nTừ mới: **${newStart}**`;
+        logger.info(`Channel [${idChannel}] WIN '${playerWord}' -> '${newStart}' [${(Date.now() - startTime) / 1000}s]`);
+        const statsLine = formatStatsLine(idUser, { currentStreak: nextStreak, bestStreak: best });
+        return `${statsLine}\n> **BẠN ĐÃ THẮNG!** Từ cuối "${lastWord(nextWord)}" không còn từ nào để nối tiếp.\nTừ mới: **${newStart}**`;
     }
 
     history.push(normalizedPlayer, currentWord);
@@ -253,28 +263,28 @@ function checkUser(playerWord, idUser) {
 
     if (!nextWord) {
         const nextStreak = (currentStreak || 0) + 1;
-        // update best and wins, then reset counters
+        // update best, but no win increment since loss
+        bestStreak = Math.max(bestStreak || 0, nextStreak);
+        currentWord = newWord();
+        userData = { word: currentWord, history: [], currentStreak: 0, bestStreak, wins, wrongCount: 0 };
+        db.store('users', { [idUser]: userData });
+        logger.info(`DM: [${idUser}] LOSS '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
+        const statsLineDM = formatStatsLine(idUser, { currentStreak: nextStreak, bestStreak, isDM: true });
+        return `${statsLineDM}\n> **Thua cuộc!** Từ cuối "${lastWord(normalizedPlayer)}" không còn từ nào để nối tiếp.\nTừ mới: **${currentWord}**`;
+    }
+
+    const response = `Từ tiếp theo: **${nextWord}**`;
+
+    if (uniqueWord(lastWord(nextWord))) {
+        const nextStreak = (currentStreak || 0) + 1;
         bestStreak = Math.max(bestStreak || 0, nextStreak);
         wins = (wins || 0) + 1;
         currentWord = newWord();
         userData = { word: currentWord, history: [], currentStreak: 0, bestStreak, wins, wrongCount: 0 };
         db.store('users', { [idUser]: userData });
         logger.info(`DM: [${idUser}] WIN '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
-    const statsLineDM = formatStatsLine(idUser, { currentStreak: nextStreak, bestStreak, isDM: true });
-        return `${statsLineDM}\n**BẠN ĐÃ THẮNG!**\n **Từ mới: **${currentWord}**`;
-    }
-
-    const response = `Từ tiếp theo: **${nextWord}**`;
-
-    if (uniqueWord(lastWord(nextWord))) {
-        const preserveBest = bestStreak || 0;
-        const preserveWins = wins || 0;
-        currentWord = newWord();
-        userData = { word: currentWord, history: [], currentStreak: 0, bestStreak: preserveBest, wins: preserveWins, wrongCount: 0 };
-        db.store('users', { [idUser]: userData });
-        logger.info(`DM: [${idUser}] LOSS '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
-    const statsLineDM = formatStatsLine(idUser, { currentStreak, bestStreak: preserveBest, isDM: true });
-        return `${statsLineDM}\n> Thua cuộc, đây là từ cuối trong từ điển của bot\nTừ mới: **${currentWord}**\n${statsLineDM}`;
+        const statsLineDM = formatStatsLine(idUser, { currentStreak: nextStreak, bestStreak, isDM: true });
+        return `${statsLineDM}\n> **BẠN ĐÃ THẮNG!** Từ cuối "${lastWord(nextWord)}" không còn từ nào để nối tiếp.\nTừ mới: **${currentWord}**`;
     }
 
     history.push(normalizedPlayer, currentWord);

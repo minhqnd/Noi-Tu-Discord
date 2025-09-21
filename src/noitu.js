@@ -73,7 +73,7 @@ async function tratu(word) {
     if (response.status === 200 && response.data) {
       const data = response.data;
       if (data.error || !data.meanings || data.meanings.length === 0) {
-        return `Không tìm thấy định nghĩa cho từ "${word}".`;
+        return `Không tìm thấy định nghĩa cho từ "${word}", đây có thể là một từ ghép hán việt, vui lòng tra cứu ở các nguồn khác.`;
       }
       // Format similar to the React component
       let formatted = `**Giải nghĩa:**\n`;

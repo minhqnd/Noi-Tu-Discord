@@ -4,6 +4,7 @@ const path = require('path');
 const { setupLogger } = require('./src/log');
 const noituBot = require('./src/noitu_bot');
 const noitu = require('./src/noitu');
+const db = require('./src/db');
 
 const logger = setupLogger('bot');
 // Track channels with a pending /newgame vote
@@ -30,10 +31,11 @@ async function sendWordReminder(interaction) {
     if (interaction.channel.isDMBased()) return;
     const channelId = interaction.channel.id.toString();
     if (!data.channelAllowlist.includes(channelId)) return;
-    const ch = data.channels[channelId];
+    const channels = db.read('channels') || {};
+    const ch = channels[channelId];
     if (!ch || !ch.word) return;
     try {
-        await interaction.followUp({ content: `Từ hiện tại: **${ch.word}**`, ephemeral: false });
+        await interaction.channel.send(`Từ hiện tại: **${ch.word}**`);
     } catch (e) {
         logger.error(`Failed to send word reminder: ${e.message}`);
     }
