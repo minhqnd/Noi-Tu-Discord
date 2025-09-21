@@ -2,10 +2,48 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-// Load từ điển từ wordPairs.json để tra cứu nhanh hơn
-const wordPairs = JSON.parse(fs.readFileSync(path.join(__dirname, 'assets', 'wordPairs.json'), 'utf8'));
+function normalizeVietnamese(text) {
+  let normalized = text.toLowerCase().trim();
 
-// Tạo list các từ hợp lệ từ wordPairs
+  const applyRules = [
+    {
+      pattern: /o[àáảãạ](?=$|[^\p{L}])/gu,
+      replace: (m) => ({ 'oà': 'òa', 'oá': 'óa', 'oả': 'ỏa', 'oã': 'õa', 'oạ': 'ọa' }[m])
+    },
+    {
+      pattern: /u[ýỳỷỹỵ](?=$|[^\p{L}])/gu,
+      replace: (m, offset, str) => {
+        const prev = offset > 0 ? str[offset - 1] : '';
+        if (prev === 'q') return m;
+        const map = { 'uý': 'úy', 'uỳ': 'ùy', 'uỷ': 'ủy', 'uỹ': 'ũy', 'uỵ': 'ụy' };
+        return map[m] || m;
+      }
+    },
+    { pattern: /hoà(?=$|[^\p{L}])/gu, replace: () => 'hòa' },
+    { pattern: /toà(?=$|[^\p{L}])/gu, replace: () => 'tòa' },
+  ];
+
+  for (const rule of applyRules) {
+    normalized = normalized.replace(rule.pattern, (...args) => rule.replace(...args));
+  }
+
+  return normalized;
+}
+
+const rawWordPairs = JSON.parse(fs.readFileSync(path.join(__dirname, 'assets', 'wordPairs.json'), 'utf8'));
+
+// Build normalized, merged wordPairs
+const wordPairs = {};
+for (const [k, arr] of Object.entries(rawWordPairs)) {
+  const nk = normalizeVietnamese(k);
+  if (!wordPairs[nk]) wordPairs[nk] = [];
+  for (const v of arr) {
+    const nv = normalizeVietnamese(v);
+    if (!wordPairs[nk].includes(nv)) wordPairs[nk].push(nv);
+  }
+}
+
+// Rebuild listWords from normalized pairs
 const listWords = [];
 for (const firstWord in wordPairs) {
   for (const secondWord of wordPairs[firstWord]) {
@@ -14,12 +52,12 @@ for (const firstWord in wordPairs) {
 }
 
 function getnoitu(playerWord) {
-  if (playerWord.split(' ').length !== 2) {
+  const normalizedInput = normalizeVietnamese(playerWord);
+  if (normalizedInput.split(' ').length !== 2) {
     return 'Từ bắt buộc phải gồm 2 từ';
   } else {
-    const lastWord = playerWord.split(' ')[1];
+    const lastWord = normalizedInput.split(' ')[1];
     const possibleSecondWords = wordPairs[lastWord] || [];
-    
     if (possibleSecondWords.length > 0) {
       const secondWord = possibleSecondWords[Math.floor(Math.random() * possibleSecondWords.length)];
       return `${lastWord} ${secondWord}`;
@@ -44,7 +82,6 @@ async function tratu(word) {
       if (response.data.length < 5) {
         return 'Không tìm thấy từ trong api tudientv, có thể từ ở nguồn khác.';
       } else {
-        // Simple text extraction, since no cheerio
         return response.data.replace(/<[^>]*>/g, '').replace(/\n+/g, '\n');
       }
     } else {
@@ -55,4 +92,4 @@ async function tratu(word) {
   }
 }
 
-module.exports = { getnoitu, tratu, listWords, wordPairs };
+module.exports = { getnoitu, tratu, listWords, wordPairs, normalizeVietnamese };

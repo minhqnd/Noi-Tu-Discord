@@ -1,4 +1,4 @@
-const { listWords, wordPairs } = require('./noitu');
+const { listWords, wordPairs, normalizeVietnamese } = require('./noitu');
 const db = require('./db');
 const { setupLogger } = require('./log');
 
@@ -57,7 +57,9 @@ function checkChannel(playerWord, idChannel, idUser) {
   const startTime = Date.now();
   idChannel = idChannel.toString();
 
-  if (playerWord.split(' ').length !== 2) {
+  const normalizedPlayer = normalizeVietnamese(playerWord);
+
+  if (normalizedPlayer.split(' ').length !== 2) {
     return 'Từ bắt buộc phải gồm 2 từ';
   }
 
@@ -76,7 +78,7 @@ function checkChannel(playerWord, idChannel, idUser) {
     return `Từ hiện tại: **${currentWord}**`;
   }
 
-  if (lastWord(currentWord) !== firstWord(playerWord)) {
+  if (lastWord(currentWord) !== firstWord(normalizedPlayer)) {
     sai += 1;
     if (sai === 3) {
       currentWord = newWord();
@@ -93,7 +95,7 @@ function checkChannel(playerWord, idChannel, idUser) {
   }
 
   // Kiểm tra từ đã được trả lời chưa
-  if (history.includes(playerWord)) {
+  if (history.includes(normalizedPlayer)) {
     sai += 1;
     if (sai === 3) {
       currentWord = newWord();
@@ -110,7 +112,7 @@ function checkChannel(playerWord, idChannel, idUser) {
   }
 
   // Kiểm tra từ có trong từ điển không
-  if (!listWords.includes(playerWord)) {
+  if (!listWords.includes(normalizedPlayer)) {
     sai += 1;
     if (sai === 3) {
       currentWord = newWord();
@@ -126,7 +128,7 @@ function checkChannel(playerWord, idChannel, idUser) {
     }
   }
 
-  const nextWord = getWordStartingWith(lastWord(playerWord), history);
+  const nextWord = getWordStartingWith(lastWord(normalizedPlayer), history);
   currentWord = nextWord;
 
   if (!nextWord) {
@@ -147,7 +149,7 @@ function checkChannel(playerWord, idChannel, idUser) {
     return `${response}\n> Thua cuộc, đây là từ cuối trong từ điển của bot, Chuỗi đúng: **${streak}**\nTừ mới: **${currentWord}**`;
   }
 
-  history.push(playerWord, currentWord);
+  history.push(normalizedPlayer, currentWord);
   channelData.word = currentWord;
   channelData.history = history;
   channelData.streak = streak + 1;
