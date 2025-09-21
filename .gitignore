@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 data.json
 data.json
+node_modules/
