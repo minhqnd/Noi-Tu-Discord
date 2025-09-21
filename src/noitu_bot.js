@@ -59,7 +59,18 @@ function getWordStartingWith(start, history = []) {
 
 function uniqueWord(start) {
     const possibleWords = wordPairs[start] || [];
-    return possibleWords.length === 0;
+    if (possibleWords.length === 0) return true;
+    
+    // Check if all possible words lead to dead ends
+    const validContinuations = possibleWords.filter(word => {
+        // If word is same as start, it's a loop - dead end
+        if (word === start) return false;
+        
+        const nextPossible = wordPairs[word] || [];
+        return nextPossible.length > 0;
+    });
+    
+    return validContinuations.length === 0;
 }
 
 function newWord() {
@@ -326,4 +337,4 @@ function resetChannelGame(idChannel) {
     return currentWord;
 }
 
-module.exports = { checkChannel, checkUser, tratu, resetUserGame, resetChannelGame };
+module.exports = { checkChannel, checkUser, tratu, resetUserGame, resetChannelGame, uniqueWord };
