@@ -17,8 +17,11 @@ let data;
 try {
     data = JSON.parse(fs.readFileSync(path.join(__dirname, 'data.json'), 'utf8'));
 } catch (err) {
-    data = { channels: [] };
+    data = { channels: {}, users: {}, channelAllowlist: [] };
 }
+if (!data.channels || Array.isArray(data.channels)) data.channels = {};
+if (!data.users || Array.isArray(data.users)) data.users = {};
+if (!Array.isArray(data.channelAllowlist)) data.channelAllowlist = data.channelAllowlist ? [data.channelAllowlist].flat() : [];
 
 const client = new Client({
     intents: [
@@ -71,18 +74,18 @@ client.on('interactionCreate', async interaction => {
 
     if (commandName === 'noitu_add') {
         const channelId = interaction.channel.id.toString();
-        if (data.channels.includes(channelId)) {
+        if (data.channelAllowlist.includes(channelId)) {
             await interaction.reply({ content: '> **Phòng hiện tại đã có trong cơ sở dữ liệu!**', ephemeral: false });
         } else {
-            data.channels.push(channelId);
+            data.channelAllowlist.push(channelId);
             fs.writeFileSync(path.join(__dirname, 'data.json'), JSON.stringify(data, null, 2), 'utf8');
             await interaction.reply({ content: '> **Đã thêm phòng game nối từ, MoiChat sẽ trả lời mọi tin nhắn từ phòng này!**', ephemeral: false });
             logger.info(`Thêm phòng mới ${channelId}!`);
         }
     } else if (commandName === 'noitu_remove') {
         const channelId = interaction.channel.id.toString();
-        if (data.channels.includes(channelId)) {
-            data.channels = data.channels.filter(id => id !== channelId);
+        if (data.channelAllowlist.includes(channelId)) {
+            data.channelAllowlist = data.channelAllowlist.filter(id => id !== channelId);
             fs.writeFileSync(path.join(__dirname, 'data.json'), JSON.stringify(data, null, 2), 'utf8');
             await interaction.reply({ content: '> **Đã xóa phòng game nối từ.**', ephemeral: false });
             logger.info(`Xóa phòng ${channelId}!`);
@@ -117,7 +120,7 @@ client.on('interactionCreate', async interaction => {
         } else {
             // Reset game cho channel (chỉ admin/mod có thể reset)
             const channelId = interaction.channel.id.toString();
-            if (data.channels.includes(channelId)) {
+            if (data.channelAllowlist.includes(channelId)) {
                 const newWord = noituBot.resetChannelGame(channelId);
                 await interaction.reply({
                     content: `🎮 **Game mới đã bắt đầu cho channel này!**\nTừ hiện tại: **${newWord}**`,
@@ -151,7 +154,7 @@ client.on('messageCreate', async message => {
             await message.channel.send(response);
             logger.info(`Sent DM response to ${message.author.tag}`);
         } else {
-            if (data.channels.includes(channelId)) {
+            if (data.channelAllowlist.includes(channelId)) {
                 logger.info(`Processing channel message from ${message.author.tag}: '${userMessage}'`);
                 const response = noituBot.checkChannel(userMessage, channelId, userId);
                 await message.channel.send(response);
