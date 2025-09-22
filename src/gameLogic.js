@@ -1,11 +1,15 @@
-const { tratu } = require('./noitu');
+const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
 const db = require('./db');
 const GameEngine = require('./gameEngine');
-const { setupLogger } = require('./log');
+const { setupLogger } = require('./utils');
+const { tratu } = require('./wordProcessing');
 
-const logger = setupLogger('noitu_bot');
+const logger = setupLogger('game_logic');
 const gameEngine = new GameEngine();
 
+// Game logic functions from noitu_bot.js
 function checkChannel(playerWord, idChannel, idUser) {
     idChannel = idChannel.toString();
     idUser = idUser.toString();
@@ -95,4 +99,14 @@ function markFeedbackAsReviewed(feedbackId) {
     return false;
 }
 
-module.exports = { checkChannel, checkUser, tratu, resetUserGame, resetChannelGame, storeFeedback, getAllFeedbacks, markFeedbackAsReviewed };
+module.exports = {
+    // Game logic functions
+    checkChannel,
+    checkUser,
+    resetUserGame,
+    resetChannelGame,
+    storeFeedback,
+    getAllFeedbacks,
+    markFeedbackAsReviewed,
+    tratu
+};
