@@ -40,7 +40,7 @@ class DiscordBot {
             channels: {},
             users: {},
             channelAllowlist: [],
-            strictMode: false
+            feedbacks: []
         };
     }
 
@@ -202,16 +202,13 @@ class DiscordBot {
                 case 'noitu_mode':
                     await this.handleNoituMode(interaction);
                     break;
-                case 'strict_mode':
-                    await this.handleStrictMode(interaction);
-                    break;
             }
         } catch (error) {
             logger.error(`Error handling interaction ${commandName}:`, error);
             await interaction.reply({
                 content: 'Có lỗi xảy ra khi xử lý lệnh. Vui lòng thử lại sau.',
                 ephemeral: true
-            }).catch(() => {});
+            }).catch(() => { });
         }
     }
 
@@ -309,7 +306,7 @@ class DiscordBot {
                 } else {
                     await interaction.reply({ content: 'Không thể tra từ lúc này, vui lòng thử lại sau.' });
                 }
-            } catch {}
+            } catch { }
             logger.error(`Tratu failed: ${e.message}`);
         }
     }
@@ -446,12 +443,12 @@ class DiscordBot {
 
     async handleViewFeedback(interaction) {
         const hasModPermissions = interaction.member?.permissions?.has(PERMISSIONS.MODERATE_MEMBERS) ||
-                                 interaction.member?.permissions?.has(PERMISSIONS.ADMINISTRATOR) ||
-                                 interaction.member?.permissions?.has(PERMISSIONS.MANAGE_MESSAGES) ||
-                                 interaction.member?.permissions?.has(PERMISSIONS.MANAGE_GUILD);
+            interaction.member?.permissions?.has(PERMISSIONS.ADMINISTRATOR) ||
+            interaction.member?.permissions?.has(PERMISSIONS.MANAGE_MESSAGES) ||
+            interaction.member?.permissions?.has(PERMISSIONS.MANAGE_GUILD);
 
         const isDMOwner = interaction.channel.isDMBased() &&
-                         interaction.user.id === '319857617060478976'; // Replace with your user ID if needed
+            interaction.user.id === '319857617060478976'; // Replace with your user ID if needed
 
         const canView = hasModPermissions || isDMOwner;
 
@@ -485,7 +482,7 @@ class DiscordBot {
             recentFeedbacks.forEach((feedback, index) => {
                 const date = new Date(feedback.timestamp).toLocaleString('vi-VN');
                 const status = feedback.status === 'pending' ? '🟡 Chờ xử lý' :
-                              feedback.status === 'reviewed' ? '🟢 Đã xem' : '✅ Đã giải quyết';
+                    feedback.status === 'reviewed' ? '🟢 Đã xem' : '✅ Đã giải quyết';
 
                 embed.addFields({
                     name: `${index + 1}. ${feedback.username} - ${date}`,
@@ -511,7 +508,7 @@ class DiscordBot {
             return;
         }
         const hasPerm = interaction.member?.permissions?.has(PERMISSIONS.MANAGE_GUILD) ||
-                       interaction.member?.permissions?.has(PERMISSIONS.ADMINISTRATOR);
+            interaction.member?.permissions?.has(PERMISSIONS.ADMINISTRATOR);
         if (!hasPerm) {
             await interaction.reply({ content: '❌ Bạn cần quyền Manage Server để đổi chế độ.', ephemeral: true });
             return;
@@ -530,20 +527,6 @@ class DiscordBot {
         if (currentWord) {
             await interaction.channel.send(`Từ hiện tại: **${currentWord}**`);
         }
-    }
-
-    async handleStrictMode(interaction) {
-        const hasPerm = interaction.member?.permissions?.has(PERMISSIONS.MANAGE_GUILD) ||
-                       interaction.member?.permissions?.has(PERMISSIONS.ADMINISTRATOR);
-        if (!hasPerm) {
-            await interaction.reply({ content: '❌ Bạn cần quyền Manage Server để đổi chế độ nghiêm ngặt.', ephemeral: true });
-            return;
-        }
-        const enabled = interaction.options.getBoolean('enabled');
-        this.data.strictMode = enabled;
-        this.saveData();
-        const status = enabled ? 'BẬT' : 'TẮT';
-        await interaction.reply({ content: `✅ Đã ${status} chế độ nghiêm ngặt. Từ không có trong từ điển sẽ ${enabled ? 'được coi là sai' : 'chỉ hiện emoji ❓'}.`, ephemeral: false });
     }
 
     async onMessageCreate(message) {
@@ -574,8 +557,8 @@ class DiscordBot {
                                 .setColor(0xFFFF00);
                             const sent = await message.reply({ embeds: [embed] });
                             setTimeout(async () => {
-                                try { await sent.delete(); } catch {}
-                                try { await message.delete(); } catch {}
+                                try { await sent.delete(); } catch { }
+                                try { await message.delete(); } catch { }
                             }, GAME_CONSTANTS.BLOCK_MESSAGE_TIMEOUT);
                         } catch (e) {
                             logger.error(`Failed to send/delete pending vote notice: ${e.message}`);
@@ -619,12 +602,8 @@ class DiscordBot {
                 await message.react('🔴');
                 await message.reply({ content: `Từ này đã được trả lời trước đó!\nTừ hiện tại: **${response.currentWord}**` });
             } else if (response.code === 'not_in_dict') {
-                if (this.data.strictMode) {
-                    await message.react('❌');
-                    await message.reply({ content: `**Từ không có trong bộ từ điển!** Vui lòng thử lại.\nTừ hiện tại: **${response.currentWord}**`, ephemeral: true });
-                } else {
-                    await message.react('❓');
-                }
+                await message.react('❌');
+                await message.reply({ content: `**Từ không có trong bộ từ điển!** Vui lòng thử lại.\nTừ hiện tại: **${response.currentWord}**`, ephemeral: true });
             } else if (response.code === 'invalid_format') {
                 await message.react('⚠️');
                 await message.reply({ content: `${response.message}\nTừ hiện tại: **${response.currentWord}**`, ephemeral: true });

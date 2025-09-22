@@ -32,7 +32,6 @@ class Database {
             channels: {},
             users: {},
             channelAllowlist: [],
-            strictMode: false,
             feedbacks: []
         };
     }
@@ -78,11 +77,6 @@ class Database {
 
         if (!Array.isArray(this.cache.channelAllowlist)) {
             this.cache.channelAllowlist = this.cache.channelAllowlist ? [this.cache.channelAllowlist].flat() : [];
-            migrated = true;
-        }
-
-        if (typeof this.cache.strictMode !== 'boolean') {
-            this.cache.strictMode = false;
             migrated = true;
         }
 
