@@ -29,11 +29,12 @@ let data;
 try {
     data = JSON.parse(fs.readFileSync(path.join(__dirname, 'data.json'), 'utf8'));
 } catch (err) {
-    data = { channels: {}, users: {}, channelAllowlist: [] };
+    data = { channels: {}, users: {}, channelAllowlist: [], strictMode: false };
 }
 if (!data.channels || Array.isArray(data.channels)) data.channels = {};
 if (!data.users || Array.isArray(data.users)) data.users = {};
 if (!Array.isArray(data.channelAllowlist)) data.channelAllowlist = data.channelAllowlist ? [data.channelAllowlist].flat() : [];
+if (typeof data.strictMode !== 'boolean') data.strictMode = false;
 
 // Function to update bot status with active games count
 function updateBotStatus() {
@@ -111,6 +112,34 @@ client.once('clientReady', async () => {
         {
             name: 'viewfeedback',
             description: '[ADMIN] Xem tất cả phản hồi từ người dùng'
+        },
+        {
+            name: 'noitu_mode',
+            description: 'Chọn chế độ chơi cho kênh: bot hoặc pvp',
+            options: [
+                {
+                    name: 'mode',
+                    description: 'Chế độ chơi (bot: user vs bot, pvp: user vs user)',
+                    type: 3, // STRING
+                    required: true,
+                    choices: [
+                        { name: 'user vs bot', value: 'bot' },
+                        { name: 'user vs user (PvP)', value: 'pvp' }
+                    ]
+                }
+            ]
+        },
+        {
+            name: 'strict_mode',
+            description: '[ADMIN] Bật/tắt chế độ nghiêm ngặt (từ không có trong từ điển coi là sai)',
+            options: [
+                {
+                    name: 'enabled',
+                    description: 'Bật (true) hoặc tắt (false) chế độ nghiêm ngặt',
+                    type: 5, // BOOLEAN
+                    required: true
+                }
+            ]
         }
     ]);
     
@@ -179,17 +208,17 @@ client.on('interactionCreate', async interaction => {
                 },
                 {
                     name: '📚 Tiện ích',
-                    value: '`/tratu [từ]` - Tra cứu từ điển\n`/feedback [nội dung]` - Gửi phản hồi về từ thiếu/lỗi\n`/help` - Hiển thị hướng dẫn này',
+                    value: '`/tratu [từ]` - Tra cứu từ điển\n`/feedback [nội dung]` - Gửi phản hồi về từ thiếu/lỗi\n`/noitu_mode [bot|pvp]` - Đặt chế độ chơi của kênh\n`/help` - Hiển thị hướng dẫn này',
                     inline: false
                 },
                 {
                     name: '👮 Moderator/Admin',
-                    value: '`/viewfeedback` - Xem phản hồi từ người dùng',
+                    value: '`/viewfeedback` - Xem phản hồi từ người dùng\n`/strict_mode [true/false]` - Bật/tắt chế độ nghiêm ngặt (từ không có trong từ điển coi là sai)',
                     inline: false
                 },
                 {
                     name: '🎮 Cách chơi',
-                    value: 'Nhập từ gồm 2 chữ, từ đầu phải trùng với từ cuối của bot\nVí dụ: Bot nói "**nối từ**" → Bạn phải nói từ bắt đầu bằng "**từ**"',
+                    value: 'Nhập từ gồm 2 chữ.\n• Chế độ bot: bot sẽ đưa ra từ tiếp theo.\n• Chế độ PvP: bot chỉ kiểm tra và thả reaction (✅ đúng, ❌ sai/ko có từ, 🔴 đã lặp, ⚠️ sai format).\n• Chế độ nghiêm ngặt: từ không có trong từ điển sẽ được coi là sai thay vì chỉ hiện ❓.',
                     inline: false
                 }
             )
@@ -425,6 +454,42 @@ client.on('interactionCreate', async interaction => {
             });
             logger.error(`Failed to get feedbacks: ${error.message}`);
         }
+    } else if (commandName === 'noitu_mode') {
+        if (interaction.channel.isDMBased()) {
+            await interaction.reply({ content: 'Lệnh này chỉ dùng trong kênh server.', ephemeral: true });
+            return;
+        }
+        const hasPerm = interaction.member?.permissions?.has('ManageGuild') || interaction.member?.permissions?.has('Administrator');
+        if (!hasPerm) {
+            await interaction.reply({ content: '❌ Bạn cần quyền Manage Server để đổi chế độ.', ephemeral: true });
+            return;
+        }
+        const mode = interaction.options.getString('mode');
+        const channelId = interaction.channel.id.toString();
+        const channels = db.read('channels') || {};
+        const ch = channels[channelId] || {};
+        ch.mode = mode;
+        channels[channelId] = ch;
+        db.store('channels', channels);
+        const label = mode === 'pvp' ? 'user vs user (PvP)' : 'user vs bot';
+        await interaction.reply({ content: `✅ Đã đặt chế độ cho kênh này: **${label}**.`, ephemeral: false });
+        
+        // Show current word after mode change
+        const currentWord = getCurrentWord(interaction);
+        if (currentWord) {
+            await interaction.channel.send(`Từ hiện tại: **${currentWord}**`);
+        }
+    } else if (commandName === 'strict_mode') {
+        const hasPerm = interaction.member?.permissions?.has('ManageGuild') || interaction.member?.permissions?.has('Administrator');
+        if (!hasPerm) {
+            await interaction.reply({ content: '❌ Bạn cần quyền Manage Server để đổi chế độ nghiêm ngặt.', ephemeral: true });
+            return;
+        }
+        const enabled = interaction.options.getBoolean('enabled');
+        data.strictMode = enabled;
+        fs.writeFileSync(path.join(__dirname, 'data.json'), JSON.stringify(data, null, 2), 'utf8');
+        const status = enabled ? 'BẬT' : 'TẮT';
+        await interaction.reply({ content: `✅ Đã ${status} chế độ nghiêm ngặt. Từ không có trong từ điển sẽ ${enabled ? 'được coi là sai' : 'chỉ hiện emoji ❓'}.`, ephemeral: false });
     }
 });
 
@@ -470,12 +535,45 @@ client.on('messageCreate', async message => {
                 }
                 logger.info(`Processing channel message from ${message.author.tag}: '${userMessage}'`);
                 const response = noituBot.checkChannel(userMessage, channelId, userId);
-                const embed = new EmbedBuilder()
-                    .setDescription(response.message)
-                    .setColor(response.type === 'success' ? 0x00FF00 : response.type === 'error' ? 0xFF0000 : 0x0099FF);
-                await message.reply({ embeds: [embed] });
-                if (response.currentWord) {
-                    await message.channel.send(`Từ hiện tại: **${response.currentWord}**`);
+                const channels = db.read('channels') || {};
+                const ch = channels[channelId] || {};
+                const mode = ch.mode || 'bot';
+
+                if (mode === 'pvp') {
+                    // React based on response code
+                    try {
+                        if (response.code === 'ok') {
+                            await message.react('✅');
+                        } else if (response.code === 'mismatch') {
+                            await message.react('❌');
+                            await message.reply({ content: `${response.message}\nTừ hiện tại: **${response.currentWord}**`, ephemeral: true });
+                        } else if (response.code === 'repeated') {
+                            await message.react('🔴');
+                            await message.reply({ content: `Từ này đã được trả lời trước đó!\nTừ hiện tại: **${response.currentWord}**` });
+                        } else if (response.code === 'not_in_dict') {
+                            if (data.strictMode) {
+                                await message.react('❌');
+                                await message.reply({ content: `**Từ không có trong bộ từ điển!** Vui lòng thử lại.\nTừ hiện tại: **${response.currentWord}**`, ephemeral: true });
+                            } else {
+                                await message.react('❓');
+                            }
+                        } else if (response.code === 'invalid_format') {
+                            await message.react('⚠️');
+                            await message.reply({ content: `${response.message}\nTừ hiện tại: **${response.currentWord}**`, ephemeral: true });
+                        } else {
+                            await message.react('ℹ️');
+                        }
+                    } catch (e) {
+                        logger.error(`Failed to react in PvP mode: ${e.message}`);
+                    }
+                } else {
+                    const embed = new EmbedBuilder()
+                        .setDescription(response.message)
+                        .setColor(response.type === 'success' ? 0x00FF00 : response.type === 'error' ? 0xFF0000 : 0x0099FF);
+                    await message.reply({ embeds: [embed] });
+                    if (response.currentWord) {
+                        await message.channel.send(`Từ hiện tại: **${response.currentWord}**`);
+                    }
                 }
                 logger.info(`Sent channel response to ${message.author.tag}`);
             } else {
