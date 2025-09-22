@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActivityType } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActivityType, ChannelType, MessageFlags, Partials } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const { setupLogger, GAME_CONSTANTS, PERMISSIONS, PATHS } = require('./utils');
@@ -16,7 +16,12 @@ class DiscordBot {
                 GatewayIntentBits.MessageContent,
                 GatewayIntentBits.DirectMessages
             ],
-            partials: ['Channel'] // Cần để nhận DM
+            partials: [
+                Partials.Channel,
+                Partials.Message,
+                Partials.User,
+                Partials.GuildMember
+            ] // Cần để nhận DM và partial messages
         });
 
         this.pendingNewGame = new Set();
@@ -55,7 +60,20 @@ class DiscordBot {
     setupEventHandlers() {
         this.client.once('clientReady', () => this.onReady());
         this.client.on('interactionCreate', (interaction) => this.onInteractionCreate(interaction));
-        this.client.on('messageCreate', (message) => this.onMessageCreate(message));
+        
+        // Log when bot receives any message with debug info
+        this.client.on('messageCreate', async (message) => {
+            try {
+                // Check if message is partial and fetch if needed
+                if (message.partial) {
+                    await message.fetch();
+                }
+                
+                await this.onMessageCreate(message);
+            } catch (error) {
+                logger.error(`Error in messageCreate event: ${error.message}`);
+            }
+        });
     }
 
     async onReady() {
@@ -121,18 +139,6 @@ class DiscordBot {
                         ]
                     }
                 ]
-            },
-            {
-                name: 'strict_mode',
-                description: '[ADMIN] Bật/tắt chế độ nghiêm ngặt (từ không có trong từ điển coi là sai)',
-                options: [
-                    {
-                        name: 'enabled',
-                        description: 'Bật (true) hoặc tắt (false) chế độ nghiêm ngặt',
-                        type: 5, // BOOLEAN
-                        required: true
-                    }
-                ]
             }
         ];
     }
@@ -148,8 +154,16 @@ class DiscordBot {
         });
     }
 
+    // Helper function to check if channel is DM
+    isDirectMessage(channel) {
+        if (!channel) {
+            return false;
+        }
+        return channel.type === ChannelType.DM || channel.type === ChannelType.GroupDM;
+    }
+
     getCurrentWord(interaction) {
-        if (interaction.channel.isDMBased()) {
+        if (this.isDirectMessage(interaction.channel)) {
             const users = db.read('users') || {};
             const userData = users[interaction.user.id] || {};
             return userData.word;
@@ -223,6 +237,11 @@ class DiscordBot {
     }
 
     async handleNoituAdd(interaction) {
+        if (this.isDirectMessage(interaction.channel)) {
+            await interaction.reply({ content: '❌ Lệnh này chỉ dùng trong kênh server.', ephemeral: true });
+            return;
+        }
+        
         const channelId = interaction.channel.id.toString();
         if (this.data.channelAllowlist.includes(channelId)) {
             await interaction.reply({ content: '> **Phòng hiện tại đã có trong cơ sở dữ liệu!**', ephemeral: false });
@@ -239,6 +258,11 @@ class DiscordBot {
     }
 
     async handleNoituRemove(interaction) {
+        if (this.isDirectMessage(interaction.channel)) {
+            await interaction.reply({ content: '❌ Lệnh này chỉ dùng trong kênh server.', ephemeral: true });
+            return;
+        }
+        
         const channelId = interaction.channel.id.toString();
         if (this.data.channelAllowlist.includes(channelId)) {
             this.data.channelAllowlist = this.data.channelAllowlist.filter(id => id !== channelId);
@@ -271,12 +295,12 @@ class DiscordBot {
                 },
                 {
                     name: '👮 Moderator/Admin',
-                    value: '`/viewfeedback` - Xem phản hồi từ người dùng\n`/strict_mode [true/false]` - Bật/tắt chế độ nghiêm ngặt (từ không có trong từ điển coi là sai)',
+                    value: '`/viewfeedback` - Xem phản hồi từ người dùng',
                     inline: false
                 },
                 {
                     name: '🎮 Cách chơi',
-                    value: 'Nhập từ gồm 2 chữ.\n• Chế độ bot: bot sẽ đưa ra từ tiếp theo.\n• Chế độ PvP: bot chỉ kiểm tra và thả reaction (✅ đúng, ❌ sai/ko có từ, 🔴 đã lặp, ⚠️ sai format).\n• Chế độ nghiêm ngặt: từ không có trong từ điển sẽ được coi là sai thay vì chỉ hiện ❓.',
+                    value: 'Nhập từ gồm 2 chữ.\n• Chế độ bot: bot sẽ đưa ra từ tiếp theo.\n• Chế độ PvP: bot chỉ kiểm tra và thả reaction (✅ đúng, ❌ sai/ko có từ, 🔴 đã lặp, ⚠️ sai format).\n• Từ không có trong từ điển sẽ được coi là sai.',
                     inline: false
                 }
             )
@@ -324,7 +348,16 @@ class DiscordBot {
     async handleNewgame(interaction) {
         const userId = interaction.user.id;
 
-        if (interaction.channel.isDMBased()) {
+        // Check if interaction.channel exists and is DM
+        if (!interaction.channel) {
+            await interaction.reply({
+                content: '❌ Không thể xác định loại kênh. Vui lòng thử lại.',
+                ephemeral: true
+            });
+            return;
+        }
+
+        if (this.isDirectMessage(interaction.channel)) {
             const newWord = gameLogic.resetUserGame(userId);
             await interaction.reply({
                 content: `🎮 **Game mới đã bắt đầu!**\nTừ hiện tại: **${newWord}**`,
@@ -399,7 +432,7 @@ class DiscordBot {
 
     async handleStats(interaction) {
         const userId = interaction.user.id;
-        if (interaction.channel.isDMBased()) {
+        if (this.isDirectMessage(interaction.channel)) {
             const users = db.read('users') || {};
             const dataUser = users[userId] || { word: null, history: [], currentStreak: 0, bestStreak: 0, wins: 0, wrongCount: 0 };
             const heading = `Thống kê của ${interaction.user}`;
@@ -426,6 +459,11 @@ class DiscordBot {
     }
 
     async handleFeedback(interaction) {
+        if (this.isDirectMessage(interaction.channel)) {
+            await interaction.reply({ content: '❌ Lệnh này chỉ dùng trong kênh server.', ephemeral: true });
+            return;
+        }
+        
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId('select_feedback_type')
             .setPlaceholder('Chọn loại phản hồi')
@@ -458,17 +496,17 @@ class DiscordBot {
     }
 
     async handleViewFeedback(interaction) {
+        if (this.isDirectMessage(interaction.channel)) {
+            await interaction.reply({ content: '❌ Lệnh này chỉ dùng trong kênh server.', ephemeral: true });
+            return;
+        }
+        
         const hasModPermissions = interaction.member?.permissions?.has(PERMISSIONS.MODERATE_MEMBERS) ||
             interaction.member?.permissions?.has(PERMISSIONS.ADMINISTRATOR) ||
             interaction.member?.permissions?.has(PERMISSIONS.MANAGE_MESSAGES) ||
             interaction.member?.permissions?.has(PERMISSIONS.MANAGE_GUILD);
 
-        const isDMOwner = interaction.channel.isDMBased() &&
-            interaction.user.id === '319857617060478976'; // Replace with your user ID if needed
-
-        const canView = hasModPermissions || isDMOwner;
-
-        if (!canView) {
+        if (!hasModPermissions) {
             await interaction.reply({
                 content: '❌ Bạn không có quyền sử dụng lệnh này. Chỉ Moderator/Admin mới có thể xem phản hồi.',
                 ephemeral: true
@@ -531,7 +569,7 @@ class DiscordBot {
     }
 
     async handleNoituMode(interaction) {
-        if (interaction.channel.isDMBased()) {
+        if (this.isDirectMessage(interaction.channel)) {
             await interaction.reply({ content: 'Lệnh này chỉ dùng trong kênh server.', ephemeral: true });
             return;
         }
@@ -741,7 +779,7 @@ class DiscordBot {
 
         const userId = interaction.user.id;
         const username = interaction.user.tag;
-        const channelId = interaction.channel.isDMBased() ? null : interaction.channel.id;
+        const channelId = this.isDirectMessage(interaction.channel) ? null : interaction.channel.id;
 
         const typeLabels = {
             missing_word: 'Từ còn thiếu',
@@ -779,8 +817,7 @@ class DiscordBot {
         const userId = message.author.id;
 
         try {
-            if (message.channel.isDMBased()) {
-                logger.info(`Processing DM from ${message.author.tag}: '${userMessage}'`);
+            if (this.isDirectMessage(message.channel)) {
                 const response = gameLogic.checkUser(userMessage, userId);
                 const embed = new EmbedBuilder()
                     .setDescription(response.message)
@@ -789,7 +826,6 @@ class DiscordBot {
                 if (response.currentWord) {
                     await message.channel.send(`Từ hiện tại: **${response.currentWord}**`);
                 }
-                logger.info(`Sent DM response to ${message.author.tag}`);
             } else {
                 if (this.data.channelAllowlist.includes(channelId)) {
                     if (this.pendingNewGame.has(channelId)) {
@@ -807,7 +843,6 @@ class DiscordBot {
                         }
                         return;
                     }
-                    logger.info(`Processing channel message from ${message.author.tag}: '${userMessage}'`);
                     const response = gameLogic.checkChannel(userMessage, channelId, userId);
                     const channels = db.read('channels') || {};
                     const ch = channels[channelId] || {};
@@ -824,7 +859,6 @@ class DiscordBot {
                             await message.channel.send(`Từ hiện tại: **${response.currentWord}**`);
                         }
                     }
-                    logger.info(`Sent channel response to ${message.author.tag}`);
                 }
             }
         } catch (error) {
