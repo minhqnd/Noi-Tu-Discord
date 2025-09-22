@@ -1,92 +1,248 @@
-# Moi Nối Từ — Bot Discord Game Nối Từ Tiếng Việt
+# 🎮 Moi Nối Từ - Discord Bot
 
-Moi Nối Từ là bot Discord hỗ trợ chơi game nối từ Tiếng Việt với từ gồm 2 chữ. Bot cung cấp hai chế độ chơi (user vs bot và PvP), cùng các tiện ích tra cứu, thống kê và quản lý phản hồi nhằm nâng cao trải nghiệm người dùng.
+[![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
-![Ảnh minh họa tổng quan](https://example.com/screenshots/overview.png)
+Bot Discord chơi game nối từ tiếng Việt với từ gồm 2 chữ. Hỗ trợ chơi cả trong kênh server và tin nhắn riêng (DM).
 
-## Tính Năng
+![Game Demo](./images/game-demo.png)
+*Ảnh demo game nối từ trong kênh Discord*
 
-### 1) Game nối từ cốt lõi
-- Luật chơi: người chơi nhập một từ Tiếng Việt gồm 2 chữ; người kế tiếp phải dùng chữ cuối của từ trước làm chữ đầu cho từ mới.
-- Xác thực: bot kiểm tra định dạng hợp lệ, tra cứu trong từ điển và ngăn dùng lại từ đã xuất hiện trong ván hiện tại.
+## ✨ Tính năng
 
-![Gameplay](https://example.com/screenshots/gameplay.png)
+### 🎯 Game Nối Từ
+- **Từ điển tiếng Việt**: Sử dụng bộ từ điển phong phú với gần 70,000 từ ghép
+- **2 chế độ chơi**:
+  - **Bot vs User**: Bot tự động tìm từ tiếp theo
+  - **PvP (User vs User)**: Người chơi thi đấu với nhau
+- **DM Support**: Có thể chơi riêng với bot qua tin nhắn trực tiếp
+- **Thống kê cá nhân**: Theo dõi chuỗi thắng, kỷ lục, số trận thắng
 
-### 2) Chế độ chơi linh hoạt
-- User vs Bot: bot tự động trả lời bằng một từ hợp lệ sau lượt của người chơi.
-- PvP (Player vs Player): bot đóng vai trò trọng tài, phản hồi bằng reaction để thông báo kết quả: ✅ đúng, ❌ sai/không có từ, 🔴 đã lặp, ⚠️ sai định dạng.
+### 🛠️ Quản Lý Kênh
+- **Thêm/Xóa kênh**: Admin có thể thêm kênh để bot hoạt động
+- **Chế độ linh hoạt**: Chuyển đổi giữa bot mode và PvP mode
+- **Reset game**: Bắt đầu lại từ đầu bất cứ lúc nào
 
-![Chế độ chơi](https://example.com/screenshots/modes.png)
+### 📚 Tiện Ích
+- **Tra cứu từ điển**: Tích hợp API từ điển tiếng Việt
+- **Hỗ trợ nhiều định dạng**: Xử lý dấu tiếng Việt chuẩn
 
-### 3) Tra cứu từ điển
-Sử dụng lệnh `/tratu` để tra cứu nhanh định nghĩa/ý nghĩa của từ Tiếng Việt.
+### 👮 Quản Trị Viên
+- **Quản lý kênh**: Thêm/xóa kênh, đổi chế độ chơi
+- **Logs chi tiết**: Theo dõi hoạt động bot
 
-![Tra cứu từ điển](https://example.com/screenshots/dictionary.png)
+## 🚀 Cài Đặt
 
-### 4) Thống kê người chơi
-Lệnh `/stats` hiển thị các chỉ số cá nhân trong kênh: chuỗi hiện tại, kỷ lục chuỗi, và số trận thắng.
-
-![Thống kê](https://example.com/screenshots/stats.png)
-
-### 5) Hệ thống phản hồi (feedback)
-- Lệnh `/feedback` mở menu lựa chọn loại phản hồi: “Từ còn thiếu”, “Lỗi”, hoặc “Đóng góp tính năng”.
-- Sau khi chọn, một biểu mẫu (modal) xuất hiện để nhập nội dung chi tiết; phản hồi được lưu kèm loại để thuận tiện theo dõi.
-
-![Gửi phản hồi](https://example.com/screenshots/feedback-send.png)
-
-### 6) Quản trị phản hồi (dành cho Admin/Mod)
-- Lệnh `/viewfeedback` hiển thị danh sách phản hồi gần nhất kèm dropdown để chọn xem chi tiết.
-- Màn hình chi tiết cho phép: đánh dấu “Đã giải quyết”, “Xóa”, hoặc “Quay lại” danh sách.
-
-![Quản lý phản hồi](https://example.com/screenshots/feedback-admin.png)
-
-## Hệ Thống Lệnh
-
-### Nhóm lệnh trò chơi
-- `/noitu_add` — Thêm phòng cho game nối từ.
-- `/noitu_remove` — Xóa phòng khỏi game nối từ.
-- `/newgame` — Khởi tạo ván mới.
-	- Trong DM: reset ván của riêng bạn và sinh từ bắt đầu mới ngay lập tức.
-	- Trong kênh server: khởi tạo một yêu cầu reset có thể hủy. Bot sẽ hiển thị nút “Hủy” và chờ trong khoảng thời gian cấu hình; nếu không ai hủy, ván sẽ được reset và bot thông báo từ mới.
-	- Dùng để “bỏ qua” từ hiện tại khi bế tắc hoặc muốn đổi ván mới.
-
-![Newgame Flow](https://example.com/screenshots/newgame.png)
-- `/stats` — Xem thống kê cá nhân.
-
-### Nhóm lệnh tiện ích
-- `/tratu [từ]` — Tra cứu từ điển.
-- `/feedback` — Gửi phản hồi (qua menu + modal).
-- `/noitu_mode [bot|pvp]` — Đặt chế độ chơi cho kênh.
-- `/help` — Hiển thị hướng dẫn.
-
-### Nhóm lệnh quản trị
-- `/viewfeedback` — Xem và quản lý phản hồi người dùng.
-
-## Cài Đặt & Chạy
-
-### Yêu cầu
-- Node.js (phiên bản LTS khuyến nghị)
-- npm
+### Yêu cầu hệ thống
+- Node.js >= 16.0.0
+- npm hoặc yarn
+- Tài khoản Discord Bot Token
 
 ### Các bước cài đặt
-1) Clone repository:
-```bash
-git clone https://github.com/minhqnd/Noi-Tu-Discord.git
-cd Noi-Tu-Discord
+
+1. **Clone repository**
+   ```bash
+   git clone https://github.com/minhqnd/noi-tu-discord-bot.git
+   cd noi-tu-discord-bot
+   ```
+
+2. **Cài đặt dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Tạo file .env**
+   ```env
+   DISCORD_BOT_TOKEN=your_bot_token_here
+   ```
+
+4. **Khởi chạy bot**
+   ```bash
+   npm start
+   ```
+
+### ⚙️ Cấu Hình Bot Discord
+
+1. Truy cập [Discord Developer Portal](https://discord.com/developers/applications)
+2. Tạo ứng dụng mới hoặc chọn ứng dụng hiện có
+3. Chuyển đến tab "Bot"
+4. Sao chép Bot Token và paste vào file `.env`
+
+#### 🔐 Quyền cần thiết cho Bot
+Bot cần các quyền sau trong server:
+- ✅ Read Messages
+- ✅ Send Messages
+- ✅ Use Slash Commands
+- ✅ Read Message History
+- ✅ Add Reactions (cho PvP mode)
+
+![Bot Permissions](./images/bot-permissions.png)
+*Ảnh hướng dẫn cấu hình quyền cho bot*
+
+## 🎮 Cách Chơi
+
+### Cơ Bản
+1. **Thêm kênh**: Sử dụng `/noitu_add` để thêm kênh chơi game
+2. **Bắt đầu**: Bot sẽ tự động bắt đầu với từ đầu tiên
+3. **Nối từ**: Nhập từ gồm 2 chữ bắt đầu bằng chữ cuối của từ trước
+4. **Thắng**: Khi đối phương/bot không tìm được từ tiếp theo
+
+### Ví dụ
 ```
-2) Cài đặt dependencies:
-```bash
-npm install
-```
-3) Khai báo biến môi trường:
-Tạo file `.env` và thêm token của bot:
-```
-DISCORD_TOKEN=<token_bot_discord_của_bạn>
-```
-4) Chạy bot:
-```bash
-npm start
+Bot: thế chân
+User: chân trời
+Bot: trời xanh
+User: xanh lục
+...
 ```
 
-## Đóng Góp
-Đóng góp được hoan nghênh. Vui lòng mở issue để báo lỗi/đề xuất, hoặc gửi pull request với mô tả chi tiết thay đổi.
+### Chế Độ PvP
+- Bot chỉ kiểm tra và thả reaction:
+  - ✅ Từ đúng
+  - ❌ Từ không nối được
+  - 🔴 Từ đã lặp
+  - ⚠️ Sai format
+
+![PvP Mode](./images/pvp-mode.png)
+*Ảnh demo chế độ PvP với reactions*
+
+### Chơi Trong DM
+- Gửi tin nhắn trực tiếp cho bot
+- Bot sẽ phản hồi và chơi riêng với bạn
+
+![DM Game](./images/dm-game.png)
+*Ảnh demo chơi trong DM*
+
+## 📋 Commands
+
+### 🎯 Commands Chính
+| Command | Mô tả |
+|---------|--------|
+| `/noitu_add` | Thêm kênh để bot hoạt động |
+| `/noitu_remove` | Xóa kênh khỏi game |
+| `/newgame` | Bắt đầu game mới |
+| `/stats` | Xem thống kê cá nhân |
+| `/help` | Hiển thị hướng dẫn |
+
+### 📚 Tiện Ích
+| Command | Mô tả |
+|---------|--------|
+| `/tratu [từ]` | Tra cứu từ điển |
+| `/noitu_mode [mode]` | Đổi chế độ chơi |
+
+## 🏗️ Kiến Trúc Code
+
+```
+src/
+├── discordBot.js      # Bot chính, xử lý Discord events
+├── gameEngine.js      # Logic game core
+├── gameLogic.js       # Interface giữa bot và game engine
+├── db.js             # Database layer (JSON file)
+├── wordProcessing.js # Xử lý từ tiếng Việt
+├── utils.js          # Constants và utilities
+└── assets/
+    └── wordPairs.json # Bộ từ điển (70,000+ từ)
+```
+
+### 🗂️ Cấu Trúc Dữ Liệu
+
+**data.json**:
+```json
+{
+  "channels": {
+    "channel_id": {
+      "word": "từ hiện tại",
+      "history": ["từ đã dùng"],
+      "players": {
+        "user_id": {
+          "currentStreak": 5,
+          "bestStreak": 12,
+          "wins": 3
+        }
+      },
+      "mode": "bot"
+    }
+  },
+  "users": {
+    "user_id": {
+      "word": "từ hiện tại",
+      "history": ["từ đã dùng"],
+      "currentStreak": 8,
+      "bestStreak": 15,
+      "wins": 5
+    }
+  },
+  "channelAllowlist": ["channel_id_1", "channel_id_2"]
+}
+```
+
+## 🔧 Phát Triển
+
+### Thêm Từ Mới
+Từ điển được lưu trong `src/assets/wordPairs.json`. Để thêm từ mới:
+
+1. Thêm vào file JSON theo format:
+   ```json
+   {
+     "từ_đầu": ["từ_cuối_1", "từ_cuối_2"]
+   }
+   ```
+
+2. Chạy script normalize:
+   ```bash
+   node src/assets/normalize_wordpairs.js
+   ```
+
+### Testing
+```bash
+# Chạy bot ở chế độ development
+npm run dev
+
+# Kiểm tra logs
+tail -f bot.log
+```
+
+## 📊 Thống Kê & Logs
+
+### Logs
+Bot ghi log chi tiết vào file `bot.log`:
+- Game events (thắng/thua)
+- User interactions
+- Errors và warnings
+
+### Thống Kê
+- **Chuỗi hiện tại**: Số từ nối liên tiếp trong game hiện tại
+- **Kỷ lục**: Chuỗi dài nhất từng đạt được
+- **Số trận thắng**: Tổng số lần thắng
+
+## 🤝 Đóng Góp
+
+Chúng tôi hoan nghênh mọi đóng góp!
+
+1. Fork project
+2. Tạo feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Tạo Pull Request
+
+### 📝 Báo Lỗi & Đề Xuất
+- Tạo [GitHub Issue](https://github.com/minhqnd/noi-tu-discord-bot/issues)
+
+## 📄 License
+
+Dự án này được phân phối dưới giấy phép MIT. Xem file `LICENSE` để biết thêm chi tiết.
+
+## 🙏 Lời Cảm Ơn
+
+- Bộ từ điển từ [minhqnd.com](https://minhqnd.com)
+- Cộng đồng Discord.js
+- Những người đóng góp và tester
+
+---
+
+**Tạo bởi [minhqnd](https://github.com/minhqnd)** với ❤️ cho cộng đồng tiếng Việt
+
+![Bot Avatar](./images/bot-avatar.png)
+*Avatar của bot Moi Nối Từ*</content>
+<parameter name="filePath">/Users/minhqnd/CODE/Noi-Tu-Discord/README.md
