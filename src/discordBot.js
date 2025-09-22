@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ActivityType } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActivityType } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const { setupLogger, GAME_CONSTANTS, PERMISSIONS, PATHS } = require('./utils');
@@ -100,15 +100,7 @@ class DiscordBot {
             },
             {
                 name: 'feedback',
-                description: 'Gửi phản hồi về từ thiếu, lỗi hoặc đề xuất',
-                options: [
-                    {
-                        name: 'content',
-                        description: 'Nội dung phản hồi (từ thiếu, lỗi, đề xuất...)',
-                        type: 3, // STRING
-                        required: true
-                    }
-                ]
+                description: 'Gửi phản hồi về từ thiếu, lỗi hoặc đề xuất'
             },
             {
                 name: 'viewfeedback',
@@ -212,6 +204,8 @@ class DiscordBot {
         } else if (interaction.isStringSelectMenu()) {
             if (interaction.customId === 'select_feedback') {
                 await this.handleSelectFeedback(interaction);
+            } else if (interaction.customId === 'select_feedback_type') {
+                await this.handleSelectFeedbackType(interaction);
             }
         } else if (interaction.isButton()) {
             if (interaction.customId.startsWith('edit_feedback_')) {
@@ -220,6 +214,10 @@ class DiscordBot {
                 await this.handleDeleteFeedback(interaction);
             } else if (interaction.customId === 'back_to_feedback_list') {
                 await this.handleBackToFeedbackList(interaction);
+            }
+        } else if (interaction.isModalSubmit()) {
+            if (interaction.customId.startsWith('feedback_modal_')) {
+                await this.handleFeedbackModalSubmit(interaction);
             }
         }
     }
@@ -428,29 +426,35 @@ class DiscordBot {
     }
 
     async handleFeedback(interaction) {
-        const content = interaction.options.getString('content');
-        const userId = interaction.user.id;
-        const username = interaction.user.tag;
-        const channelId = interaction.channel.isDMBased() ? null : interaction.channel.id;
+        const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId('select_feedback_type')
+            .setPlaceholder('Chọn loại phản hồi')
+            .addOptions([
+                {
+                    label: 'Từ còn thiếu',
+                    description: 'Phản hồi về từ chưa có trong từ điển',
+                    value: 'missing_word'
+                },
+                {
+                    label: 'Lỗi',
+                    description: 'Báo lỗi trong bot hoặc game',
+                    value: 'bug'
+                },
+                {
+                    label: 'Đóng góp tính năng',
+                    description: 'Đề xuất tính năng mới hoặc cải thiện',
+                    value: 'feature_request'
+                }
+            ]);
 
-        try {
-            const feedbackId = gameLogic.storeFeedback(userId, username, content, channelId);
-            const embed = new EmbedBuilder()
-                .setTitle('✅ Phản hồi đã được gửi')
-                .setDescription(`Cảm ơn bạn đã gửi phản hồi! Chúng tôi sẽ xem xét và cải thiện.\n\n**ID phản hồi:** ${feedbackId}`)
-                .setColor(0x00FF00)
-                // .setFooter({ text: 'Phản hồi của bạn rất quan trọng đối với chúng tôi!' })
-                .setTimestamp();
+        const row = new ActionRowBuilder().addComponents(selectMenu);
 
-            await interaction.reply({ embeds: [embed], ephemeral: true });
-            logger.info(`Feedback received from ${username}: ${content.substring(0, 100)}...`);
-        } catch (error) {
-            await interaction.reply({
-                content: '❌ Có lỗi xảy ra khi gửi phản hồi. Vui lòng thử lại sau.',
-                ephemeral: true
-            });
-            logger.error(`Failed to store feedback: ${error.message}`);
-        }
+        const embed = new EmbedBuilder()
+            .setTitle('📝 Gửi phản hồi')
+            .setDescription('Chọn loại phản hồi bạn muốn gửi.')
+            .setColor(0x00FF00);
+
+        await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
     }
 
     async handleViewFeedback(interaction) {
@@ -598,6 +602,28 @@ class DiscordBot {
         await interaction.update({ embeds: [embed], components: [row] });
     }
 
+    async handleSelectFeedbackType(interaction) {
+        const feedbackType = interaction.values[0];
+
+        const modal = new ModalBuilder()
+            .setCustomId(`feedback_modal_${feedbackType}`)
+            .setTitle('Gửi phản hồi');
+
+        const contentInput = new TextInputBuilder()
+            .setCustomId('feedback_content')
+            .setLabel('Nội dung phản hồi')
+            .setStyle(TextInputStyle.Paragraph)
+            .setPlaceholder('Mô tả chi tiết phản hồi của bạn...')
+            .setRequired(true)
+            .setMaxLength(1000);
+
+        const firstActionRow = new ActionRowBuilder().addComponents(contentInput);
+
+        modal.addComponents(firstActionRow);
+
+        await interaction.showModal(modal);
+    }
+
     async handleResolveFeedback(interaction) {
         const feedbackId = interaction.customId.split('_')[2];
         // Mark as resolved
@@ -707,6 +733,42 @@ class DiscordBot {
         const row = new ActionRowBuilder().addComponents(selectMenu);
 
         await interaction.update({ embeds: [embed], components: [row] });
+    }
+
+    async handleFeedbackModalSubmit(interaction) {
+        const feedbackType = interaction.customId.split('_')[2];
+        const content = interaction.fields.getTextInputValue('feedback_content');
+
+        const userId = interaction.user.id;
+        const username = interaction.user.tag;
+        const channelId = interaction.channel.isDMBased() ? null : interaction.channel.id;
+
+        const typeLabels = {
+            missing_word: 'Từ còn thiếu',
+            bug: 'Lỗi',
+            feature_request: 'Đóng góp tính năng'
+        };
+
+        const typeLabel = typeLabels[feedbackType] || 'Khác';
+        const fullContent = `[${typeLabel}] ${content}`;
+
+        try {
+            const feedbackId = gameLogic.storeFeedback(userId, username, fullContent, channelId);
+            const embed = new EmbedBuilder()
+                .setTitle('✅ Phản hồi đã được gửi')
+                .setDescription(`Cảm ơn bạn đã gửi phản hồi! Chúng tôi sẽ xem xét và cải thiện.\n\n**Loại:** ${typeLabel}\n**ID phản hồi:** ${feedbackId}`)
+                .setColor(0x00FF00)
+                .setTimestamp();
+
+            await interaction.reply({ embeds: [embed], ephemeral: true });
+            logger.info(`Feedback received from ${username}: ${fullContent.substring(0, 100)}...`);
+        } catch (error) {
+            await interaction.reply({
+                content: '❌ Có lỗi xảy ra khi gửi phản hồi. Vui lòng thử lại sau.',
+                ephemeral: true
+            });
+            logger.error(`Failed to store feedback: ${error.message}`);
+        }
     }
 
     async onMessageCreate(message) {
