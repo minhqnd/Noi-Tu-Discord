@@ -54,7 +54,7 @@ for (const firstWord in wordPairs) {
 function getnoitu(playerWord) {
   const normalizedInput = normalizeVietnamese(playerWord);
   if (normalizedInput.split(' ').length !== 2) {
-    return 'Từ bắt buộc phải gồm 2 từ';
+    return 'Từ bắt buộc phải gồm 2 từ va ';
   } else {
     const lastWord = normalizedInput.split(' ')[1];
     const possibleSecondWords = wordPairs[lastWord] || [];

@@ -92,7 +92,8 @@ function checkChannel(playerWord, idChannel, idUser) {
         const channels = db.read('channels') || {};
         const channelData = channels[idChannel] || {};
         const currentWord = channelData.word;
-        return { type: 'error', message: 'Từ bắt buộc phải gồm 2 từ', currentWord: currentWord };
+        const firstWord = currentWord ? firstWord(currentWord) : 'từ';
+        return { type: 'error', message: `Từ bắt buộc phải gồm 2 từ và bắt đầu bằng **"${firstWord}"**`, currentWord: currentWord };
     }
 
     const channels = db.read('channels') || {};
@@ -163,7 +164,8 @@ function checkChannel(playerWord, idChannel, idUser) {
         // update user's best and wins - USER WINS when bot can't continue!
         const best = Math.max(userStats.bestStreak || 0, nextStreak);
         const wins = (userStats.wins || 0) + 1;
-        players[idUser] = { currentStreak: 0, bestStreak: best, wins, wrongCount: 0 };
+        // Don't reset currentStreak after win - keep the streak going
+        players[idUser] = { currentStreak: nextStreak, bestStreak: best, wins, wrongCount: 0 };
         channelData = { word: newStart, history: [], players };
         db.store('channels', { [idChannel]: channelData });
         logger.info(`Channel [${idChannel}] WIN '${playerWord}' -> '${newStart}' [${(Date.now() - startTime) / 1000}s]`);
@@ -206,7 +208,8 @@ function checkUser(playerWord, idUser) {
     const normalizedPlayer = normalizeVietnamese(playerWord);
 
     if (normalizedPlayer.split(' ').length !== 2) {
-        return { type: 'error', message: 'Từ bắt buộc phải gồm 2 từ' };
+        const firstWord = currentWord ? firstWord(currentWord) : 'từ';
+        return { type: 'error', message: `Từ bắt buộc phải gồm 2 từ và bắt đầu bằng **"${firstWord}"**` };
     }
 
     const users = db.read('users') || {};
@@ -278,11 +281,12 @@ function checkUser(playerWord, idUser) {
         bestStreak = Math.max(bestStreak || 0, nextStreak);
         wins = (wins || 0) + 1;
         currentWord = newWord();
-        userData = { word: currentWord, history: [], currentStreak: 0, bestStreak, wins, wrongCount: 0 };
+        // Don't reset currentStreak after win - keep the streak going
+        userData = { word: currentWord, history: [], currentStreak: nextStreak, bestStreak, wins, wrongCount: 0 };
         db.store('users', { [idUser]: userData });
         logger.info(`DM: [${idUser}] WIN '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
         const statsLineDM = formatStatsLine(idUser, { currentStreak: nextStreak, bestStreak, isDM: true });
-        return { type: 'success', message: `${statsLineDM}\n**BẠN ĐÃ THẮNG!** Từ cuối "${lastWord(normalizedPlayer)}" không còn từ nào để nối tiếp.`, currentWord: currentWord };
+        return { type: 'success', message: `${statsLineDM}\n**BẠN ĐÃ THẮNG!** Từ tiếp theo **"${normalizedPlayer}"** không còn từ nào để nối tiếp.`, currentWord: currentWord };
     }
 
     if (uniqueWord(lastWord(nextWord))) {
@@ -293,7 +297,7 @@ function checkUser(playerWord, idUser) {
         db.store('users', { [idUser]: userData });
         logger.info(`DM: [${idUser}] LOSS '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
         const statsLineDM = formatStatsLine(idUser, { currentStreak, bestStreak: preserveBest, isDM: true });
-        return { type: 'error', message: `${statsLineDM}\n**Thua cuộc!** Từ cuối "${lastWord(nextWord)}" cũng không còn từ nào để nối tiếp.`, currentWord: currentWord };
+        return { type: 'error', message: `${statsLineDM}\n**Thua cuộc!** Từ tiếp theo **"${nextWord}"** không còn từ nào để nối tiếp.`, currentWord: currentWord };
     }
 
     history.push(normalizedPlayer, currentWord);
