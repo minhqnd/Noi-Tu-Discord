@@ -24,7 +24,8 @@ const RESPONSE_CODES = {
     REPEATED: 'repeated',
     NOT_IN_DICT: 'not_in_dict',
     INVALID_FORMAT: 'invalid_format',
-    LOSS: 'loss'
+    LOSS: 'loss',
+    WIN: 'win'
 };
 
 // Response types

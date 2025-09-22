@@ -116,14 +116,14 @@ class DiscordBot {
                 name: 'stats',
                 description: 'Xem thống kê nối từ hiện tại'
             },
-            {
-                name: 'feedback',
-                description: 'Gửi phản hồi về từ thiếu, lỗi hoặc đề xuất'
-            },
-            {
-                name: 'viewfeedback',
-                description: '[ADMIN] Xem tất cả phản hồi từ người dùng'
-            },
+            // {
+            //     name: 'feedback',
+            //     description: 'Gửi phản hồi về từ thiếu, lỗi hoặc đề xuất'
+            // },
+            // {
+            //     name: 'viewfeedback',
+            //     description: '[ADMIN] Xem tất cả phản hồi từ người dùng'
+            // },
             {
                 name: 'noitu_mode',
                 description: 'Chọn chế độ chơi cho kênh: bot hoặc pvp',
@@ -871,6 +871,15 @@ class DiscordBot {
         try {
             if (response.code === 'ok') {
                 await message.react('✅');
+            } else if (response.code === 'win') {
+                await message.react('🏆');
+                const embed = new EmbedBuilder()
+                    .setDescription(response.message)
+                    .setColor(0x00FF00);
+                await message.reply({ embeds: [embed] });
+                if (response.currentWord) {
+                    await message.channel.send(`🎮 **Game mới bắt đầu!**\nTừ hiện tại: **${response.currentWord}**`);
+                }
             } else if (response.code === 'mismatch') {
                 await message.react('❌');
                 await message.reply({ content: `${response.message}\nTừ hiện tại: **${response.currentWord}**`, ephemeral: true });

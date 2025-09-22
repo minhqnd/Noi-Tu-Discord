@@ -299,12 +299,54 @@ class GameEngine {
             wrongCount: 0
         };
 
-        // PvP mode: just accept and update
+        // PvP mode: just accept and update, but check for endword
         if (mode === GAME_MODES.PVP && !isDM) {
             history.push(normalizedPlayer);
             userStats.currentStreak = (userStats.currentStreak || 0) + 1;
             userStats.bestStreak = Math.max(userStats.bestStreak || 0, userStats.currentStreak);
             userStats.wrongCount = 0;
+
+            // Check if this is an endword (no next word available)
+            const nextWordAvailable = this.getWordStartingWith(this.lastWord(normalizedPlayer), history);
+            
+            if (!nextWordAvailable) {
+                // User wins - they found an endword
+                const wins = (userStats.wins || 0) + 1;
+                userStats.wins = wins;
+
+                const newWord = this.newWord();
+                const newGameData = {
+                    word: newWord,
+                    history: [],
+                    players: { 
+                        ...players, 
+                        [userId]: {
+                            ...userStats,
+                            currentStreak: userStats.currentStreak,
+                            bestStreak: userStats.bestStreak,
+                            wins: wins,
+                            wrongCount: 0
+                        }
+                    },
+                    mode: mode
+                };
+
+                this.logger.info(`Channel: [${gameData.id}] PVP_WIN '${normalizedPlayer}' -> '${newWord}' [${(Date.now() - startTime) / 1000}s]`);
+                const statsLine = this.formatStatsLine(userId, {
+                    currentStreak: userStats.currentStreak || 0,
+                    bestStreak: userStats.bestStreak || 0,
+                    wins: wins,
+                    showWins: true
+                });
+
+                return {
+                    type: RESPONSE_TYPES.SUCCESS,
+                    code: RESPONSE_CODES.WIN,
+                    message: `${statsLine}\n🏆 **THẮNG!** Từ "${this.lastWord(normalizedPlayer)}" không còn từ nào để nối tiếp!`,
+                    currentWord: newWord,
+                    gameData: newGameData
+                };
+            }
 
             const newGameData = {
                 word: normalizedPlayer,
