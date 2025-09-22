@@ -99,6 +99,10 @@ function markFeedbackAsReviewed(feedbackId) {
     return false;
 }
 
+function saveFeedbacks(feedbacks) {
+    db.store('feedbacks', feedbacks);
+}
+
 module.exports = {
     // Game logic functions
     checkChannel,
@@ -108,5 +112,6 @@ module.exports = {
     storeFeedback,
     getAllFeedbacks,
     markFeedbackAsReviewed,
+    saveFeedbacks,
     tratu
 };

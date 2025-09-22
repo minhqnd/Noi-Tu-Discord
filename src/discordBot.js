@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ActivityType } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ActivityType } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const { setupLogger, GAME_CONSTANTS, PERMISSIONS, PATHS } = require('./utils');
@@ -169,46 +169,58 @@ class DiscordBot {
     }
 
     async onInteractionCreate(interaction) {
-        if (!interaction.isCommand()) return;
+        if (interaction.isCommand()) {
+            const { commandName } = interaction;
 
-        const { commandName } = interaction;
-
-        try {
-            switch (commandName) {
-                case 'noitu_add':
-                    await this.handleNoituAdd(interaction);
-                    break;
-                case 'noitu_remove':
-                    await this.handleNoituRemove(interaction);
-                    break;
-                case 'help':
-                    await this.handleHelp(interaction);
-                    break;
-                case 'tratu':
-                    await this.handleTratu(interaction);
-                    break;
-                case 'newgame':
-                    await this.handleNewgame(interaction);
-                    break;
-                case 'stats':
-                    await this.handleStats(interaction);
-                    break;
-                case 'feedback':
-                    await this.handleFeedback(interaction);
-                    break;
-                case 'viewfeedback':
-                    await this.handleViewFeedback(interaction);
-                    break;
-                case 'noitu_mode':
-                    await this.handleNoituMode(interaction);
-                    break;
+            try {
+                switch (commandName) {
+                    case 'noitu_add':
+                        await this.handleNoituAdd(interaction);
+                        break;
+                    case 'noitu_remove':
+                        await this.handleNoituRemove(interaction);
+                        break;
+                    case 'help':
+                        await this.handleHelp(interaction);
+                        break;
+                    case 'tratu':
+                        await this.handleTratu(interaction);
+                        break;
+                    case 'newgame':
+                        await this.handleNewgame(interaction);
+                        break;
+                    case 'stats':
+                        await this.handleStats(interaction);
+                        break;
+                    case 'feedback':
+                        await this.handleFeedback(interaction);
+                        break;
+                    case 'viewfeedback':
+                        await this.handleViewFeedback(interaction);
+                        break;
+                    case 'noitu_mode':
+                        await this.handleNoituMode(interaction);
+                        break;
+                }
+            } catch (error) {
+                logger.error(`Error handling command ${commandName}:`, error);
+                await interaction.reply({
+                    content: 'Có lỗi xảy ra khi xử lý lệnh. Vui lòng thử lại sau.',
+                    ephemeral: true
+                }).catch(() => { });
             }
-        } catch (error) {
-            logger.error(`Error handling interaction ${commandName}:`, error);
-            await interaction.reply({
-                content: 'Có lỗi xảy ra khi xử lý lệnh. Vui lòng thử lại sau.',
-                ephemeral: true
-            }).catch(() => { });
+        } else if (interaction.isStringSelectMenu()) {
+            if (interaction.customId === 'select_feedback') {
+                await this.handleSelectFeedback(interaction);
+            }
+        } else if (interaction.isButton()) {
+            if (interaction.customId.startsWith('edit_feedback_')) {
+                await this.handleResolveFeedback(interaction);
+            } else if (interaction.customId.startsWith('delete_feedback_')) {
+                await this.handleDeleteFeedback(interaction);
+            } else if (interaction.customId === 'back_to_feedback_list') {
+                await this.handleBackToFeedbackList(interaction);
+            }
         }
     }
 
@@ -475,14 +487,13 @@ class DiscordBot {
 
             const embed = new EmbedBuilder()
                 .setTitle('📋 Phản hồi từ người dùng')
-                .setDescription(`Hiển thị ${recentFeedbacks.length} phản hồi gần nhất (tổng: ${feedbacks.length})`)
+                .setDescription(`Hiển thị ${recentFeedbacks.length} phản hồi gần nhất (tổng: ${feedbacks.length})\nChọn một phản hồi từ dropdown để xem chi tiết.`)
                 .setColor(0x0099FF)
                 .setTimestamp();
 
             recentFeedbacks.forEach((feedback, index) => {
                 const date = new Date(feedback.timestamp).toLocaleString('vi-VN');
-                const status = feedback.status === 'pending' ? '🟡 Chờ xử lý' :
-                    feedback.status === 'reviewed' ? '🟢 Đã xem' : '✅ Đã giải quyết';
+                const status = feedback.status === 'pending' ? '🟡 Chờ xử lý' : '✅ Đã giải quyết';
 
                 embed.addFields({
                     name: `${index + 1}. ${feedback.username} - ${date}`,
@@ -491,7 +502,20 @@ class DiscordBot {
                 });
             });
 
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            const selectMenu = new StringSelectMenuBuilder()
+                .setCustomId('select_feedback')
+                .setPlaceholder('Chọn phản hồi để xem chi tiết')
+                .addOptions(
+                    recentFeedbacks.map((feedback, index) => ({
+                        label: `${index + 1}. ${feedback.username}`,
+                        description: feedback.content.substring(0, 50) + (feedback.content.length > 50 ? '...' : ''),
+                        value: feedback.id.toString()
+                    }))
+                );
+
+            const row = new ActionRowBuilder().addComponents(selectMenu);
+
+            await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
             logger.info(`Admin ${interaction.user.tag} viewed feedbacks`);
         } catch (error) {
             await interaction.reply({
@@ -527,6 +551,162 @@ class DiscordBot {
         if (currentWord) {
             await interaction.channel.send(`Từ hiện tại: **${currentWord}**`);
         }
+    }
+
+    async handleSelectFeedback(interaction) {
+        const feedbackId = interaction.values[0];
+        const feedbacks = gameLogic.getAllFeedbacks();
+        const feedback = feedbacks.find(f => f.id == feedbackId);
+
+        if (!feedback) {
+            await interaction.reply({ content: '❌ Không tìm thấy phản hồi này.', ephemeral: true });
+            return;
+        }
+
+        const date = new Date(feedback.timestamp).toLocaleString('vi-VN');
+        const status = feedback.status === 'pending' ? '🟡 Chờ xử lý' : '✅ Đã giải quyết';
+
+        const embed = new EmbedBuilder()
+            .setTitle('📝 Chi tiết phản hồi')
+            .setColor(0x00FF00)
+            .addFields(
+                { name: 'ID', value: feedback.id.toString(), inline: true },
+                { name: 'Người dùng', value: feedback.username, inline: true },
+                { name: 'Thời gian', value: date, inline: true },
+                { name: 'Trạng thái', value: status, inline: true },
+                { name: 'Nội dung', value: feedback.content, inline: false }
+            )
+            .setTimestamp();
+
+        const editButton = new ButtonBuilder()
+            .setCustomId(`edit_feedback_${feedback.id}`)
+            .setLabel('Đã giải quyết')
+            .setStyle(ButtonStyle.Primary);
+
+        const deleteButton = new ButtonBuilder()
+            .setCustomId(`delete_feedback_${feedback.id}`)
+            .setLabel('Xóa')
+            .setStyle(ButtonStyle.Danger);
+
+        const backButton = new ButtonBuilder()
+            .setCustomId('back_to_feedback_list')
+            .setLabel('Quay lại')
+            .setStyle(ButtonStyle.Secondary);
+
+        const row = new ActionRowBuilder().addComponents(editButton, deleteButton, backButton);
+
+        await interaction.update({ embeds: [embed], components: [row] });
+    }
+
+    async handleResolveFeedback(interaction) {
+        const feedbackId = interaction.customId.split('_')[2];
+        // Mark as resolved
+        const feedbacks = gameLogic.getAllFeedbacks();
+        const feedback = feedbacks.find(f => f.id == feedbackId);
+        if (feedback) {
+            feedback.status = 'resolved';
+            gameLogic.saveFeedbacks(feedbacks);
+
+            // Update embed with new status
+            const date = new Date(feedback.timestamp).toLocaleString('vi-VN');
+            const status = '✅ Đã giải quyết';
+
+            const embed = new EmbedBuilder()
+                .setTitle('📝 Chi tiết phản hồi')
+                .setColor(0x00FF00)
+                .addFields(
+                    { name: 'ID', value: feedback.id.toString(), inline: true },
+                    { name: 'Người dùng', value: feedback.username, inline: true },
+                    { name: 'Thời gian', value: date, inline: true },
+                    { name: 'Trạng thái', value: status, inline: true },
+                    { name: 'Nội dung', value: feedback.content, inline: false }
+                )
+                .setTimestamp();
+
+            // Disable buttons
+            const editButton = new ButtonBuilder()
+                .setCustomId(`edit_feedback_${feedback.id}`)
+                .setLabel('Đã giải quyết')
+                .setStyle(ButtonStyle.Success)
+                .setDisabled(true);
+
+            const deleteButton = new ButtonBuilder()
+                .setCustomId(`delete_feedback_${feedback.id}`)
+                .setLabel('Xóa')
+                .setStyle(ButtonStyle.Danger);
+
+            const backButton = new ButtonBuilder()
+                .setCustomId('back_to_feedback_list')
+                .setLabel('Quay lại')
+                .setStyle(ButtonStyle.Secondary);
+
+            const row = new ActionRowBuilder().addComponents(editButton, deleteButton, backButton);
+
+            await interaction.update({ embeds: [embed], components: [row] });
+        } else {
+            await interaction.update({ content: '❌ Không tìm thấy phản hồi.', embeds: [], components: [] });
+        }
+    }
+
+    async handleDeleteFeedback(interaction) {
+        const feedbackId = interaction.customId.split('_')[2];
+        const feedbacks = gameLogic.getAllFeedbacks();
+        const index = feedbacks.findIndex(f => f.id == feedbackId);
+        if (index !== -1) {
+            feedbacks.splice(index, 1);
+            gameLogic.saveFeedbacks(feedbacks);
+            // Quay về list feedback
+            await this.handleBackToFeedbackList(interaction);
+        } else {
+            await interaction.update({ content: '❌ Không tìm thấy phản hồi.', embeds: [], components: [] });
+        }
+    }
+
+    async handleBackToFeedbackList(interaction) {
+        const feedbacks = gameLogic.getAllFeedbacks();
+
+        if (feedbacks.length === 0) {
+            await interaction.update({
+                content: '📭 Chưa có phản hồi nào từ người dùng.',
+                embeds: [],
+                components: []
+            });
+            return;
+        }
+
+        const recentFeedbacks = feedbacks.slice(-10).reverse();
+
+        const embed = new EmbedBuilder()
+            .setTitle('📋 Phản hồi từ người dùng')
+            .setDescription(`Hiển thị ${recentFeedbacks.length} phản hồi gần nhất (tổng: ${feedbacks.length})\nChọn một phản hồi từ dropdown để xem chi tiết.`)
+            .setColor(0x0099FF)
+            .setTimestamp();
+
+        recentFeedbacks.forEach((feedback, index) => {
+            const date = new Date(feedback.timestamp).toLocaleString('vi-VN');
+            const status = feedback.status === 'pending' ? '🟡 Chờ xử lý' : '✅ Đã giải quyết';
+
+            embed.addFields({
+                name: `${index + 1}. ${feedback.username} - ${date}`,
+                value: `**ID:** ${feedback.id}\n**Nội dung:** ${feedback.content.substring(0, 200)}${feedback.content.length > 200 ? '...' : ''}\n**Trạng thái:** ${status}`,
+                inline: false
+            });
+        });
+
+        const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId('select_feedback')
+            .setPlaceholder('Chọn phản hồi để xem chi tiết')
+            .addOptions(
+                recentFeedbacks.map((feedback, index) => ({
+                    label: `${index + 1}. ${feedback.username}`,
+                    description: feedback.content.substring(0, 50) + (feedback.content.length > 50 ? '...' : ''),
+                    value: feedback.id.toString()
+                }))
+            );
+
+        const row = new ActionRowBuilder().addComponents(selectMenu);
+
+        await interaction.update({ embeds: [embed], components: [row] });
     }
 
     async onMessageCreate(message) {
