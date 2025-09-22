@@ -157,7 +157,7 @@ class GameEngine {
             return {
                 type: RESPONSE_TYPES.ERROR,
                 code: RESPONSE_CODES.MISMATCH,
-                message: `**Từ đầu của bạn phải là "${this.lastWord(currentWord)}"!** Vui lòng thử lại.`,
+                message: `Từ đầu của bạn phải là **"${this.lastWord(currentWord)}"!** Vui lòng thử lại.`,
                 currentWord: currentWord
             };
         }
