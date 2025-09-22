@@ -12,7 +12,7 @@ Bot Discord chơi game nối từ tiếng Việt với từ gồm 2 chữ. Hỗ 
 ## ✨ Tính năng
 
 ### 🎯 Game Nối Từ
-- **Từ điển tiếng Việt**: Sử dụng bộ từ điển phong phú với gần 70,000 từ ghép
+- **Từ điển tiếng Việt**: Sử dụng bộ từ điển phong phú với gần 60,000 từ ghép
 - **2 chế độ chơi**:
   - **Bot vs User**: Bot tự động tìm từ tiếp theo
   - **PvP (User vs User)**: Người chơi thi đấu với nhau
@@ -142,7 +142,7 @@ src/
 ├── wordProcessing.js # Xử lý từ tiếng Việt
 ├── utils.js          # Constants và utilities
 └── assets/
-    └── wordPairs.json # Bộ từ điển (70,000+ từ)
+    └── wordPairs.json # Bộ từ điển (~60,000 từ)
 ```
 
 ### 🗂️ Cấu Trúc Dữ Liệu
@@ -241,7 +241,7 @@ Dự án này được phân phối dưới giấy phép MIT. Xem file `LICENSE`
 
 ---
 
-**Tạo bởi [minhqnd](https://github.com/minhqnd)** với ❤️ cho cộng đồng tiếng Việt
+**Tạo bởi [minhqnd](https://github.com/minhqnd)** ❤️
 
 ![Bot Avatar](./images/bot-avatar.png)
 *Avatar của bot Moi Nối Từ*</content>
