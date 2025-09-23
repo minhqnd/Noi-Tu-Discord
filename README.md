@@ -37,7 +37,7 @@ Bot Discord chơi game nối từ tiếng Việt với từ gồm 2 chữ. Hỗ 
 ### Yêu cầu hệ thống
 - Node.js >= 16.0.0
 - npm hoặc yarn
-- Tài khoản Discord Bot Token
+- Discord Bot Token
 
 ### Các bước cài đặt
 
