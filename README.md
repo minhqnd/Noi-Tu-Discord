@@ -37,7 +37,7 @@ Bot Discord chơi game nối từ tiếng Việt với từ gồm 2 chữ. Hỗ 
 ### Yêu cầu hệ thống
 - Node.js >= 16.0.0
 - npm hoặc yarn
-- Discord Bot Token
+- Tài khoản Discord Bot Token
 
 ### Các bước cài đặt
 
@@ -135,6 +135,7 @@ src/
 ├── gameEngine.js      # Logic game core
 ├── gameLogic.js       # Interface giữa bot và game engine
 ├── db.js             # Database layer (JSON file)
+├── wordProcessing.js # Xử lý từ tiếng Việt
 ├── utils.js          # Constants và utilities
 └── assets/
     └── wordPairs.json # Bộ từ điển (~60,000 từ)
