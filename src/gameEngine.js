@@ -110,8 +110,19 @@ class GameEngine {
 
     // Core game logic
     processMove(gameData, playerWord, userId, isDM = false) {
+        // Input validation
+        if (!gameData || typeof gameData !== 'object') {
+            throw new Error('Invalid gameData parameter');
+        }
+        if (!playerWord || typeof playerWord !== 'string') {
+            throw new Error('Invalid playerWord parameter');
+        }
+        if (!userId) {
+            throw new Error('Invalid userId parameter');
+        }
+        
         const startTime = Date.now();
-        const normalizedPlayer = normalizeVietnamese(playerWord);
+        const normalizedPlayer = normalizeVietnamese(playerWord.trim());
 
         // Validate format
         if (!this.validateWordFormat(playerWord)) {
