@@ -135,7 +135,6 @@ src/
 ├── gameEngine.js      # Logic game core
 ├── gameLogic.js       # Interface giữa bot và game engine
 ├── db.js             # Database layer (JSON file)
-├── wordProcessing.js # Xử lý từ tiếng Việt
 ├── utils.js          # Constants và utilities
 └── assets/
     └── wordPairs.json # Bộ từ điển (~60,000 từ)
