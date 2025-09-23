@@ -52,7 +52,11 @@ for (const firstWord in wordPairs) {
 }
 
 function getnoitu(playerWord) {
-  const normalizedInput = normalizeVietnamese(playerWord);
+  if (!playerWord || typeof playerWord !== 'string') {
+    return 'Từ không hợp lệ';
+  }
+  
+  const normalizedInput = normalizeVietnamese(playerWord.trim());
   if (normalizedInput.split(' ').length !== 2) {
     return 'Từ bắt buộc phải gồm 2 từ ';
   } else {
@@ -68,12 +72,21 @@ function getnoitu(playerWord) {
 }
 
 async function tratu(word) {
+  if (!word || typeof word !== 'string') {
+    return 'Từ không hợp lệ để tra cứu';
+  }
+  
+  const trimmedWord = word.trim();
+  if (trimmedWord.length === 0) {
+    return 'Từ không được để trống';
+  }
+  
   try {
-    const response = await axios.get(`https://minhqnd.com/api/dictionary/lookup?word=${encodeURIComponent(word)}`);
+    const response = await axios.get(`https://minhqnd.com/api/dictionary/lookup?word=${encodeURIComponent(trimmedWord)}`);
     if (response.status === 200 && response.data) {
       const data = response.data;
       if (data.error || !data.meanings || data.meanings.length === 0) {
-        return `Không tìm thấy định nghĩa cho từ "${word}", đây có thể là một từ ghép hán việt, vui lòng tra cứu ở các nguồn khác.`;
+        return `Không tìm thấy định nghĩa cho từ "${trimmedWord}", đây có thể là một từ ghép hán việt, vui lòng tra cứu ở các nguồn khác.`;
       }
       // Format similar to the React component
       let formatted = `**Giải nghĩa:**\n`;
@@ -90,7 +103,7 @@ async function tratu(word) {
         }
         formatted += '\n';
       });
-      return `**Từ tra cứu: "${data.word || word}"**\n\n${formatted.trim()}`;
+      return `**Từ tra cứu: "${data.word || trimmedWord}"**\n\n${formatted.trim()}`;
     } else {
       return "Không thể lấy dữ liệu từ API";
     }
