@@ -105,7 +105,6 @@ User: xanh lục
   - ⚠️ Sai format
 
 ![PvP Mode](./images/pvp-mode.png)
-*Ảnh demo chế độ PvP với reactions*
 
 ### Chơi Trong DM
 - Gửi tin nhắn trực tiếp cho bot
