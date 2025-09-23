@@ -1,13 +1,13 @@
 # 🎮 Moi Nối Từ - Discord Bot
 
-[![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/)
+<!-- [![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/) -->
+[![Add to Discord](https://img.shields.io/badge/Add_to_Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/oauth2/authorize?client_id=1076547168099385436)
 [![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
 Bot Discord chơi game nối từ tiếng Việt với từ gồm 2 chữ. Hỗ trợ chơi cả trong kênh server và tin nhắn riêng (DM).
 
 ![Game Demo](./images/game-demo.png)
-*Ảnh demo game nối từ trong kênh Discord*
 
 ## ✨ Tính năng
 
@@ -71,7 +71,7 @@ Bot Discord chơi game nối từ tiếng Việt với từ gồm 2 chữ. Hỗ 
 
 #### 🔐 Quyền cần thiết cho Bot
 Bot cần các quyền sau trong server:
-- ✅ Read Messages
+- ✅ Manage Messages
 - ✅ Send Messages
 - ✅ Use Slash Commands
 - ✅ Read Message History
@@ -110,9 +110,6 @@ User: xanh lục
 ### Chơi Trong DM
 - Gửi tin nhắn trực tiếp cho bot
 - Bot sẽ phản hồi và chơi riêng với bạn
-
-![DM Game](./images/dm-game.png)
-*Ảnh demo chơi trong DM*
 
 ## 📋 Commands
 
@@ -182,16 +179,11 @@ src/
 ### Thêm Từ Mới
 Từ điển được lưu trong `src/assets/wordPairs.json`. Để thêm từ mới:
 
-1. Thêm vào file JSON theo format:
+Thêm vào file JSON theo format:
    ```json
    {
      "từ_đầu": ["từ_cuối_1", "từ_cuối_2"]
    }
-   ```
-
-2. Chạy script normalize:
-   ```bash
-   node src/assets/normalize_wordpairs.js
    ```
 
 ### Testing
@@ -233,15 +225,8 @@ Chúng tôi hoan nghênh mọi đóng góp!
 
 Dự án này được phân phối dưới giấy phép MIT. Xem file `LICENSE` để biết thêm chi tiết.
 
-## 🙏 Lời Cảm Ơn
-
-- Bộ từ điển từ [minhqnd.com](https://minhqnd.com)
-- Cộng đồng Discord.js
-- Những người đóng góp và tester
-
 ---
 
-**Tạo bởi [minhqnd](https://github.com/minhqnd)** ❤️
+**Made by [minhqnd](https://github.com/minhqnd)** ❤️
 
 ![Bot Avatar](./images/bot-avatar.png)
-</content>
