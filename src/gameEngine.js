@@ -458,7 +458,7 @@ class GameEngine {
             return {
                 type: RESPONSE_TYPES.ERROR,
                 code: RESPONSE_CODES.LOSS,
-                message: `${statsLine}\n**Thua cuộc!** Từ cuối "${this.lastWord(nextWord)}" cũng không còn từ nào để nối tiếp.`,
+                message: `${statsLine}\n**Thua cuộc!** Từ tiếp theo: **"${this.nextWord}"** không còn từ nào để nối tiếp.`,
                 currentWord: newWord,
                 gameData: newGameData
             };
