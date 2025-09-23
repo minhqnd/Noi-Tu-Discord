@@ -244,5 +244,4 @@ Dự án này được phân phối dưới giấy phép MIT. Xem file `LICENSE`
 **Tạo bởi [minhqnd](https://github.com/minhqnd)** ❤️
 
 ![Bot Avatar](./images/bot-avatar.png)
-*Avatar của bot Moi Nối Từ*</content>
-<parameter name="filePath">/Users/minhqnd/CODE/Noi-Tu-Discord/README.md
+</content>
