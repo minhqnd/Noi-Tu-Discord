@@ -184,6 +184,34 @@ class GameEngine {
                     wins: userStats.wins || 0
                 };
 
+                // In PVP mode, reset streak but keep current word and history
+                if (mode === GAME_MODES.PVP && !isDM) {
+                    const newGameData = {
+                        word: currentWord,
+                        history: history,
+                        mode: mode,
+                        players: {
+                            ...players,
+                            [userId]: {
+                                currentStreak: 0,
+                                bestStreak: preserved.bestStreak,
+                                wins: preserved.wins,
+                                wrongCount: 0
+                            }
+                        }
+                    };
+
+                    this.logger.info(`Channel: [${gameData.id}] PVP_STREAK_RESET '${playerWord}' [${(Date.now() - startTime) / 1000}s]`);
+                    return {
+                        type: RESPONSE_TYPES.ERROR,
+                        code: RESPONSE_CODES.REPEATED,
+                        message: `Chuỗi bị reset! Từ đã được trả lời trước đó.\nChuỗi đạt được: **${userStats.currentStreak}**, kỷ lục: **${userStats.bestStreak}**`,
+                        currentWord: currentWord,
+                        gameData: newGameData
+                    };
+                }
+
+                // Bot mode or DM: reset everything
                 const newWord = this.newWord();
                 const newGameData = {
                     word: newWord,
@@ -246,6 +274,34 @@ class GameEngine {
                     wins: userStats.wins || 0
                 };
 
+                // In PVP mode, reset streak but keep current word and history
+                if (mode === GAME_MODES.PVP && !isDM) {
+                    const newGameData = {
+                        word: currentWord,
+                        history: history,
+                        mode: mode,
+                        players: {
+                            ...players,
+                            [userId]: {
+                                currentStreak: 0,
+                                bestStreak: preserved.bestStreak,
+                                wins: preserved.wins,
+                                wrongCount: 0
+                            }
+                        }
+                    };
+
+                    this.logger.info(`Channel: [${gameData.id}] PVP_STREAK_RESET '${playerWord}' [${(Date.now() - startTime) / 1000}s]`);
+                    return {
+                        type: RESPONSE_TYPES.ERROR,
+                        code: RESPONSE_CODES.NOT_IN_DICT,
+                        message: `Chuỗi bị reset! Từ không có trong bộ từ điển.\nChuỗi đạt được: **${userStats.currentStreak}**, kỷ lục: **${userStats.bestStreak}**`,
+                        currentWord: currentWord,
+                        gameData: newGameData
+                    };
+                }
+
+                // Bot mode or DM: reset everything
                 const newWord = this.newWord();
                 const newGameData = {
                     word: newWord,
