@@ -60,7 +60,7 @@ class DiscordBot {
     setupEventHandlers() {
         this.client.once('clientReady', () => this.onReady());
         this.client.on('interactionCreate', (interaction) => this.onInteractionCreate(interaction));
-        
+
         // Log when bot receives any message with debug info
         this.client.on('messageCreate', async (message) => {
             try {
@@ -68,7 +68,7 @@ class DiscordBot {
                 if (message.partial) {
                     await message.fetch();
                 }
-                
+
                 await this.onMessageCreate(message);
             } catch (error) {
                 logger.error(`Error in messageCreate event: ${error.message}`);
@@ -241,7 +241,7 @@ class DiscordBot {
             await interaction.reply({ content: '❌ Lệnh này chỉ dùng trong kênh server.', ephemeral: true });
             return;
         }
-        
+
         const channelId = interaction.channel.id.toString();
         if (this.data.channelAllowlist.includes(channelId)) {
             await interaction.reply({ content: '> **Phòng hiện tại đã có trong cơ sở dữ liệu!**', ephemeral: false });
@@ -262,7 +262,7 @@ class DiscordBot {
             await interaction.reply({ content: '❌ Lệnh này chỉ dùng trong kênh server.', ephemeral: true });
             return;
         }
-        
+
         const channelId = interaction.channel.id.toString();
         if (this.data.channelAllowlist.includes(channelId)) {
             this.data.channelAllowlist = this.data.channelAllowlist.filter(id => id !== channelId);
@@ -463,7 +463,7 @@ class DiscordBot {
             await interaction.reply({ content: '❌ Lệnh này chỉ dùng trong kênh server.', ephemeral: true });
             return;
         }
-        
+
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId('select_feedback_type')
             .setPlaceholder('Chọn loại phản hồi')
@@ -500,7 +500,7 @@ class DiscordBot {
             await interaction.reply({ content: '❌ Lệnh này chỉ dùng trong kênh server.', ephemeral: true });
             return;
         }
-        
+
         const hasModPermissions = interaction.member?.permissions?.has(PERMISSIONS.MODERATE_MEMBERS) ||
             interaction.member?.permissions?.has(PERMISSIONS.ADMINISTRATOR) ||
             interaction.member?.permissions?.has(PERMISSIONS.MANAGE_MESSAGES) ||
@@ -816,6 +816,8 @@ class DiscordBot {
         const channelId = message.channel.id.toString();
         const userId = message.author.id;
 
+        logger.info(`Message received: ${message.author.username} : '${userMessage}' in ${channelId} (${this.isDirectMessage(message.channel) ? 'DM' : 'Channel'})`);
+
         try {
             if (this.isDirectMessage(message.channel)) {
                 const response = gameLogic.checkUser(userMessage, userId);
@@ -884,11 +886,11 @@ class DiscordBot {
                 await message.react('❌');
                 await message.reply({ content: `${response.message}\nTừ hiện tại: **${response.currentWord}**`, ephemeral: true });
             } else if (response.code === 'repeated') {
-                await message.react('🔴');
-                await message.reply({ content: `Từ này đã được trả lời trước đó!\nTừ hiện tại: **${response.currentWord}**` });
+                await message.react('❌');
+                await message.reply({ content: `${response.message}\nTừ hiện tại: **${response.currentWord}**` });
             } else if (response.code === 'not_in_dict') {
                 await message.react('❌');
-                await message.reply({ content: `**Từ không có trong bộ từ điển!** Vui lòng thử lại.\nTừ hiện tại: **${response.currentWord}**`, ephemeral: true });
+                await message.reply({ content: `${response.message}\nTừ hiện tại: **${response.currentWord}**`, ephemeral: !response.streakReset });
             } else if (response.code === 'invalid_format') {
                 await message.react('⚠️');
                 await message.reply({ content: `${response.message}\nTừ hiện tại: **${response.currentWord}**`, ephemeral: true });

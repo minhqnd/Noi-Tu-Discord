@@ -164,7 +164,7 @@ class GameEngine {
 
         // Validate word match
         if (!this.validateWordMatch(currentWord, playerWord)) {
-            this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] MISMATCH '${playerWord}' -> needs '${this.lastWord(currentWord)}' [${(Date.now() - startTime) / 1000}s]`);
+            this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] MODE=${mode} MISMATCH '${playerWord}' -> needs '${this.lastWord(currentWord)}' [${(Date.now() - startTime) / 1000}s]`);
             return {
                 type: RESPONSE_TYPES.ERROR,
                 code: RESPONSE_CODES.MISMATCH,
@@ -201,14 +201,15 @@ class GameEngine {
                         }
                     };
 
-                    this.logger.info(`Channel: [${gameData.id}] PVP_STREAK_RESET '${playerWord}' [${(Date.now() - startTime) / 1000}s]`);
-                    return {
-                        type: RESPONSE_TYPES.ERROR,
-                        code: RESPONSE_CODES.REPEATED,
-                        message: `Chuỗi bị reset! Từ đã được trả lời trước đó.\nChuỗi đạt được: **${userStats.currentStreak}**, kỷ lục: **${userStats.bestStreak}**`,
-                        currentWord: currentWord,
-                        gameData: newGameData
-                    };
+                            this.logger.info(`Channel: [${gameData.id}] MODE=pvp STREAK_RESET REPEATED '${playerWord}' [${(Date.now() - startTime) / 1000}s]`);
+                            return {
+                                type: RESPONSE_TYPES.ERROR,
+                                code: RESPONSE_CODES.REPEATED,
+                                streakReset: true,
+                                message: `Chuỗi của <@${userId}> đã **bị reset** (từ đã được trả lời). Chuỗi đạt được: **${userStats.currentStreak}**, kỷ lục: **${userStats.bestStreak}**`,
+                                currentWord: currentWord,
+                                gameData: newGameData
+                            };
                 }
 
                 // Bot mode or DM: reset everything
@@ -235,7 +236,7 @@ class GameEngine {
                     })
                 };
 
-                this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] USER_LOSS '${playerWord}' -> '${newWord}' [${(Date.now() - startTime) / 1000}s]`);
+                this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] MODE=${mode} USER_LOSS REPEATED '${playerWord}' -> '${newWord}' [${(Date.now() - startTime) / 1000}s]`);
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.REPEATED,
@@ -252,7 +253,7 @@ class GameEngine {
                     })
                 };
 
-                this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] ERROR '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
+                this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] MODE=${mode} ERROR REPEATED '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.REPEATED,
@@ -291,11 +292,12 @@ class GameEngine {
                         }
                     };
 
-                    this.logger.info(`Channel: [${gameData.id}] PVP_STREAK_RESET '${playerWord}' [${(Date.now() - startTime) / 1000}s]`);
+                    this.logger.info(`Channel: [${gameData.id}] MODE=pvp STREAK_RESET NOT_IN_DICT '${playerWord}' [${(Date.now() - startTime) / 1000}s]`);
                     return {
                         type: RESPONSE_TYPES.ERROR,
                         code: RESPONSE_CODES.NOT_IN_DICT,
-                        message: `Chuỗi bị reset! Từ không có trong bộ từ điển.\nChuỗi đạt được: **${userStats.currentStreak}**, kỷ lục: **${userStats.bestStreak}**`,
+                        streakReset: true,
+                        message: `Chuỗi của <@${userId}> **bị reset** (không có trong bộ từ).\nChuỗi đạt được: **${userStats.currentStreak}**, kỷ lục: **${userStats.bestStreak}**`,
                         currentWord: currentWord,
                         gameData: newGameData
                     };
@@ -325,7 +327,7 @@ class GameEngine {
                     })
                 };
 
-                this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] USER_LOSS '${playerWord}' -> '${newWord}' [${(Date.now() - startTime) / 1000}s]`);
+                this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] MODE=${mode} USER_LOSS NOT_IN_DICT '${playerWord}' -> '${newWord}' [${(Date.now() - startTime) / 1000}s]`);
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.NOT_IN_DICT,
@@ -342,11 +344,11 @@ class GameEngine {
                     })
                 };
 
-                this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] ERROR '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
+                this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] MODE=${mode} ERROR NOT_IN_DICT '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.NOT_IN_DICT,
-                    message: `**Từ không có trong bộ từ điển!** Bạn đã trả lời sai **${userStats.wrongCount}** lần.`,
+                    message: `**Từ không có trong bộ từ điển!** Bạn còn **${GAME_CONSTANTS.MAX_WRONG_COUNT - userStats.wrongCount}** lần đoán.`,
                     currentWord: currentWord,
                     gameData: newGameData
                 };
@@ -422,7 +424,7 @@ class GameEngine {
                 mode: mode
             };
 
-            this.logger.info(`Channel: [${gameData.id}] PVP_OK '${normalizedPlayer}' [${(Date.now() - startTime) / 1000}s]`);
+            this.logger.info(`Channel: [${gameData.id}] MODE=pvp OK '${normalizedPlayer}' [${(Date.now() - startTime) / 1000}s]`);
             const statsLine = this.formatStatsLine(userId, {
                 currentStreak: userStats.currentStreak || 0,
                 bestStreak: userStats.bestStreak || 0
@@ -551,7 +553,7 @@ class GameEngine {
             })
         };
 
-        this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] NEXT '${normalizedPlayer}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
+    this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] MODE=${mode} OK '${normalizedPlayer}' [${(Date.now() - startTime) / 1000}s]`);
         const statsLine = this.formatStatsLine(userId, {
             currentStreak: userStats.currentStreak,
             bestStreak: userStats.bestStreak,
