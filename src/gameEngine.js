@@ -1,5 +1,4 @@
 const { listWords, wordPairs, normalizeVietnamese } = require('./wordProcessing');
-const db = require('./db');
 const { setupLogger, GAME_CONSTANTS, RESPONSE_CODES, RESPONSE_TYPES, GAME_MODES } = require('./utils');
 
 const logger = setupLogger('game_engine');

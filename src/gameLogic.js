@@ -1,11 +1,7 @@
-const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
 const db = require('./db');
 const GameEngine = require('./gameEngine');
 const { setupLogger } = require('./utils');
 const { tratu } = require('./wordProcessing');
-
 const logger = setupLogger('game_logic');
 const gameEngine = new GameEngine();
 
