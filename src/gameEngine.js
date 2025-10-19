@@ -552,7 +552,7 @@ class GameEngine {
             })
         };
 
-    this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] MODE=${mode} OK '${normalizedPlayer}' [${(Date.now() - startTime) / 1000}s]`);
+        this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] MODE=${mode} OK '${normalizedPlayer}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
         const statsLine = this.formatStatsLine(userId, {
             currentStreak: userStats.currentStreak,
             bestStreak: userStats.bestStreak,

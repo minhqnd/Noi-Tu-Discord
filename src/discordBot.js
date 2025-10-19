@@ -290,21 +290,26 @@ class DiscordBot {
                 },
                 {
                     name: '📚 Tiện ích',
-                    value: '`/tratu [từ]` - Tra cứu từ điển\n`/feedback [nội dung]` - Gửi phản hồi về từ thiếu/lỗi\n`/noitu_mode [bot|pvp]` - Đặt chế độ chơi của kênh\n`/help` - Hiển thị hướng dẫn này',
+                    value: '`/tratu [từ]` - Tra cứu từ điển\n`/noitu_mode [bot|pvp]` - Đặt chế độ chơi của kênh\n`/help` - Hiển thị hướng dẫn này',
                     inline: false
                 },
-                {
-                    name: '👮 Moderator/Admin',
-                    value: '`/viewfeedback` - Xem phản hồi từ người dùng',
-                    inline: false
-                },
+                // {
+                //     name: '👮 Moderator/Admin',
+                //     value: '`/viewfeedback` - Xem phản hồi từ người dùng',
+                //     inline: false
+                // },
                 {
                     name: '🎮 Cách chơi',
                     value: 'Nhập từ gồm 2 chữ.\n• Chế độ bot: bot sẽ đưa ra từ tiếp theo.\n• Chế độ PvP: bot chỉ kiểm tra và thả reaction (✅ đúng, ❌ sai/ko có từ, 🔴 đã lặp, ⚠️ sai format).\n• Từ không có trong từ điển sẽ được coi là sai.',
                     inline: false
+                },
+                {
+                    name: '⚠️ Lưu ý',
+                    value: 'Bot vẫn đang trong giai đoạn demo, nếu gặp lỗi, vui lòng chat cho @minhqnd để được fix ngay nha <3.',
+                    inline: false
                 }
             )
-            .setFooter({ text: 'Tạo bởi moi - Game nối từ Tiếng Việt' })
+            .setFooter({ text: 'Tạo bởi @minhqnd - Game nối từ Tiếng Việt' })
             .setTimestamp();
 
         await interaction.reply({ embeds: [helpEmbed], ephemeral: false });
