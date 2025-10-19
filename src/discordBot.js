@@ -305,7 +305,7 @@ class DiscordBot {
                 },
                 {
                     name: '⚠️ Lưu ý',
-                    value: 'Bot vẫn đang trong giai đoạn demo, nếu gặp lỗi, vui lòng chat cho @minhqnd để được fix ngay nha <3.',
+                    value: 'Bot vẫn đang trong giai đoạn demo, nếu gặp lỗi, vui lòng chat cho <@457802322190401546> để được fix ngay nha <3.',
                     inline: false
                 }
             )
