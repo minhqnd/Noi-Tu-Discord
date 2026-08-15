@@ -1040,6 +1040,39 @@ class DiscordBot {
 
         try {
             if (isDM) {
+                // Check if this is a first-time DM user (no existing game data)
+                const users = db.read('users') || {};
+                const existingUserData = users[userId];
+
+                if (!existingUserData || !existingUserData.word) {
+                    // First-time user: send welcome + start game
+                    const response = gameLogic.checkUser(userMessage, userId);
+
+                    const welcomeEmbed = new EmbedBuilder()
+                        .setTitle('👋 Chào mừng bạn đến với Nối Từ!')
+                        .setDescription(
+                            'Đây là game **nối từ tiếng Việt** — bạn và bot thay phiên nối từ gồm **2 âm tiết**.\n\n' +
+                            '**Luật chơi:**\n' +
+                            '• Từ của bạn phải bắt đầu bằng **chữ cuối** của từ trước đó\n' +
+                            '• Mỗi từ gồm đúng **2 âm tiết** (ví dụ: "xanh lục", "lục bình")\n' +
+                            '• Không được lặp lại từ đã dùng\n\n' +
+                            '**Lệnh hữu ích:**\n' +
+                            '• `/newgame` — Bắt đầu ván mới\n' +
+                            '• `/stats` — Xem thống kê của bạn\n' +
+                            '• `/tratu [từ]` — Tra cứu từ điển\n' +
+                            '• `/feedback` — Gửi phản hồi nếu bạn thấy từ bị thiếu'
+                        )
+                        .setColor(0x57F287)
+                        .setFooter({ text: 'Bot Nối Từ 🐧 | Hãy bắt đầu nối từ nhé!' });
+
+                    await message.reply({ embeds: [welcomeEmbed] });
+
+                    if (response.currentWord) {
+                        await message.channel.send(`Từ bắt đầu: **${response.currentWord}**\nHãy nối tiếp bằng từ bắt đầu bởi **"${response.currentWord.split(' ').pop()}"** nhé!`);
+                    }
+                    return;
+                }
+
                 const response = gameLogic.checkUser(userMessage, userId);
                 const embed = new EmbedBuilder()
                     .setDescription(response.message)
