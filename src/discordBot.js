@@ -271,6 +271,8 @@ class DiscordBot {
             } else if (interaction.isButton()) {
                 if (interaction.customId.startsWith('reply_feedback_')) {
                     await this.handleReplyFeedbackButton(interaction);
+                } else if (interaction.customId.startsWith('userreply_')) {
+                    await this.handleUserReplyButton(interaction);
                 } else if (interaction.customId.startsWith('edit_feedback_')) {
                     await this.handleResolveFeedback(interaction);
                 } else if (interaction.customId.startsWith('delete_feedback_')) {
@@ -283,6 +285,8 @@ class DiscordBot {
                     await this.handleFeedbackModalSubmit(interaction);
                 } else if (interaction.customId.startsWith('reply_modal_')) {
                     await this.handleReplyModalSubmit(interaction);
+                } else if (interaction.customId.startsWith('userreply_modal_')) {
+                    await this.handleUserReplyModalSubmit(interaction);
                 }
             }
         } catch (error) {
@@ -923,31 +927,28 @@ class DiscordBot {
                 return;
             }
 
-            // Fetch original feedback to show context
+            // Save reply to conversation history
             const feedbacks = gameLogic.getAllFeedbacks();
-            const originalFeedback = feedbacks.find(f => f.id === feedbackId);
-            const originalContent = originalFeedback ? originalFeedback.content : null;
-
-            const replyEmbed = new EmbedBuilder()
-                .setTitle('📩 Phản hồi từ Admin Bot Nối Từ')
-                .setColor(0x57F287)
-                .setFooter({ text: 'Cảm ơn bạn đã đóng góp phát triển Bot Nối Từ 🐧' })
-                .setTimestamp();
-
-            if (originalContent) {
-                replyEmbed.addFields(
-                    { name: '📝 Phản hồi của bạn', value: originalContent.substring(0, 1024) },
-                    { name: '💬 Câu trả lời từ Admin', value: replyContent.substring(0, 1024) },
-                    { name: 'Mã phản hồi', value: feedbackId || 'N/A' }
-                );
-            } else {
-                replyEmbed.setDescription(replyContent);
-                replyEmbed.addFields(
-                    { name: 'Mã phản hồi của bạn', value: feedbackId || 'N/A' }
-                );
+            const feedback = feedbacks.find(f => f.id === feedbackId);
+            if (feedback) {
+                if (!feedback.replies) feedback.replies = [];
+                feedback.replies.push({ from: 'admin', content: replyContent, timestamp: new Date().toISOString() });
+                gameLogic.saveFeedbacks(feedbacks);
             }
 
-            await targetUser.send({ embeds: [replyEmbed] });
+            // Build conversation history embed
+            const replyEmbed = this._buildConversationEmbed(feedback, replyContent, 'admin');
+
+            // Add reply button for user
+            const userReplyBtn = new ButtonBuilder()
+                .setCustomId(`userreply_${feedbackId}`)
+                .setLabel('Trả lời')
+                .setStyle(ButtonStyle.Primary)
+                .setEmoji('💬');
+
+            const row = new ActionRowBuilder().addComponents(userReplyBtn);
+
+            await targetUser.send({ embeds: [replyEmbed], components: [row] });
 
             await interaction.editReply({ content: `✅ Đã gửi tin nhắn trả lời thành công tới **${targetUser.tag}**!` });
             logger.info(`Admin replied to feedback ${feedbackId} from user ${targetUserId}`);
@@ -959,6 +960,111 @@ class DiscordBot {
                 await interaction.editReply({ content: `❌ Gửi tin nhắn thất bại: ${error.message}` });
             }
         }
+    }
+
+    async handleUserReplyButton(interaction) {
+        const feedbackId = interaction.customId.replace('userreply_', '');
+
+        const modal = new ModalBuilder()
+            .setCustomId(`userreply_modal_${feedbackId}`)
+            .setTitle('Trả lời Admin');
+
+        const replyInput = new TextInputBuilder()
+            .setCustomId('reply_content')
+            .setLabel('Nội dung trả lời')
+            .setStyle(TextInputStyle.Paragraph)
+            .setPlaceholder('Nhập câu trả lời của bạn...')
+            .setRequired(true)
+            .setMaxLength(2000);
+
+        const row = new ActionRowBuilder().addComponents(replyInput);
+        modal.addComponents(row);
+
+        await interaction.showModal(modal);
+    }
+
+    async handleUserReplyModalSubmit(interaction) {
+        const feedbackId = interaction.customId.replace('userreply_modal_', '');
+        const replyContent = interaction.fields.getTextInputValue('reply_content');
+        const userId = interaction.user.id;
+        const username = interaction.user.tag;
+
+        try {
+            await interaction.deferReply({ ephemeral: true });
+
+            // Save reply to conversation history
+            const feedbacks = gameLogic.getAllFeedbacks();
+            const feedback = feedbacks.find(f => f.id === feedbackId);
+            if (feedback) {
+                if (!feedback.replies) feedback.replies = [];
+                feedback.replies.push({ from: 'user', content: replyContent, timestamp: new Date().toISOString() });
+                gameLogic.saveFeedbacks(feedbacks);
+            }
+
+            // Send to admin with full conversation history
+            const owner = await this.client.users.fetch(OWNER_ID);
+            const historyEmbed = this._buildConversationEmbed(feedback, replyContent, 'user');
+
+            const replyBtn = new ButtonBuilder()
+                .setCustomId(`reply_feedback_${userId}_${feedbackId}`)
+                .setLabel('Trả lời')
+                .setStyle(ButtonStyle.Primary)
+                .setEmoji('💬');
+
+            const row = new ActionRowBuilder().addComponents(replyBtn);
+
+            await owner.send({ embeds: [historyEmbed], components: [row] });
+
+            await interaction.editReply({ content: '✅ Đã gửi trả lời tới Admin thành công!' });
+            logger.info(`User ${username} replied to feedback ${feedbackId}`);
+        } catch (error) {
+            logger.error(`Failed to send user reply for feedback ${feedbackId}: ${error.message}`);
+            await interaction.editReply({ content: '❌ Có lỗi xảy ra khi gửi trả lời. Vui lòng thử lại sau.' });
+        }
+    }
+
+    _buildConversationEmbed(feedback, latestContent, latestFrom) {
+        const embed = new EmbedBuilder()
+            .setTitle(latestFrom === 'admin' ? '📩 Phản hồi từ Admin Bot Nối Từ' : '📬 Trả lời từ người dùng')
+            .setColor(latestFrom === 'admin' ? 0x57F287 : 0xFFA500)
+            .setFooter({ text: latestFrom === 'admin' ? 'Cảm ơn bạn đã đóng góp phát triển Bot Nối Từ 🐧' : `Feedback #${feedback?.id || 'N/A'}` })
+            .setTimestamp();
+
+        if (!feedback) {
+            embed.setDescription(latestContent);
+            return embed;
+        }
+
+        // Build conversation thread
+        let history = '';
+
+        // Original feedback
+        history += `**📝 Phản hồi gốc** (${feedback.username}):\n> ${feedback.content.substring(0, 300)}\n\n`;
+
+        // Previous replies
+        if (feedback.replies && feedback.replies.length > 0) {
+            // Show all replies except the latest one (which we'll highlight)
+            const previousReplies = feedback.replies.slice(0, -1);
+            for (const reply of previousReplies) {
+                const label = reply.from === 'admin' ? '💬 Admin' : `👤 ${feedback.username}`;
+                history += `**${label}:**\n> ${reply.content.substring(0, 300)}\n\n`;
+            }
+        }
+
+        // Latest message (highlighted)
+        const latestLabel = latestFrom === 'admin' ? '💬 Admin (mới nhất)' : `👤 ${feedback.username} (mới nhất)`;
+        history += `**${latestLabel}:**\n${latestContent.substring(0, 500)}`;
+
+        embed.setDescription(history.substring(0, 4000));
+        embed.addFields({ name: 'Mã phản hồi', value: feedback.id || 'N/A', inline: true });
+
+        if (latestFrom === 'user') {
+            embed.addFields(
+                { name: 'Từ', value: `${feedback.username} (${feedback.user_id})`, inline: true }
+            );
+        }
+
+        return embed;
     }
 
     async handleFeedbackModalSubmit(interaction) {
