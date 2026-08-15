@@ -923,15 +923,29 @@ class DiscordBot {
                 return;
             }
 
+            // Fetch original feedback to show context
+            const feedbacks = gameLogic.getAllFeedbacks();
+            const originalFeedback = feedbacks.find(f => f.id === feedbackId);
+            const originalContent = originalFeedback ? originalFeedback.content : null;
+
             const replyEmbed = new EmbedBuilder()
                 .setTitle('📩 Phản hồi từ Admin Bot Nối Từ')
-                .setDescription(replyContent)
-                .addFields(
-                    { name: 'Mã phản hồi của bạn', value: feedbackId || 'N/A' }
-                )
                 .setColor(0x57F287)
                 .setFooter({ text: 'Cảm ơn bạn đã đóng góp phát triển Bot Nối Từ 🐧' })
                 .setTimestamp();
+
+            if (originalContent) {
+                replyEmbed.addFields(
+                    { name: '📝 Phản hồi của bạn', value: originalContent.substring(0, 1024) },
+                    { name: '💬 Câu trả lời từ Admin', value: replyContent.substring(0, 1024) },
+                    { name: 'Mã phản hồi', value: feedbackId || 'N/A' }
+                );
+            } else {
+                replyEmbed.setDescription(replyContent);
+                replyEmbed.addFields(
+                    { name: 'Mã phản hồi của bạn', value: feedbackId || 'N/A' }
+                );
+            }
 
             await targetUser.send({ embeds: [replyEmbed] });
 
