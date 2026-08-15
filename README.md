@@ -1,18 +1,28 @@
 # 🎮 Moi Nối Từ - Discord Bot
 
-<!-- [![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/) -->
-[![Add to Discord](https://img.shields.io/badge/Add_to_Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/oauth2/authorize?client_id=1076547168099385436)
+[![Servers](https://img.shields.io/badge/Servers-390%2B-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/oauth2/authorize?client_id=1076547168099385436)
+[![Status](https://img.shields.io/badge/Status-Online-23A55A?style=for-the-badge&logo=statuspage&logoColor=white)](https://discord.com/oauth2/authorize?client_id=1076547168099385436)
 [![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
+
+### Thêm vào Server ngay!
+[![Thêm vào server](https://img.shields.io/badge/THÊM_VÀO_SERVER-5865F2?style=for-the-badge&logo=discord&logoColor=white&labelColor=5865F2)](https://discord.com/oauth2/authorize?client_id=1076547168099385436)
+>
+> ⚡ **3 bước bắt đầu nhanh:**
+> 1. Vào kênh muốn chơi, gõ: `/noitu_add` *(yêu cầu quyền Quản lý máy chủ)*
+> 2. Chọn chế độ: `/noitu_mode` *(chơi với bot hoặc PvP với bạn bè)*
+> 3. Bắt đầu gõ từ nối tiếp ngay trong kênh!
 
 Bot Discord chơi game nối từ tiếng Việt với từ gồm 2 chữ. Hỗ trợ chơi cả trong kênh server và tin nhắn riêng (DM).
 
 ![Game Demo](./images/game-demo.png)
 
+---
+
 ## ✨ Tính năng
 
 ### 🎯 Game Nối Từ
-- **Từ điển tiếng Việt**: Sử dụng bộ từ điển phong phú với gần 60,000 từ ghép
+- **Từ điển tiếng Việt**: Sử dụng bộ từ điển phong phú kết hợp API tra từ với hơn 357,000+ định nghĩa
 - **2 chế độ chơi**:
   - **Bot vs User**: Bot tự động tìm từ tiếp theo
   - **PvP (User vs User)**: Người chơi thi đấu với nhau
@@ -20,23 +30,24 @@ Bot Discord chơi game nối từ tiếng Việt với từ gồm 2 chữ. Hỗ 
 - **Thống kê cá nhân**: Theo dõi chuỗi thắng, kỷ lục, số trận thắng
 
 ### 🛠️ Quản Lý Kênh
-- **Thêm/Xóa kênh**: Admin có thể thêm kênh để bot hoạt động
-- **Chế độ linh hoạt**: Chuyển đổi giữa bot mode và PvP mode
-- **Reset game**: Bắt đầu lại từ đầu bất cứ lúc nào
+- **Thêm/Xóa kênh**: Admin có thể thêm/xóa kênh để bot hoạt động
+- **Chế độ linh hoạt**: Chuyển đổi giữa bot mode và PvP mode (`/noitu_mode`)
+- **Reset game**: Bắt đầu lại ván mới bất cứ lúc nào (`/newgame`)
 
-### 📚 Tiện Ích
-- **Tra cứu từ điển**: Tích hợp API từ điển tiếng Việt
-- **Hỗ trợ nhiều định dạng**: Xử lý dấu tiếng Việt chuẩn
+### 📚 Tiện Ích & Phản Hồi
+- **Tra cứu từ điển**: Tích hợp API từ điển tiếng Việt (`/tratu [từ]`) qua [dict.minhqnd.com](https://dict.minhqnd.com)
+- **Gửi phản hồi (`/feedback`)**: Báo từ thiếu, lỗi hoặc đề xuất tính năng trực tiếp tới admin bot
 
 ### 👮 Quản Trị Viên
 - **Quản lý kênh**: Thêm/xóa kênh, đổi chế độ chơi
+- **Cơ sở dữ liệu SQLite**: Tối ưu hiệu năng, lưu trữ hàng trăm server mượt mà
 - **Logs chi tiết**: Theo dõi hoạt động bot
 
 ## 🚀 Cài Đặt
 
 ### Yêu cầu hệ thống
-- Node.js >= 16.0.0
-- npm hoặc yarn
+- Node.js >= 18.0.0
+- pnpm / npm / yarn
 - Tài khoản Discord Bot Token
 
 ### Các bước cài đặt
@@ -49,7 +60,7 @@ Bot Discord chơi game nối từ tiếng Việt với từ gồm 2 chữ. Hỗ 
 
 2. **Cài đặt dependencies**
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. **Tạo file .env**
@@ -59,7 +70,7 @@ Bot Discord chơi game nối từ tiếng Việt với từ gồm 2 chữ. Hỗ 
 
 4. **Khởi chạy bot**
    ```bash
-   npm start
+   pnpm start
    ```
 
 ### ⚙️ Cấu Hình Bot Discord
@@ -116,64 +127,41 @@ User: xanh lục
 
 ### 🎯 Commands Chính
 | Command | Mô tả |
-|---------|--------|
-| `/noitu_add` | Thêm kênh để bot hoạt động |
-| `/noitu_remove` | Xóa kênh khỏi game |
-| `/newgame` | Bắt đầu game mới |
-| `/stats` | Xem thống kê cá nhân |
-| `/help` | Hiển thị hướng dẫn |
+|---|---|
+| `/noitu_add` | Thêm kênh để bot hoạt động *(Cần quyền Manage Server)* |
+| `/noitu_remove` | Xóa kênh khỏi game *(Cần quyền Manage Server)* |
+| `/noitu_mode [mode]` | Chọn chế độ chơi: `bot` (với bot) hoặc `pvp` (giữa người chơi) |
+| `/newgame` | Bắt đầu ván mới |
+| `/stats` | Xem thống kê chuỗi thắng, kỷ lục |
+| `/help` | Hiển thị hướng dẫn sử dụng |
 
-### 📚 Tiện Ích
+### 📚 Tiện Ích & Đóng Góp
 | Command | Mô tả |
-|---------|--------|
-| `/tratu [từ]` | Tra cứu từ điển |
-| `/noitu_mode [mode]` | Đổi chế độ chơi |
+|---|---|
+| `/tratu [từ]` | Tra cứu nghĩa từ điển tiếng Việt qua [dict.minhqnd.com](https://dict.minhqnd.com) |
+| `/feedback` | Gửi báo cáo từ còn thiếu, báo lỗi hoặc đề xuất tính năng trực tiếp cho Admin |
 
 ## 🏗️ Kiến Trúc Code
 
 ```
 src/
-├── discordBot.js      # Bot chính, xử lý Discord events
-├── gameEngine.js      # Logic game core
+├── discordBot.js      # Bot chính, xử lý Discord interactions & messages
+├── gameEngine.js      # Logic core game nối từ & tính streak
 ├── gameLogic.js       # Interface giữa bot và game engine
-├── db.js             # Database layer (JSON file)
-├── wordProcessing.js # Xử lý từ tiếng Việt
-├── utils.js          # Constants và utilities
+├── db.js             # Database layer (SQLite better-sqlite3)
+├── wordProcessing.js # Xử lý chuẩn hóa từ & gọi API từ điển
+├── utils.js          # Constants và logger (Winston)
 └── assets/
-    └── wordPairs.json # Bộ từ điển (~60,000 từ)
+    └── wordPairs.json # Bộ từ điển local
 ```
 
-### 🗂️ Cấu Trúc Dữ Liệu
+### 🗂️ Cấu Trúc Dữ Liệu (SQLite)
 
-**data.json**:
-```json
-{
-  "channels": {
-    "channel_id": {
-      "word": "từ hiện tại",
-      "history": ["từ đã dùng"],
-      "players": {
-        "user_id": {
-          "currentStreak": 5,
-          "bestStreak": 12,
-          "wins": 3
-        }
-      },
-      "mode": "bot"
-    }
-  },
-  "users": {
-    "user_id": {
-      "word": "từ hiện tại",
-      "history": ["từ đã dùng"],
-      "currentStreak": 8,
-      "bestStreak": 15,
-      "wins": 5
-    }
-  },
-  "channelAllowlist": ["channel_id_1", "channel_id_2"]
-}
-```
+Dữ liệu được lưu trong `data.db` (SQLite WAL mode):
+- **`channels`**: Lưu trạng thái ván game hiện tại của từng kênh (`word`, `mode`, `history`, `players`)
+- **`users`**: Lưu trạng thái game 1v1 khi chat riêng DM với bot (`word`, `history`, `streaks`, `wins`)
+- **`channel_allowlist`**: Danh sách ID các kênh được kích hoạt chơi game nối từ
+- **`feedbacks`**: Danh sách các phản hồi, đóng góp từ người dùng gửi qua `/feedback`
 
 ## 🔧 Phát Triển
 
