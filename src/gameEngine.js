@@ -297,7 +297,7 @@ class GameEngine {
                         type: RESPONSE_TYPES.ERROR,
                         code: RESPONSE_CODES.NOT_IN_DICT,
                         streakReset: true,
-                        message: `Chuỗi của <@${userId}> **bị reset** (không có trong bộ từ).\nChuỗi đạt được: **${userStats.currentStreak}**, kỷ lục: **${userStats.bestStreak}**`,
+                        message: `Chuỗi của <@${userId}> **bị reset** (không có trong bộ từ).\nChuỗi đạt được: **${userStats.currentStreak}**, kỷ lục: **${userStats.bestStreak}**\n-# 💡 Nếu bạn nghĩ từ này tồn tại, hãy dùng \`/feedback\` để báo cho chúng mình!`,
                         currentWord: currentWord,
                         gameData: newGameData
                     };
@@ -331,7 +331,7 @@ class GameEngine {
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.NOT_IN_DICT,
-                    message: `Thua cuộc, từ không có trong bộ từ điển! Chuỗi: **${userStats.currentStreak}**, kỷ lục: **${userStats.bestStreak}**`,
+                    message: `Thua cuộc, từ không có trong bộ từ điển! Chuỗi: **${userStats.currentStreak}**, kỷ lục: **${userStats.bestStreak}**\n-# 💡 Nếu bạn nghĩ từ này tồn tại, hãy dùng \`/feedback\` để báo cho chúng mình!`,
                     currentWord: newWord,
                     gameData: newGameData
                 };
@@ -348,7 +348,7 @@ class GameEngine {
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.NOT_IN_DICT,
-                    message: `**Từ không có trong bộ từ điển!** Bạn còn **${GAME_CONSTANTS.MAX_WRONG_COUNT - userStats.wrongCount}** lần đoán.`,
+                    message: `**Từ không có trong bộ từ điển!** Bạn còn **${GAME_CONSTANTS.MAX_WRONG_COUNT - userStats.wrongCount}** lần đoán.\n-# 💡 Nếu bạn nghĩ từ này tồn tại, hãy dùng \`/feedback\` để báo cho chúng mình!`,
                     currentWord: currentWord,
                     gameData: newGameData
                 };
