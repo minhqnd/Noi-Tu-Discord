@@ -1,6 +1,7 @@
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const { GAME_CONSTANTS } = require('./utils');
 
 function normalizeVietnamese(text) {
   let normalized = text.toLowerCase().trim();
@@ -50,6 +51,7 @@ for (const firstWord in wordPairs) {
     listWords.push(`${firstWord} ${secondWord}`);
   }
 }
+const listWordSet = new Set(listWords);
 
 function getnoitu(playerWord) {
   if (!playerWord || typeof playerWord !== 'string') {
@@ -80,36 +82,67 @@ async function tratu(word) {
   if (trimmedWord.length === 0) {
     return 'Từ không được để trống';
   }
+  if (trimmedWord.length > GAME_CONSTANTS.DICTIONARY_LOOKUP_MAX_WORD_LENGTH) {
+    return `Từ tra cứu không được vượt quá ${GAME_CONSTANTS.DICTIONARY_LOOKUP_MAX_WORD_LENGTH} ký tự`;
+  }
   
   try {
-    const response = await axios.get(`https://minhqnd.com/api/dictionary/lookup?word=${encodeURIComponent(trimmedWord)}`);
+    const response = await axios.get(`https://dict.minhqnd.com/api/v1/lookup?word=${encodeURIComponent(trimmedWord)}`, {
+      timeout: GAME_CONSTANTS.DICTIONARY_LOOKUP_TIMEOUT_MS,
+      maxContentLength: GAME_CONSTANTS.DICTIONARY_LOOKUP_MAX_CONTENT_LENGTH,
+      maxBodyLength: GAME_CONSTANTS.DICTIONARY_LOOKUP_MAX_CONTENT_LENGTH,
+    });
     if (response.status === 200 && response.data) {
       const data = response.data;
-      if (data.error || !data.meanings || data.meanings.length === 0) {
+      if (!data.exists || !data.results || data.results.length === 0) {
         return `Không tìm thấy định nghĩa cho từ "${trimmedWord}", đây có thể là một từ ghép hán việt, vui lòng tra cứu ở các nguồn khác.`;
       }
-      // Format similar to the React component
-      let formatted = `**Giải nghĩa:**\n`;
-      data.meanings.forEach((m, idx) => {
-        formatted += `• **${m.definition}**\n`;
-        let details = [];
-        if (m.pos) details.push(`**Loại:** ${m.pos}`);
-        if (m.sub_pos) details.push(`**Nhóm:** ${m.sub_pos}`);
-        if (details.length > 0) {
-          formatted += `  ${details.join(' · ')}\n`;
+
+      let formatted = '';
+
+      for (const langResult of data.results) {
+
+        // Meanings
+        if (langResult.meanings && langResult.meanings.length > 0) {
+          formatted += `**Giải nghĩa:**\n`;
+          langResult.meanings.forEach((m) => {
+            formatted += `• **${m.definition}**\n`;
+            let details = [];
+            if (m.pos) details.push(`**Loại:** ${m.pos}`);
+            if (m.sub_pos) details.push(`**Nhóm:** ${m.sub_pos}`);
+            if (details.length > 0) {
+              formatted += `  ${details.join(' · ')}\n`;
+            }
+            if (m.example) {
+              formatted += `  **VD:** ${m.example}\n`;
+            }
+            formatted += '\n';
+          });
         }
-        if (m.example) {
-          formatted += `  **VD:** ${m.example}\n`;
+
+        // Translations
+        if (langResult.translations && langResult.translations.length > 0) {
+          const trans = langResult.translations.map(t => `${t.translation} *(${t.lang_name})*`).join(', ');
+          formatted += `🌐 **Dịch:** ${trans}\n\n`;
         }
-        formatted += '\n';
-      });
+
+        // Relations (synonyms, antonyms)
+        if (langResult.relations && langResult.relations.length > 0) {
+          const rels = langResult.relations.map(r => `${r.related_word} *(${r.relation_type})*`).join(', ');
+          formatted += `🔗 **Từ liên quan:** ${rels}\n\n`;
+        }
+      }
+
       return `**Từ tra cứu: "${data.word || trimmedWord}"**\n\n${formatted.trim()}`;
     } else {
       return "Không thể lấy dữ liệu từ API";
     }
   } catch (error) {
+    if (error.response && error.response.status === 404) {
+      return `Không tìm thấy định nghĩa cho từ "${trimmedWord}", đây có thể là một từ ghép hán việt, vui lòng tra cứu ở các nguồn khác.`;
+    }
     return "Không thể lấy dữ liệu từ API";
   }
 }
 
-module.exports = { getnoitu, tratu, listWords, wordPairs, normalizeVietnamese };
+module.exports = { getnoitu, tratu, listWords, listWordSet, wordPairs, normalizeVietnamese };

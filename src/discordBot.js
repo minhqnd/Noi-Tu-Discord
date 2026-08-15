@@ -1,11 +1,16 @@
-const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActivityType, ChannelType, MessageFlags, Partials } = require('discord.js');
-const fs = require('fs');
-const path = require('path');
-const { setupLogger, GAME_CONSTANTS, PERMISSIONS, PATHS } = require('./utils');
+const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActivityType, ChannelType, Partials } = require('discord.js');
+const { setupLogger, GAME_CONSTANTS, PERMISSIONS } = require('./utils');
 const gameLogic = require('./gameLogic');
 const db = require('./db');
 
 const logger = setupLogger('discord_bot');
+const COMMAND_CONTEXTS = {
+    GUILD: 0,
+    BOT_DM: 1
+};
+const COMMAND_PERMISSIONS = {
+    MANAGE_GUILD: (1n << 5n).toString()
+};
 
 class DiscordBot {
     constructor() {
@@ -25,36 +30,9 @@ class DiscordBot {
         });
 
         this.pendingNewGame = new Set();
-        this.dataPath = path.join(__dirname, '..', PATHS.DATA_FILE);
-        this.data = this.loadData();
+        this.dictionaryCooldowns = new Map();
 
         this.setupEventHandlers();
-    }
-
-    loadData() {
-        try {
-            const raw = fs.readFileSync(this.dataPath, 'utf8');
-            return raw ? JSON.parse(raw) : this.getDefaultData();
-        } catch (err) {
-            return this.getDefaultData();
-        }
-    }
-
-    getDefaultData() {
-        return {
-            channels: {},
-            users: {},
-            channelAllowlist: [],
-            feedbacks: []
-        };
-    }
-
-    saveData() {
-        try {
-            fs.writeFileSync(this.dataPath, JSON.stringify(this.data, null, 2), 'utf8');
-        } catch (error) {
-            logger.error('Failed to save data:', error.message);
-        }
     }
 
     setupEventHandlers() {
@@ -86,19 +64,25 @@ class DiscordBot {
         return [
             {
                 name: 'noitu_add',
-                description: 'Thêm phòng game nối từ'
+                description: 'Thêm phòng game nối từ',
+                default_member_permissions: COMMAND_PERMISSIONS.MANAGE_GUILD,
+                contexts: [COMMAND_CONTEXTS.GUILD]
             },
             {
                 name: 'noitu_remove',
-                description: 'Xóa phòng game nối từ'
+                description: 'Xóa phòng game nối từ',
+                default_member_permissions: COMMAND_PERMISSIONS.MANAGE_GUILD,
+                contexts: [COMMAND_CONTEXTS.GUILD]
             },
             {
                 name: 'help',
-                description: 'Hiển thị trợ giúp của bot'
+                description: 'Hiển thị trợ giúp của bot',
+                contexts: [COMMAND_CONTEXTS.GUILD, COMMAND_CONTEXTS.BOT_DM]
             },
             {
                 name: 'tratu',
                 description: 'Tra cứu từ điển tiếng việt',
+                contexts: [COMMAND_CONTEXTS.GUILD, COMMAND_CONTEXTS.BOT_DM],
                 options: [
                     {
                         name: 'word',
@@ -110,11 +94,13 @@ class DiscordBot {
             },
             {
                 name: 'newgame',
-                description: 'Reset nối từ - bắt đầu game mới'
+                description: 'Reset nối từ - bắt đầu game mới',
+                contexts: [COMMAND_CONTEXTS.GUILD, COMMAND_CONTEXTS.BOT_DM]
             },
             {
                 name: 'stats',
-                description: 'Xem thống kê nối từ hiện tại'
+                description: 'Xem thống kê nối từ hiện tại',
+                contexts: [COMMAND_CONTEXTS.GUILD, COMMAND_CONTEXTS.BOT_DM]
             },
             // {
             //     name: 'feedback',
@@ -127,6 +113,8 @@ class DiscordBot {
             {
                 name: 'noitu_mode',
                 description: 'Chọn chế độ chơi cho kênh: bot hoặc pvp',
+                default_member_permissions: COMMAND_PERMISSIONS.MANAGE_GUILD,
+                contexts: [COMMAND_CONTEXTS.GUILD],
                 options: [
                     {
                         name: 'mode',
@@ -162,6 +150,69 @@ class DiscordBot {
         return channel.type === ChannelType.DM || channel.type === ChannelType.GroupDM;
     }
 
+    getChannelAllowlist() {
+        return db.read('channelAllowlist') || [];
+    }
+
+    saveChannelAllowlist(channelAllowlist) {
+        db.store('channelAllowlist', channelAllowlist);
+    }
+
+    isChannelAllowed(channelId) {
+        return this.getChannelAllowlist().includes(channelId.toString());
+    }
+
+    hasGuildManagementPermission(interaction) {
+        return interaction.member?.permissions?.has(PERMISSIONS.MANAGE_GUILD) ||
+            interaction.member?.permissions?.has(PERMISSIONS.ADMINISTRATOR);
+    }
+
+    hasFeedbackModerationPermission(interaction) {
+        return interaction.member?.permissions?.has(PERMISSIONS.MODERATE_MEMBERS) ||
+            interaction.member?.permissions?.has(PERMISSIONS.ADMINISTRATOR) ||
+            interaction.member?.permissions?.has(PERMISSIONS.MANAGE_MESSAGES) ||
+            interaction.member?.permissions?.has(PERMISSIONS.MANAGE_GUILD);
+    }
+
+    async replyNoPermission(interaction, content) {
+        const payload = { content, ephemeral: true };
+        if (interaction.replied || interaction.deferred) {
+            await interaction.followUp(payload).catch(() => { });
+            return;
+        }
+        await interaction.reply(payload).catch(() => { });
+    }
+
+    async replyInteractionError(interaction) {
+        const payload = {
+            content: 'Có lỗi xảy ra khi xử lý lệnh. Vui lòng thử lại sau.',
+            ephemeral: true
+        };
+        if (interaction.replied || interaction.deferred) {
+            await interaction.followUp(payload).catch(() => { });
+            return;
+        }
+        await interaction.reply(payload).catch(() => { });
+    }
+
+    checkDictionaryCooldown(userId) {
+        const now = Date.now();
+        const availableAt = this.dictionaryCooldowns.get(userId) || 0;
+        if (availableAt > now) {
+            return Math.ceil((availableAt - now) / 1000);
+        }
+
+        const nextAvailableAt = now + GAME_CONSTANTS.DICTIONARY_LOOKUP_COOLDOWN_MS;
+        this.dictionaryCooldowns.set(userId, nextAvailableAt);
+        const timer = setTimeout(() => {
+            if ((this.dictionaryCooldowns.get(userId) || 0) <= Date.now()) {
+                this.dictionaryCooldowns.delete(userId);
+            }
+        }, GAME_CONSTANTS.DICTIONARY_LOOKUP_COOLDOWN_MS);
+        timer.unref?.();
+        return 0;
+    }
+
     getCurrentWord(interaction) {
         if (this.isDirectMessage(interaction.channel)) {
             const users = db.read('users') || {};
@@ -175,10 +226,10 @@ class DiscordBot {
     }
 
     async onInteractionCreate(interaction) {
-        if (interaction.isCommand()) {
-            const { commandName } = interaction;
+        const commandName = interaction.isCommand() ? interaction.commandName : interaction.customId;
 
-            try {
+        try {
+            if (interaction.isCommand()) {
                 switch (commandName) {
                     case 'noitu_add':
                         await this.handleNoituAdd(interaction);
@@ -208,31 +259,28 @@ class DiscordBot {
                         await this.handleNoituMode(interaction);
                         break;
                 }
-            } catch (error) {
-                logger.error(`Error handling command ${commandName}:`, error);
-                await interaction.reply({
-                    content: 'Có lỗi xảy ra khi xử lý lệnh. Vui lòng thử lại sau.',
-                    ephemeral: true
-                }).catch(() => { });
+            } else if (interaction.isStringSelectMenu()) {
+                if (interaction.customId === 'select_feedback') {
+                    await this.handleSelectFeedback(interaction);
+                } else if (interaction.customId === 'select_feedback_type') {
+                    await this.handleSelectFeedbackType(interaction);
+                }
+            } else if (interaction.isButton()) {
+                if (interaction.customId.startsWith('edit_feedback_')) {
+                    await this.handleResolveFeedback(interaction);
+                } else if (interaction.customId.startsWith('delete_feedback_')) {
+                    await this.handleDeleteFeedback(interaction);
+                } else if (interaction.customId === 'back_to_feedback_list') {
+                    await this.handleBackToFeedbackList(interaction);
+                }
+            } else if (interaction.isModalSubmit()) {
+                if (interaction.customId.startsWith('feedback_modal_')) {
+                    await this.handleFeedbackModalSubmit(interaction);
+                }
             }
-        } else if (interaction.isStringSelectMenu()) {
-            if (interaction.customId === 'select_feedback') {
-                await this.handleSelectFeedback(interaction);
-            } else if (interaction.customId === 'select_feedback_type') {
-                await this.handleSelectFeedbackType(interaction);
-            }
-        } else if (interaction.isButton()) {
-            if (interaction.customId.startsWith('edit_feedback_')) {
-                await this.handleResolveFeedback(interaction);
-            } else if (interaction.customId.startsWith('delete_feedback_')) {
-                await this.handleDeleteFeedback(interaction);
-            } else if (interaction.customId === 'back_to_feedback_list') {
-                await this.handleBackToFeedbackList(interaction);
-            }
-        } else if (interaction.isModalSubmit()) {
-            if (interaction.customId.startsWith('feedback_modal_')) {
-                await this.handleFeedbackModalSubmit(interaction);
-            }
+        } catch (error) {
+            logger.error(`Error handling interaction ${commandName}:`, error);
+            await this.replyInteractionError(interaction);
         }
     }
 
@@ -241,13 +289,18 @@ class DiscordBot {
             await interaction.reply({ content: '❌ Lệnh này chỉ dùng trong kênh server.', ephemeral: true });
             return;
         }
+        if (!this.hasGuildManagementPermission(interaction)) {
+            await this.replyNoPermission(interaction, '❌ Bạn cần quyền Manage Server để thêm phòng game.');
+            return;
+        }
 
         const channelId = interaction.channel.id.toString();
-        if (this.data.channelAllowlist.includes(channelId)) {
+        const channelAllowlist = this.getChannelAllowlist();
+        if (channelAllowlist.includes(channelId)) {
             await interaction.reply({ content: '> **Phòng hiện tại đã có trong cơ sở dữ liệu!**', ephemeral: false });
         } else {
-            this.data.channelAllowlist.push(channelId);
-            this.saveData();
+            channelAllowlist.push(channelId);
+            this.saveChannelAllowlist(channelAllowlist);
             const newWord = gameLogic.resetChannelGame(channelId);
             await interaction.reply({
                 content: `> **Đã thêm phòng game nối từ, MoiChat sẽ trả lời mọi tin nhắn từ phòng này!**\n\n🎮 **Game mới đã bắt đầu!**\nTừ hiện tại: **${newWord}**`,
@@ -262,14 +315,20 @@ class DiscordBot {
             await interaction.reply({ content: '❌ Lệnh này chỉ dùng trong kênh server.', ephemeral: true });
             return;
         }
+        if (!this.hasGuildManagementPermission(interaction)) {
+            await this.replyNoPermission(interaction, '❌ Bạn cần quyền Manage Server để xóa phòng game.');
+            return;
+        }
 
         const channelId = interaction.channel.id.toString();
-        if (this.data.channelAllowlist.includes(channelId)) {
-            this.data.channelAllowlist = this.data.channelAllowlist.filter(id => id !== channelId);
-            if (this.data.channels && this.data.channels[channelId]) {
-                delete this.data.channels[channelId];
+        const channelAllowlist = this.getChannelAllowlist();
+        if (channelAllowlist.includes(channelId)) {
+            this.saveChannelAllowlist(channelAllowlist.filter(id => id !== channelId));
+            const channels = db.read('channels') || {};
+            if (channels[channelId]) {
+                delete channels[channelId];
+                db.replace('channels', channels);
             }
-            this.saveData();
             await interaction.reply({ content: '> **Đã xóa phòng game nối từ và toàn bộ dữ liệu của phòng này.**', ephemeral: false });
             logger.info(`Xóa phòng ${channelId} và xóa dữ liệu kèm theo!`);
         } else {
@@ -323,13 +382,28 @@ class DiscordBot {
 
     async handleTratu(interaction) {
         const word = interaction.options.getString('word');
+        if ((word || '').trim().length > GAME_CONSTANTS.DICTIONARY_LOOKUP_MAX_WORD_LENGTH) {
+            await interaction.reply({
+                content: `Từ tra cứu không được vượt quá ${GAME_CONSTANTS.DICTIONARY_LOOKUP_MAX_WORD_LENGTH} ký tự.`,
+                ephemeral: true
+            });
+            return;
+        }
+        const retryAfter = this.checkDictionaryCooldown(interaction.user.id);
+        if (retryAfter > 0) {
+            await interaction.reply({
+                content: `⏳ Vui lòng chờ ${retryAfter}s trước khi tra tiếp.`,
+                ephemeral: true
+            });
+            return;
+        }
         try {
             await interaction.deferReply();
             const responses = await gameLogic.tratu(word || 'từ');
             const embed = new EmbedBuilder()
                 .setTitle('📖 Từ điển Tiếng Việt')
                 .setDescription(responses)
-                .setFooter({ text: 'Nguồn: minhqnd.com/api/dictionary/lookup' })
+                .setFooter({ text: 'Nguồn: dict.minhqnd.com' })
                 .setTimestamp();
             await interaction.editReply({ embeds: [embed] });
 
@@ -337,7 +411,7 @@ class DiscordBot {
             if (currentWord) {
                 await interaction.channel.send(`Từ hiện tại: **${currentWord}**`);
             }
-            logger.info(`${interaction.user.tag} Tra từ: ` + (word || 'từ'));
+            logger.info(`${interaction.user.tag} tra từ '${(word || 'từ').trim()}'`);
         } catch (e) {
             try {
                 if (interaction.deferred || interaction.replied) {
@@ -346,7 +420,7 @@ class DiscordBot {
                     await interaction.reply({ content: 'Không thể tra từ lúc này, vui lòng thử lại sau.' });
                 }
             } catch { }
-            logger.error(`Tratu failed: ${e.message}`);
+            logger.error(`Tratu failed for '${(word || '').trim()}': ${e.message}`);
         }
     }
 
@@ -371,7 +445,7 @@ class DiscordBot {
             logger.info(`User ${interaction.user.tag} started new DM game`);
         } else {
             const channelId = interaction.channel.id.toString();
-            if (this.data.channelAllowlist.includes(channelId)) {
+            if (this.isChannelAllowed(channelId)) {
                 if (this.pendingNewGame.has(channelId)) {
                     await interaction.reply({ content: '⚠️ Đang có yêu cầu reset đang chờ xác nhận trong channel này.', ephemeral: true });
                     return;
@@ -506,12 +580,7 @@ class DiscordBot {
             return;
         }
 
-        const hasModPermissions = interaction.member?.permissions?.has(PERMISSIONS.MODERATE_MEMBERS) ||
-            interaction.member?.permissions?.has(PERMISSIONS.ADMINISTRATOR) ||
-            interaction.member?.permissions?.has(PERMISSIONS.MANAGE_MESSAGES) ||
-            interaction.member?.permissions?.has(PERMISSIONS.MANAGE_GUILD);
-
-        if (!hasModPermissions) {
+        if (!this.hasFeedbackModerationPermission(interaction)) {
             await interaction.reply({
                 content: '❌ Bạn không có quyền sử dụng lệnh này. Chỉ Moderator/Admin mới có thể xem phản hồi.',
                 ephemeral: true
@@ -578,9 +647,7 @@ class DiscordBot {
             await interaction.reply({ content: 'Lệnh này chỉ dùng trong kênh server.', ephemeral: true });
             return;
         }
-        const hasPerm = interaction.member?.permissions?.has(PERMISSIONS.MANAGE_GUILD) ||
-            interaction.member?.permissions?.has(PERMISSIONS.ADMINISTRATOR);
-        if (!hasPerm) {
+        if (!this.hasGuildManagementPermission(interaction)) {
             await interaction.reply({ content: '❌ Bạn cần quyền Manage Server để đổi chế độ.', ephemeral: true });
             return;
         }
@@ -601,6 +668,11 @@ class DiscordBot {
     }
 
     async handleSelectFeedback(interaction) {
+        if (!this.hasFeedbackModerationPermission(interaction)) {
+            await this.replyNoPermission(interaction, '❌ Bạn không có quyền xem phản hồi.');
+            return;
+        }
+
         const feedbackId = interaction.values[0];
         const feedbacks = gameLogic.getAllFeedbacks();
         const feedback = feedbacks.find(f => f.id == feedbackId);
@@ -668,6 +740,11 @@ class DiscordBot {
     }
 
     async handleResolveFeedback(interaction) {
+        if (!this.hasFeedbackModerationPermission(interaction)) {
+            await this.replyNoPermission(interaction, '❌ Bạn không có quyền xử lý phản hồi.');
+            return;
+        }
+
         const feedbackId = interaction.customId.split('_')[2];
         // Mark as resolved
         const feedbacks = gameLogic.getAllFeedbacks();
@@ -718,6 +795,11 @@ class DiscordBot {
     }
 
     async handleDeleteFeedback(interaction) {
+        if (!this.hasFeedbackModerationPermission(interaction)) {
+            await this.replyNoPermission(interaction, '❌ Bạn không có quyền xóa phản hồi.');
+            return;
+        }
+
         const feedbackId = interaction.customId.split('_')[2];
         const feedbacks = gameLogic.getAllFeedbacks();
         const index = feedbacks.findIndex(f => f.id == feedbackId);
@@ -732,6 +814,11 @@ class DiscordBot {
     }
 
     async handleBackToFeedbackList(interaction) {
+        if (!this.hasFeedbackModerationPermission(interaction)) {
+            await this.replyNoPermission(interaction, '❌ Bạn không có quyền xem phản hồi.');
+            return;
+        }
+
         const feedbacks = gameLogic.getAllFeedbacks();
 
         if (feedbacks.length === 0) {
@@ -804,7 +891,7 @@ class DiscordBot {
                 .setTimestamp();
 
             await interaction.reply({ embeds: [embed], ephemeral: true });
-            logger.info(`Feedback received from ${username}: ${fullContent.substring(0, 100)}...`);
+            logger.info(`Feedback received from ${username}: ${fullContent.length} chars`);
         } catch (error) {
             await interaction.reply({
                 content: '❌ Có lỗi xảy ra khi gửi phản hồi. Vui lòng thử lại sau.',
@@ -820,11 +907,10 @@ class DiscordBot {
         const userMessage = message.content.toLowerCase().trim();
         const channelId = message.channel.id.toString();
         const userId = message.author.id;
-
-        logger.info(`Message received: ${message.author.username} : '${userMessage}' in ${channelId} (${this.isDirectMessage(message.channel) ? 'DM' : 'Channel'})`);
+        const isDM = this.isDirectMessage(message.channel);
 
         try {
-            if (this.isDirectMessage(message.channel)) {
+            if (isDM) {
                 const response = gameLogic.checkUser(userMessage, userId);
                 const embed = new EmbedBuilder()
                     .setDescription(response.message)
@@ -834,7 +920,7 @@ class DiscordBot {
                     await message.channel.send(`Từ hiện tại: **${response.currentWord}**`);
                 }
             } else {
-                if (this.data.channelAllowlist.includes(channelId)) {
+                if (this.isChannelAllowed(channelId)) {
                     if (this.pendingNewGame.has(channelId)) {
                         try {
                             const embed = new EmbedBuilder()
@@ -889,16 +975,16 @@ class DiscordBot {
                 }
             } else if (response.code === 'mismatch') {
                 await message.react('❌');
-                await message.reply({ content: `${response.message}\nTừ hiện tại: **${response.currentWord}**`, ephemeral: true });
+                await message.reply({ content: `${response.message}\nTừ hiện tại: **${response.currentWord}**` });
             } else if (response.code === 'repeated') {
                 await message.react('❌');
                 await message.reply({ content: `${response.message}\nTừ hiện tại: **${response.currentWord}**` });
             } else if (response.code === 'not_in_dict') {
                 await message.react('❌');
-                await message.reply({ content: `${response.message}\nTừ hiện tại: **${response.currentWord}**`, ephemeral: !response.streakReset });
+                await message.reply({ content: `${response.message}\nTừ hiện tại: **${response.currentWord}**` });
             } else if (response.code === 'invalid_format') {
                 await message.react('⚠️');
-                await message.reply({ content: `${response.message}\nTừ hiện tại: **${response.currentWord}**`, ephemeral: true });
+                await message.reply({ content: `${response.message}\nTừ hiện tại: **${response.currentWord}**` });
             } else {
                 await message.react('ℹ️');
             }

@@ -1,4 +1,4 @@
-const { listWords, wordPairs, normalizeVietnamese } = require('./wordProcessing');
+const { listWords, listWordSet, wordPairs, normalizeVietnamese } = require('./wordProcessing');
 const { setupLogger, GAME_CONSTANTS, RESPONSE_CODES, RESPONSE_TYPES, GAME_MODES } = require('./utils');
 
 const logger = setupLogger('game_engine');
@@ -26,6 +26,7 @@ class GameEngine {
 
     getWordStartingWith(start, history = []) {
         const possibleWords = wordPairs[start] || [];
+        const historySet = history instanceof Set ? history : new Set(history);
 
         if (possibleWords.length === 0) {
             return false;
@@ -34,7 +35,7 @@ class GameEngine {
         // Lọc các từ chưa được sử dụng trong lịch sử
         const availableWords = possibleWords.filter(secondWord => {
             const fullWord = `${start} ${secondWord}`;
-            return !history.includes(fullWord);
+            return !historySet.has(fullWord);
         });
 
         // Nếu không còn từ nào có thể dùng, trả về false
@@ -99,12 +100,12 @@ class GameEngine {
 
     validateWordInDictionary(playerWord) {
         const normalized = normalizeVietnamese(playerWord);
-        return listWords.includes(normalized);
+        return listWordSet.has(normalized);
     }
 
     validateWordNotRepeated(history, playerWord) {
         const normalized = normalizeVietnamese(playerWord);
-        return !history.includes(normalized);
+        return !(history instanceof Set ? history : new Set(history)).has(normalized);
     }
 
     // Core game logic
@@ -526,7 +527,7 @@ class GameEngine {
             return {
                 type: RESPONSE_TYPES.ERROR,
                 code: RESPONSE_CODES.LOSS,
-                message: `${statsLine}\n**Thua cuộc!** Từ tiếp theo: **"${this.nextWord}"** không còn từ nào để nối tiếp.`,
+                message: `${statsLine}\n**Thua cuộc!** Từ tiếp theo: **"${nextWord}"** không còn từ nào để nối tiếp.`,
                 currentWord: newWord,
                 gameData: newGameData
             };

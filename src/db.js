@@ -70,7 +70,9 @@ class Database {
                 fs.mkdirSync(dir, { recursive: true });
             }
 
-            fs.writeFileSync(this.dataPath, JSON.stringify(this.cache, null, 2), 'utf8');
+            const tmpPath = `${this.dataPath}.${process.pid}.${Date.now()}.tmp`;
+            fs.writeFileSync(tmpPath, JSON.stringify(this.cache, null, 2), 'utf8');
+            fs.renameSync(tmpPath, this.dataPath);
             // Update last modified time
             if (fs.existsSync(this.dataPath)) {
                 this.lastModified = fs.statSync(this.dataPath).mtime.getTime();
@@ -162,11 +164,24 @@ class Database {
         this._ensureDataLoaded();
         this._migrateLegacyData();
 
+        if (Array.isArray(newData)) {
+            this.cache[key] = newData;
+            this._saveData();
+            return;
+        }
+
         if (!this.cache[key] || typeof this.cache[key] !== 'object') {
             this.cache[key] = {};
         }
 
         Object.assign(this.cache[key], newData);
+        this._saveData();
+    }
+
+    replace(key, newData) {
+        this._ensureDataLoaded();
+        this._migrateLegacyData();
+        this.cache[key] = newData;
         this._saveData();
     }
 

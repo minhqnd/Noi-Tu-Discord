@@ -77,6 +77,8 @@ Bot cần các quyền sau trong server:
 - ✅ Read Message History
 - ✅ Add Reactions (cho PvP mode)
 
+Người dùng cần quyền **Manage Server** để dùng `/noitu_add`, `/noitu_remove` và `/noitu_mode`.
+
 ![Bot Permissions](./images/bot-permissions.png)
 *Ảnh hướng dẫn cấu hình quyền cho bot*
 
