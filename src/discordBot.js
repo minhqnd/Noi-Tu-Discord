@@ -4,6 +4,7 @@ const gameLogic = require('./gameLogic');
 const db = require('./db');
 
 const logger = setupLogger('discord_bot');
+const OWNER_ID = '457802322190401546';
 const COMMAND_CONTEXTS = {
     GUILD: 0,
     BOT_DM: 1
@@ -102,14 +103,16 @@ class DiscordBot {
                 description: 'Xem thống kê nối từ hiện tại',
                 contexts: [COMMAND_CONTEXTS.GUILD, COMMAND_CONTEXTS.BOT_DM]
             },
-            // {
-            //     name: 'feedback',
-            //     description: 'Gửi phản hồi về từ thiếu, lỗi hoặc đề xuất'
-            // },
-            // {
-            //     name: 'viewfeedback',
-            //     description: '[ADMIN] Xem tất cả phản hồi từ người dùng'
-            // },
+            {
+                name: 'feedback',
+                description: 'Gửi phản hồi về từ thiếu, lỗi hoặc đề xuất',
+                contexts: [COMMAND_CONTEXTS.GUILD, COMMAND_CONTEXTS.BOT_DM]
+            },
+            {
+                name: 'viewfeedback',
+                description: '[ADMIN] Xem tất cả phản hồi từ người dùng',
+                contexts: [COMMAND_CONTEXTS.GUILD, COMMAND_CONTEXTS.BOT_DM]
+            },
             {
                 name: 'noitu_mode',
                 description: 'Chọn chế độ chơi cho kênh: bot hoặc pvp',
@@ -538,9 +541,17 @@ class DiscordBot {
     }
 
     async handleFeedback(interaction) {
-        if (this.isDirectMessage(interaction.channel)) {
-            await interaction.reply({ content: '❌ Lệnh này chỉ dùng trong kênh server.', ephemeral: true });
-            return;
+        // Rate limit: 1 feedback per user per 5 minutes
+        const userId = interaction.user.id;
+        if (!this._feedbackCooldowns) this._feedbackCooldowns = new Map();
+        const lastFeedback = this._feedbackCooldowns.get(userId);
+        if (lastFeedback) {
+            const elapsed = Math.floor((Date.now() - lastFeedback) / 1000);
+            const remaining = 300 - elapsed;
+            if (remaining > 0) {
+                await interaction.reply({ content: `⏳ Vui lòng chờ ${Math.ceil(remaining / 60)} phút trước khi gửi feedback tiếp.`, ephemeral: true });
+                return;
+            }
         }
 
         const selectMenu = new StringSelectMenuBuilder()
@@ -891,6 +902,30 @@ class DiscordBot {
                 .setTimestamp();
 
             await interaction.reply({ embeds: [embed], ephemeral: true });
+
+            // Set cooldown
+            if (!this._feedbackCooldowns) this._feedbackCooldowns = new Map();
+            this._feedbackCooldowns.set(userId, Date.now());
+
+            // Send DM to owner
+            try {
+                const owner = await this.client.users.fetch(OWNER_ID);
+                const dmEmbed = new EmbedBuilder()
+                    .setTitle('📬 Feedback mới')
+                    .setDescription(content)
+                    .addFields(
+                        { name: 'Loại', value: typeLabel, inline: true },
+                        { name: 'Từ', value: `${username} (${userId})`, inline: true },
+                        { name: 'Kênh', value: channelId || 'DM', inline: true },
+                        { name: 'ID', value: feedbackId, inline: true }
+                    )
+                    .setColor(0xFFA500)
+                    .setTimestamp();
+                await owner.send({ embeds: [dmEmbed] });
+            } catch (dmErr) {
+                logger.warn(`Could not DM owner: ${dmErr.message}`);
+            }
+
             logger.info(`Feedback received from ${username}: ${fullContent.length} chars`);
         } catch (error) {
             await interaction.reply({
