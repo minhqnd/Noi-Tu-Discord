@@ -58,6 +58,17 @@ class DB {
                 status TEXT DEFAULT 'pending',
                 replies TEXT DEFAULT '[]'
             );
+
+            CREATE TABLE IF NOT EXISTS global_stats (
+                key TEXT PRIMARY KEY,
+                value INTEGER DEFAULT 0
+            );
+
+            CREATE TABLE IF NOT EXISTS tracked_players (
+                user_id TEXT PRIMARY KEY,
+                first_seen TEXT DEFAULT CURRENT_TIMESTAMP,
+                last_seen TEXT DEFAULT CURRENT_TIMESTAMP
+            );
         `);
 
         // Migration: add replies column to feedbacks if not exists
@@ -65,6 +76,32 @@ class DB {
         if (!feedbackCols.find(c => c.name === 'replies')) {
             this.db.exec(`ALTER TABLE feedbacks ADD COLUMN replies TEXT DEFAULT '[]'`);
             logger.info('Migration: added replies column to feedbacks table');
+        }
+
+        // Backfill tracked_players from existing channels and users data
+        try {
+            const { count: playerCount } = this.db.prepare('SELECT COUNT(*) as count FROM tracked_players').get();
+            if (playerCount === 0) {
+                const backfill = this.db.transaction(() => {
+                    const channels = this.db.prepare('SELECT players FROM channels').all();
+                    for (const ch of channels) {
+                        try {
+                            const players = JSON.parse(ch.players || '{}');
+                            for (const uid of Object.keys(players)) {
+                                this.db.prepare('INSERT OR IGNORE INTO tracked_players (user_id) VALUES (?)').run(uid.toString());
+                            }
+                        } catch (e) { }
+                    }
+                    const users = this.db.prepare('SELECT user_id FROM users').all();
+                    for (const u of users) {
+                        this.db.prepare('INSERT OR IGNORE INTO tracked_players (user_id) VALUES (?)').run(u.user_id.toString());
+                    }
+                });
+                backfill();
+                logger.info('Backfilled tracked_players from existing channels and users data');
+            }
+        } catch (e) {
+            logger.error(`Error backfilling tracked_players: ${e.message}`);
         }
 
         // Prepare commonly used statements for performance
@@ -110,6 +147,22 @@ class DB {
                     SELECT id FROM feedbacks ORDER BY timestamp DESC LIMIT ?
                 )
             `),
+
+            // Global Stats
+            incrementStat: this.db.prepare(`
+                INSERT INTO global_stats (key, value) VALUES (@key, @amount)
+                ON CONFLICT(key) DO UPDATE SET value = value + excluded.value
+            `),
+            getAllGlobalStats: this.db.prepare('SELECT key, value FROM global_stats'),
+            getStat: this.db.prepare('SELECT value FROM global_stats WHERE key = ?'),
+
+            // Tracked Players
+            trackPlayer: this.db.prepare(`
+                INSERT INTO tracked_players (user_id, first_seen, last_seen)
+                VALUES (@user_id, datetime('now'), datetime('now'))
+                ON CONFLICT(user_id) DO UPDATE SET last_seen = datetime('now')
+            `),
+            countTrackedPlayers: this.db.prepare('SELECT COUNT(*) as count FROM tracked_players'),
         };
 
         logger.info('SQLite database initialized');
@@ -350,6 +403,79 @@ class DB {
      */
     clearCache() {
         logger.debug('clearCache() called (no-op for SQLite)');
+    }
+
+    /**
+     * Increment a global stat counter by amount (default 1).
+     * @param {string} key
+     * @param {number} amount
+     */
+    incrementStat(key, amount = 1) {
+        try {
+            this._stmts.incrementStat.run({ key, amount });
+        } catch (error) {
+            logger.error(`Error incrementing stat ${key}:`, error);
+        }
+    }
+
+    /**
+     * Get all global stats as key-value object.
+     * @returns {Object.<string, number>}
+     */
+    getGlobalStats() {
+        try {
+            const rows = this._stmts.getAllGlobalStats.all();
+            const stats = {};
+            for (const row of rows) {
+                stats[row.key] = row.value;
+            }
+            return stats;
+        } catch (error) {
+            logger.error('Error fetching global stats:', error);
+            return {};
+        }
+    }
+
+    /**
+     * Get a single global stat value.
+     * @param {string} key
+     * @returns {number}
+     */
+    getStat(key) {
+        try {
+            const row = this._stmts.getStat.get(key);
+            return row ? row.value : 0;
+        } catch (error) {
+            logger.error(`Error fetching stat ${key}:`, error);
+            return 0;
+        }
+    }
+
+    /**
+     * Track a user interaction (records first seen / last seen).
+     * @param {string} userId
+     */
+    trackPlayer(userId) {
+        if (!userId) return;
+        try {
+            this._stmts.trackPlayer.run({ user_id: userId.toString() });
+        } catch (error) {
+            logger.error(`Error tracking player ${userId}:`, error);
+        }
+    }
+
+    /**
+     * Get total count of unique tracked players.
+     * @returns {number}
+     */
+    getTotalTrackedPlayers() {
+        try {
+            const { count } = this._stmts.countTrackedPlayers.get();
+            return count || 0;
+        } catch (error) {
+            logger.error('Error fetching tracked players count:', error);
+            return 0;
+        }
     }
 
     /**

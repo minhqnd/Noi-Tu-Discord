@@ -104,6 +104,11 @@ class DiscordBot {
                 contexts: [COMMAND_CONTEXTS.GUILD, COMMAND_CONTEXTS.BOT_DM]
             },
             {
+                name: 'botstats',
+                description: 'Xem thống kê toàn hệ thống của Bot Nối Từ',
+                contexts: [COMMAND_CONTEXTS.GUILD, COMMAND_CONTEXTS.BOT_DM]
+            },
+            {
                 name: 'feedback',
                 description: 'Gửi phản hồi về từ thiếu, lỗi hoặc đề xuất',
                 contexts: [COMMAND_CONTEXTS.GUILD, COMMAND_CONTEXTS.BOT_DM]
@@ -265,6 +270,9 @@ class DiscordBot {
                     case 'stats':
                         await this.handleStats(interaction);
                         break;
+                    case 'botstats':
+                        await this.handleBotStats(interaction);
+                        break;
                     case 'feedback':
                         await this.handleFeedback(interaction);
                         break;
@@ -376,7 +384,7 @@ class DiscordBot {
                 },
                 {
                     name: '📚 Tiện ích',
-                    value: '`/tratu [từ]` - Tra cứu từ điển\n`/feedback` - Gửi phản hồi (từ thiếu, lỗi, đề xuất)\n`/noitu_mode [bot|pvp]` - Đặt chế độ chơi của kênh\n`/help` - Hiển thị hướng dẫn này',
+                    value: '`/tratu [từ]` - Tra cứu từ điển\n`/botstats` - Xem thống kê toàn hệ thống của bot\n`/feedback` - Gửi phản hồi (từ thiếu, lỗi, đề xuất)\n`/noitu_mode [bot|pvp]` - Đặt chế độ chơi của kênh\n`/help` - Hiển thị hướng dẫn này',
                     inline: false
                 },
                 {
@@ -556,6 +564,38 @@ class DiscordBot {
             if (ch.word) {
                 await interaction.channel.send(`Từ hiện tại: **${ch.word}**`);
             }
+        }
+    }
+
+    async handleBotStats(interaction) {
+        try {
+            const globalStats = db.getGlobalStats();
+            const totalServers = this.client.guilds.cache.size;
+            const totalActiveChannels = this.getChannelAllowlist().length;
+            const totalPlayers = db.getTotalTrackedPlayers();
+            const totalGames = globalStats.total_games || 0;
+            const totalWordsGuessed = globalStats.total_words_guessed || 0;
+            const totalWrongGuesses = globalStats.total_wrong_guesses || 0;
+
+            const embed = new EmbedBuilder()
+                .setTitle('📊 Thống Kê Toàn Hệ Thống - Bot Nối Từ')
+                .setColor(0x5865F2)
+                .setDescription('Tổng hợp các chỉ số hoạt động của bot theo thời gian thực:')
+                .addFields(
+                    { name: '🌐 Máy chủ (Servers)', value: `**${totalServers.toLocaleString('vi-VN')}** server`, inline: true },
+                    { name: '💬 Kênh đang chơi', value: `**${totalActiveChannels.toLocaleString('vi-VN')}** phòng`, inline: true },
+                    { name: '👥 Tổng người chơi', value: `**${totalPlayers.toLocaleString('vi-VN')}** người`, inline: true },
+                    { name: '🎮 Tổng ván đã bắt đầu', value: `**${totalGames.toLocaleString('vi-VN')}** ván`, inline: true },
+                    { name: '📝 Tổng từ đã nối đúng', value: `**${totalWordsGuessed.toLocaleString('vi-VN')}** từ`, inline: true },
+                    { name: '❌ Tổng lượt đoán sai', value: `**${totalWrongGuesses.toLocaleString('vi-VN')}** lần`, inline: true }
+                )
+                .setFooter({ text: 'Bot Nối Từ Tiếng Việt 🎮' })
+                .setTimestamp();
+
+            await interaction.reply({ embeds: [embed] });
+        } catch (error) {
+            logger.error(`Error in handleBotStats: ${error.message}`);
+            await interaction.reply({ content: '❌ Có lỗi xảy ra khi lấy thống kê bot.', ephemeral: true }).catch(() => { });
         }
     }
 

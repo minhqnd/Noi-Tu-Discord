@@ -1,5 +1,6 @@
 const { listWords, listWordSet, wordPairs, normalizeVietnamese } = require('./wordProcessing');
 const { setupLogger, GAME_CONSTANTS, RESPONSE_CODES, RESPONSE_TYPES, GAME_MODES } = require('./utils');
+const db = require('./db');
 
 const logger = setupLogger('game_engine');
 
@@ -120,12 +121,16 @@ class GameEngine {
         if (!userId) {
             throw new Error('Invalid userId parameter');
         }
+
+        // Track player interaction
+        db.trackPlayer(userId);
         
         const startTime = Date.now();
         const normalizedPlayer = normalizeVietnamese(playerWord.trim());
 
         // Validate format
         if (!this.validateWordFormat(playerWord)) {
+            db.incrementStat('total_wrong_guesses', 1);
             const currentWord = gameData.word;
             const lw = currentWord ? this.lastWord(currentWord) : 'từ';
             return {
@@ -146,6 +151,7 @@ class GameEngine {
 
         // Initialize game if no current word
         if (!currentWord) {
+            db.incrementStat('total_games', 1);
             currentWord = this.newWord();
             const newGameData = {
                 word: currentWord,
@@ -164,6 +170,7 @@ class GameEngine {
 
         // Validate word match
         if (!this.validateWordMatch(currentWord, playerWord)) {
+            db.incrementStat('total_wrong_guesses', 1);
             this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] MODE=${mode} MISMATCH '${playerWord}' -> needs '${this.lastWord(currentWord)}' [${(Date.now() - startTime) / 1000}s]`);
             return {
                 type: RESPONSE_TYPES.ERROR,
@@ -175,6 +182,7 @@ class GameEngine {
 
         // Validate not repeated
         if (!this.validateWordNotRepeated(history, playerWord)) {
+            db.incrementStat('total_wrong_guesses', 1);
             userStats.wrongCount += 1;
 
             if (userStats.wrongCount >= GAME_CONSTANTS.MAX_WRONG_COUNT) {
@@ -201,18 +209,19 @@ class GameEngine {
                         }
                     };
 
-                            this.logger.info(`Channel: [${gameData.id}] MODE=pvp STREAK_RESET REPEATED '${playerWord}' [${(Date.now() - startTime) / 1000}s]`);
-                            return {
-                                type: RESPONSE_TYPES.ERROR,
-                                code: RESPONSE_CODES.REPEATED,
-                                streakReset: true,
-                                message: `Chuỗi của <@${userId}> đã **bị reset** (từ đã được trả lời). Chuỗi đạt được: **${userStats.currentStreak}**, kỷ lục: **${userStats.bestStreak}**`,
-                                currentWord: currentWord,
-                                gameData: newGameData
-                            };
+                    this.logger.info(`Channel: [${gameData.id}] MODE=pvp STREAK_RESET REPEATED '${playerWord}' [${(Date.now() - startTime) / 1000}s]`);
+                    return {
+                        type: RESPONSE_TYPES.ERROR,
+                        code: RESPONSE_CODES.REPEATED,
+                        streakReset: true,
+                        message: `Chuỗi của <@${userId}> đã **bị reset** (từ đã được trả lời). Chuỗi đạt được: **${userStats.currentStreak}**, kỷ lục: **${userStats.bestStreak}**`,
+                        currentWord: currentWord,
+                        gameData: newGameData
+                    };
                 }
 
                 // Bot mode or DM: reset everything
+                db.incrementStat('total_games', 1);
                 const newWord = this.newWord();
                 const newGameData = {
                     word: newWord,
@@ -266,6 +275,7 @@ class GameEngine {
 
         // Validate in dictionary
         if (!this.validateWordInDictionary(playerWord)) {
+            db.incrementStat('total_wrong_guesses', 1);
             userStats.wrongCount += 1;
 
             if (userStats.wrongCount >= GAME_CONSTANTS.MAX_WRONG_COUNT) {
@@ -304,6 +314,7 @@ class GameEngine {
                 }
 
                 // Bot mode or DM: reset everything
+                db.incrementStat('total_games', 1);
                 const newWord = this.newWord();
                 const newGameData = {
                     word: newWord,
@@ -368,6 +379,9 @@ class GameEngine {
             wrongCount: 0
         };
 
+        // User played a valid word
+        db.incrementStat('total_words_guessed', 1);
+
         // PvP mode: just accept and update, but check for endword
         if (mode === GAME_MODES.PVP && !isDM) {
             history.push(normalizedPlayer);
@@ -379,7 +393,8 @@ class GameEngine {
             const nextWordAvailable = this.getWordStartingWith(this.lastWord(normalizedPlayer), history);
             
             if (!nextWordAvailable) {
-                // User wins - they found an endword
+                // User wins - they found an endword -> starts new game
+                db.incrementStat('total_games', 1);
                 const wins = (userStats.wins || 0) + 1;
                 userStats.wins = wins;
 
@@ -443,7 +458,8 @@ class GameEngine {
         currentWord = nextWord;
 
         if (!nextWord) {
-            // User wins
+            // User wins -> starts new game
+            db.incrementStat('total_games', 1);
             const nextStreak = (userStats.currentStreak || 0) + 1;
             const best = Math.max(userStats.bestStreak || 0, nextStreak);
             const wins = (userStats.wins || 0) + 1;
@@ -489,6 +505,8 @@ class GameEngine {
 
         if (this.uniqueWord(this.lastWord(nextWord))) {
             // User loses - bot's word ends the chain
+            db.incrementStat('total_words_guessed', 1); // Bot played a word
+            db.incrementStat('total_games', 1); // Starts new game
             const preserved = {
                 bestStreak: userStats.bestStreak || 0,
                 wins: userStats.wins || 0
@@ -533,7 +551,8 @@ class GameEngine {
             };
         }
 
-        // Normal move
+        // Normal move: Bot successfully plays nextWord
+        db.incrementStat('total_words_guessed', 1);
         history.push(normalizedPlayer, currentWord);
         userStats.currentStreak = (userStats.currentStreak || 0) + 1;
         userStats.bestStreak = Math.max(userStats.bestStreak || 0, userStats.currentStreak);
@@ -570,6 +589,7 @@ class GameEngine {
     }
 
     resetGame(gameData, isDM = false) {
+        db.incrementStat('total_games', 1);
         const currentWord = this.newWord();
         const newGameData = {
             word: currentWord,
