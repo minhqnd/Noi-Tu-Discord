@@ -1068,7 +1068,7 @@ class DiscordBot {
     }
 
     async handleFeedbackModalSubmit(interaction) {
-        const feedbackType = interaction.customId.split('_')[2];
+        const feedbackType = interaction.customId.split('_').slice(2).join('_');
         const content = interaction.fields.getTextInputValue('feedback_content');
 
         const userId = interaction.user.id;
