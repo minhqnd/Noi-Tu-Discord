@@ -108,11 +108,11 @@ class DiscordBot {
                 description: 'Gửi phản hồi về từ thiếu, lỗi hoặc đề xuất',
                 contexts: [COMMAND_CONTEXTS.GUILD, COMMAND_CONTEXTS.BOT_DM]
             },
-            {
-                name: 'viewfeedback',
-                description: '[ADMIN] Xem tất cả phản hồi từ người dùng',
-                contexts: [COMMAND_CONTEXTS.GUILD, COMMAND_CONTEXTS.BOT_DM]
-            },
+            // {
+            //     name: 'viewfeedback',
+            //     description: '[ADMIN] Xem tất cả phản hồi từ người dùng',
+            //     contexts: [COMMAND_CONTEXTS.GUILD, COMMAND_CONTEXTS.BOT_DM]
+            // },
             {
                 name: 'noitu_mode',
                 description: 'Chọn chế độ chơi cho kênh: bot hoặc pvp',
