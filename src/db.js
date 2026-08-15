@@ -55,9 +55,17 @@ class DB {
                 content TEXT NOT NULL,
                 channel_id TEXT,
                 timestamp TEXT NOT NULL,
-                status TEXT DEFAULT 'pending'
+                status TEXT DEFAULT 'pending',
+                replies TEXT DEFAULT '[]'
             );
         `);
+
+        // Migration: add replies column to feedbacks if not exists
+        const feedbackCols = this.db.pragma('table_info(feedbacks)');
+        if (!feedbackCols.find(c => c.name === 'replies')) {
+            this.db.exec(`ALTER TABLE feedbacks ADD COLUMN replies TEXT DEFAULT '[]'`);
+            logger.info('Migration: added replies column to feedbacks table');
+        }
 
         // Prepare commonly used statements for performance
         this._stmts = {
@@ -92,8 +100,8 @@ class DB {
             // Feedbacks
             getAllFeedbacks: this.db.prepare('SELECT * FROM feedbacks ORDER BY timestamp DESC'),
             insertFeedback: this.db.prepare(`
-                INSERT INTO feedbacks (id, user_id, username, content, channel_id, timestamp, status)
-                VALUES (@id, @user_id, @username, @content, @channel_id, @timestamp, @status)
+                INSERT INTO feedbacks (id, user_id, username, content, channel_id, timestamp, status, replies)
+                VALUES (@id, @user_id, @username, @content, @channel_id, @timestamp, @status, @replies)
             `),
             updateFeedbackStatus: this.db.prepare('UPDATE feedbacks SET status = ? WHERE id = ?'),
             countFeedbacks: this.db.prepare('SELECT COUNT(*) as count FROM feedbacks'),
@@ -183,12 +191,14 @@ class DB {
             case 'feedbacks': {
                 return this._stmts.getAllFeedbacks.all().map(row => ({
                     id: row.id,
+                    user_id: row.user_id,
                     userId: row.user_id,
                     username: row.username,
                     content: row.content,
                     channelId: row.channel_id,
                     timestamp: row.timestamp,
                     status: row.status,
+                    replies: JSON.parse(row.replies || '[]'),
                 }));
             }
             default:
@@ -254,12 +264,13 @@ class DB {
                         for (const f of feedbacks) {
                             this._stmts.insertFeedback.run({
                                 id: f.id,
-                                user_id: f.userId,
+                                user_id: f.userId || f.user_id,
                                 username: f.username,
                                 content: f.content,
                                 channel_id: f.channelId || null,
                                 timestamp: f.timestamp,
                                 status: f.status || 'pending',
+                                replies: JSON.stringify(f.replies || []),
                             });
                         }
                     });
