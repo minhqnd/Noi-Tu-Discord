@@ -1,9 +1,11 @@
 # 🎮 Moi Nối Từ - Discord Bot
 
-[![Servers](https://img.shields.io/badge/Servers-390%2B-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/oauth2/authorize?client_id=1076547168099385436)
-[![Status](https://img.shields.io/badge/Status-Online-23A55A?style=for-the-badge&logo=statuspage&logoColor=white)](https://discord.com/oauth2/authorize?client_id=1076547168099385436)
+<!-- [![Servers](https://img.shields.io/badge/Servers-390%2B-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/oauth2/authorize?client_id=1076547168099385436)
+[![Status](https://img.shields.io/badge/Status-Online-23A55A?style=for-the-badge&logo=statuspage&logoColor=white)](https://discord.com/oauth2/authorize?client_id=1076547168099385436) -->
 [![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
+[![Discord Bots](https://top.gg/api/widget/servers/1076547168099385436.svg)](https://top.gg/bot/1076547168099385436)
+
 
 ### Thêm vào Server ngay!
 [![Thêm vào server](https://img.shields.io/badge/THÊM_VÀO_SERVER-5865F2?style=for-the-badge&logo=discord&logoColor=white&labelColor=5865F2)](https://discord.com/oauth2/authorize?client_id=1076547168099385436)

@@ -4,7 +4,7 @@ const gameLogic = require('./gameLogic');
 const db = require('./db');
 
 const logger = setupLogger('discord_bot');
-const OWNER_ID = '457802322190401546';
+const OWNER_ID = process.env.OWNER_ID;
 const COMMAND_CONTEXTS = {
     GUILD: 0,
     BOT_DM: 1
@@ -107,6 +107,19 @@ class DiscordBot {
                 name: 'feedback',
                 description: 'Gửi phản hồi về từ thiếu, lỗi hoặc đề xuất',
                 contexts: [COMMAND_CONTEXTS.GUILD, COMMAND_CONTEXTS.BOT_DM]
+            },
+            {
+                name: 'addword',
+                description: '[OWNER] Thêm từ mới vào từ điển',
+                contexts: [COMMAND_CONTEXTS.GUILD, COMMAND_CONTEXTS.BOT_DM],
+                options: [
+                    {
+                        name: 'word',
+                        description: 'Từ 2 âm tiết cần thêm (ví dụ: trú mưa, mồi câu)',
+                        type: 3, // STRING
+                        required: true
+                    }
+                ]
             },
             // {
             //     name: 'viewfeedback',
@@ -254,6 +267,9 @@ class DiscordBot {
                         break;
                     case 'feedback':
                         await this.handleFeedback(interaction);
+                        break;
+                    case 'addword':
+                        await this.handleAddWord(interaction);
                         break;
                     case 'viewfeedback':
                         await this.handleViewFeedback(interaction);
@@ -540,6 +556,36 @@ class DiscordBot {
             if (ch.word) {
                 await interaction.channel.send(`Từ hiện tại: **${ch.word}**`);
             }
+        }
+    }
+
+    async handleAddWord(interaction) {
+        if (interaction.user.id !== OWNER_ID) {
+            await interaction.reply({
+                content: '❌ Lệnh này chỉ dành riêng cho OWNER bot.',
+                ephemeral: true
+            });
+            return;
+        }
+
+        const inputWord = interaction.options.getString('word');
+        const result = gameLogic.addWord(inputWord);
+
+        if (result.success) {
+            const embed = new EmbedBuilder()
+                .setTitle('✅ Đã thêm từ mới vào từ điển!')
+                .setDescription(`Từ **"${result.word}"** đã được thêm và có hiệu lực ngay lập tức.\nNgười chơi có thể sử dụng từ này trong game.`)
+                .setColor(0x57F287)
+                .setFooter({ text: 'Đã lưu vào customWords.json' })
+                .setTimestamp();
+
+            await interaction.reply({ embeds: [embed], ephemeral: true });
+            logger.info(`Owner ${interaction.user.tag} added new word: "${result.word}"`);
+        } else {
+            await interaction.reply({
+                content: `❌ ${result.message}`,
+                ephemeral: true
+            });
         }
     }
 

@@ -31,18 +31,33 @@ function normalizeVietnamese(text) {
   return normalized;
 }
 
+const customWordsPath = path.join(__dirname, 'assets', 'customWords.json');
+let rawCustomWords = {};
+try {
+  if (fs.existsSync(customWordsPath)) {
+    rawCustomWords = JSON.parse(fs.readFileSync(customWordsPath, 'utf8'));
+  }
+} catch (err) {
+  rawCustomWords = {};
+}
+
 const rawWordPairs = JSON.parse(fs.readFileSync(path.join(__dirname, 'assets', 'wordPairs.json'), 'utf8'));
 
 // Build normalized, merged wordPairs
 const wordPairs = {};
-for (const [k, arr] of Object.entries(rawWordPairs)) {
-  const nk = normalizeVietnamese(k);
-  if (!wordPairs[nk]) wordPairs[nk] = [];
-  for (const v of arr) {
-    const nv = normalizeVietnamese(v);
-    if (!wordPairs[nk].includes(nv)) wordPairs[nk].push(nv);
+function mergePairs(source) {
+  for (const [k, arr] of Object.entries(source)) {
+    const nk = normalizeVietnamese(k);
+    if (!wordPairs[nk]) wordPairs[nk] = [];
+    for (const v of arr) {
+      const nv = normalizeVietnamese(v);
+      if (!wordPairs[nk].includes(nv)) wordPairs[nk].push(nv);
+    }
   }
 }
+
+mergePairs(rawWordPairs);
+mergePairs(rawCustomWords);
 
 // Rebuild listWords from normalized pairs
 const listWords = [];
@@ -52,6 +67,53 @@ for (const firstWord in wordPairs) {
   }
 }
 const listWordSet = new Set(listWords);
+
+function addWord(word) {
+  if (!word || typeof word !== 'string') {
+    return { success: false, message: 'Từ không hợp lệ.' };
+  }
+
+  const normalized = normalizeVietnamese(word.trim());
+  const parts = normalized.split(/\s+/);
+
+  if (parts.length !== 2) {
+    return { success: false, message: 'Từ phải gồm đúng 2 âm tiết (ví dụ: "trú mưa").' };
+  }
+
+  const [firstWord, secondWord] = parts;
+
+  if (listWordSet.has(normalized)) {
+    return { success: false, message: `Từ **"${normalized}"** đã có sẵn trong từ điển rồi!` };
+  }
+
+  // 1. Update in-memory structures
+  if (!wordPairs[firstWord]) wordPairs[firstWord] = [];
+  if (!wordPairs[firstWord].includes(secondWord)) wordPairs[firstWord].push(secondWord);
+  listWords.push(normalized);
+  listWordSet.add(normalized);
+
+  // 2. Persist to customWords.json
+  try {
+    let customData = {};
+    if (fs.existsSync(customWordsPath)) {
+      try {
+        customData = JSON.parse(fs.readFileSync(customWordsPath, 'utf8'));
+      } catch {
+        customData = {};
+      }
+    }
+
+    if (!customData[firstWord]) customData[firstWord] = [];
+    if (!customData[firstWord].includes(secondWord)) {
+      customData[firstWord].push(secondWord);
+    }
+
+    fs.writeFileSync(customWordsPath, JSON.stringify(customData, null, 2), 'utf8');
+    return { success: true, word: normalized };
+  } catch (error) {
+    return { success: false, message: `Lỗi khi lưu file: ${error.message}` };
+  }
+}
 
 function getnoitu(playerWord) {
   if (!playerWord || typeof playerWord !== 'string') {
@@ -145,4 +207,4 @@ async function tratu(word) {
   }
 }
 
-module.exports = { getnoitu, tratu, listWords, listWordSet, wordPairs, normalizeVietnamese };
+module.exports = { getnoitu, tratu, listWords, listWordSet, wordPairs, normalizeVietnamese, addWord };

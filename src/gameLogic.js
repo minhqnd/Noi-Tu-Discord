@@ -1,7 +1,7 @@
 const db = require('./db');
 const GameEngine = require('./gameEngine');
 const { setupLogger } = require('./utils');
-const { tratu } = require('./wordProcessing');
+const { tratu, addWord } = require('./wordProcessing');
 const logger = setupLogger('game_logic');
 const gameEngine = new GameEngine();
 
@@ -168,5 +168,6 @@ module.exports = {
     getAllFeedbacks,
     markFeedbackAsReviewed,
     saveFeedbacks,
-    tratu
+    tratu,
+    addWord
 };
