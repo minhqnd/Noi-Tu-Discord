@@ -48,13 +48,14 @@ client.once('ready', async () => {
     console.log(`Logged in as ${client.user.tag}`);
     console.log(`Bot is in ${client.guilds.cache.size} servers\n`);
     // ── Chế độ gửi ──────────────────────────────────────────────
-    // Test: chỉ gửi cho 1 server cụ thể
-    const TARGET_GUILD_IDS = ['964898208696401930'];
-    // Gửi tất cả: comment dòng trên, bỏ comment dòng dưới
-    // const TARGET_GUILD_IDS = null;
+    // Test: bỏ comment dòng dưới (chỉ gửi cho server cụ thể)
+    // const TARGET_GUILD_IDS = ['964898208696401930'];
+    // Gửi tất cả (toàn bộ server):
+    const TARGET_GUILD_IDS = null;
 
-    const guilds = TARGET_GUILD_IDS
-        ? client.guilds.cache.filter(g => TARGET_GUILD_IDS.includes(g.id))
+    const targetIds = (typeof TARGET_GUILD_IDS !== 'undefined' && TARGET_GUILD_IDS) ? TARGET_GUILD_IDS : null;
+    const guilds = targetIds
+        ? client.guilds.cache.filter(g => targetIds.includes(g.id))
         : client.guilds.cache;
 
     console.log(`Sẽ gửi đến ${guilds.size}/${client.guilds.cache.size} servers\n`);

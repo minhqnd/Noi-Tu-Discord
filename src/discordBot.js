@@ -269,7 +269,9 @@ class DiscordBot {
                     await this.handleSelectFeedbackType(interaction);
                 }
             } else if (interaction.isButton()) {
-                if (interaction.customId.startsWith('edit_feedback_')) {
+                if (interaction.customId.startsWith('reply_feedback_')) {
+                    await this.handleReplyFeedbackButton(interaction);
+                } else if (interaction.customId.startsWith('edit_feedback_')) {
                     await this.handleResolveFeedback(interaction);
                 } else if (interaction.customId.startsWith('delete_feedback_')) {
                     await this.handleDeleteFeedback(interaction);
@@ -279,6 +281,8 @@ class DiscordBot {
             } else if (interaction.isModalSubmit()) {
                 if (interaction.customId.startsWith('feedback_modal_')) {
                     await this.handleFeedbackModalSubmit(interaction);
+                } else if (interaction.customId.startsWith('reply_modal_')) {
+                    await this.handleReplyModalSubmit(interaction);
                 }
             }
         } catch (error) {
@@ -871,6 +875,78 @@ class DiscordBot {
         await interaction.update({ embeds: [embed], components: [row] });
     }
 
+    async handleReplyFeedbackButton(interaction) {
+        if (interaction.user.id !== OWNER_ID) {
+            await interaction.reply({ content: '❌ Chỉ admin bot mới có thể trả lời.', ephemeral: true });
+            return;
+        }
+
+        const parts = interaction.customId.split('_');
+        const targetUserId = parts[2];
+        const feedbackId = parts[3];
+
+        const modal = new ModalBuilder()
+            .setCustomId(`reply_modal_${targetUserId}_${feedbackId}`)
+            .setTitle('Trả lời phản hồi');
+
+        const replyInput = new TextInputBuilder()
+            .setCustomId('reply_content')
+            .setLabel('Nội dung tin nhắn gửi đến người dùng')
+            .setStyle(TextInputStyle.Paragraph)
+            .setPlaceholder('Nhập câu trả lời của bạn...')
+            .setRequired(true)
+            .setMaxLength(2000);
+
+        const row = new ActionRowBuilder().addComponents(replyInput);
+        modal.addComponents(row);
+
+        await interaction.showModal(modal);
+    }
+
+    async handleReplyModalSubmit(interaction) {
+        if (interaction.user.id !== OWNER_ID) {
+            await interaction.reply({ content: '❌ Bạn không có quyền thực hiện.', ephemeral: true });
+            return;
+        }
+
+        const parts = interaction.customId.split('_');
+        const targetUserId = parts[2];
+        const feedbackId = parts[3];
+        const replyContent = interaction.fields.getTextInputValue('reply_content');
+
+        try {
+            await interaction.deferReply({ ephemeral: true });
+
+            const targetUser = await this.client.users.fetch(targetUserId);
+            if (!targetUser) {
+                await interaction.editReply({ content: '❌ Không tìm thấy người dùng này trên Discord.' });
+                return;
+            }
+
+            const replyEmbed = new EmbedBuilder()
+                .setTitle('📩 Phản hồi từ Admin Bot Nối Từ')
+                .setDescription(replyContent)
+                .addFields(
+                    { name: 'Mã phản hồi của bạn', value: feedbackId || 'N/A' }
+                )
+                .setColor(0x57F287)
+                .setFooter({ text: 'Cảm ơn bạn đã đóng góp phát triển Bot Nối Từ 🐧' })
+                .setTimestamp();
+
+            await targetUser.send({ embeds: [replyEmbed] });
+
+            await interaction.editReply({ content: `✅ Đã gửi tin nhắn trả lời thành công tới **${targetUser.tag}**!` });
+            logger.info(`Admin replied to feedback ${feedbackId} from user ${targetUserId}`);
+        } catch (error) {
+            logger.error(`Failed to send reply to user ${targetUserId}: ${error.message}`);
+            if (error.code === 50007) {
+                await interaction.editReply({ content: '❌ Không thể gửi DM cho người dùng này (họ đã tắt nhận DM từ người lạ / bot).' });
+            } else {
+                await interaction.editReply({ content: `❌ Gửi tin nhắn thất bại: ${error.message}` });
+            }
+        }
+    }
+
     async handleFeedbackModalSubmit(interaction) {
         const feedbackType = interaction.customId.split('_')[2];
         const content = interaction.fields.getTextInputValue('feedback_content');
@@ -902,7 +978,7 @@ class DiscordBot {
             if (!this._feedbackCooldowns) this._feedbackCooldowns = new Map();
             this._feedbackCooldowns.set(userId, Date.now());
 
-            // Send DM to owner
+            // Send DM to owner with reply button
             try {
                 const owner = await this.client.users.fetch(OWNER_ID);
                 const dmEmbed = new EmbedBuilder()
@@ -916,7 +992,16 @@ class DiscordBot {
                     )
                     .setColor(0xFFA500)
                     .setTimestamp();
-                await owner.send({ embeds: [dmEmbed] });
+
+                const replyBtn = new ButtonBuilder()
+                    .setCustomId(`reply_feedback_${userId}_${feedbackId}`)
+                    .setLabel('Trả lời')
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji('💬');
+
+                const row = new ActionRowBuilder().addComponents(replyBtn);
+
+                await owner.send({ embeds: [dmEmbed], components: [row] });
             } catch (dmErr) {
                 logger.warn(`Could not DM owner: ${dmErr.message}`);
             }
