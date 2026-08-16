@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActivityType, ChannelType, Partials } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActivityType, ChannelType, Partials, PermissionFlagsBits } = require('discord.js');
 const { setupLogger, GAME_CONSTANTS, PERMISSIONS } = require('./utils');
 const gameLogic = require('./gameLogic');
 const db = require('./db');
@@ -32,6 +32,7 @@ class DiscordBot {
 
         this.pendingNewGame = new Set();
         this.dictionaryCooldowns = new Map();
+        this.permissionAlertCooldowns = new Map();
 
         this.setupEventHandlers();
     }
@@ -58,6 +59,10 @@ class DiscordBot {
     async onReady() {
         await this.client.application.commands.set(this.getCommands());
         this.updateBotStatus();
+
+        // Định kỳ cập nhật trạng thái bot mỗi 5 phút
+        setInterval(() => this.updateBotStatus(), 5 * 60 * 1000);
+
         logger.info(`${this.client.user.tag} is now running!`);
     }
 
@@ -153,14 +158,23 @@ class DiscordBot {
     }
 
     updateBotStatus() {
-        this.client.user.setPresence({
-            activities: [{
-                name: '🎮 Nối từ Tiếng Việt',
-                type: ActivityType.Playing,
-                state: `Chat riêng với bot cũng chơi được nhe hehe`,
-            }],
-            status: 'online'
-        });
+        try {
+            if (!this.client?.user) return;
+            const globalStats = db.getGlobalStats();
+            const totalGames = (globalStats.total_games || 0).toLocaleString('vi-VN');
+            const totalWordsGuessed = (globalStats.total_words_guessed || 0).toLocaleString('vi-VN');
+
+            this.client.user.setPresence({
+                activities: [{
+                    name: '🎮 Nối từ Tiếng Việt',
+                    type: ActivityType.Playing,
+                    state: `🎮 ${totalGames} ván đã bắt đầu với 📝 ${totalWordsGuessed} từ đã được đoán`,
+                }],
+                status: 'online'
+            });
+        } catch (error) {
+            logger.error(`Error updating bot status: ${error.message}`);
+        }
     }
 
     // Helper function to check if channel is DM
@@ -243,6 +257,82 @@ class DiscordBot {
             const channels = db.read('channels') || {};
             const channelData = channels[interaction.channel.id.toString()] || {};
             return channelData.word;
+        }
+    }
+
+    getMissingPermissions(channel, requiredFlags = null) {
+        if (!channel || !channel.guild || !channel.permissionsFor) {
+            return [];
+        }
+
+        const botUser = this.client.user;
+        if (!botUser) return [];
+
+        let permissions = null;
+        try {
+            permissions = channel.permissionsFor(botUser);
+        } catch {
+            return [];
+        }
+        if (!permissions) return [];
+
+        const allPermissions = [
+            { flag: PermissionFlagsBits.ViewChannel, name: 'Xem Kênh (View Channel)' },
+            { flag: PermissionFlagsBits.SendMessages, name: 'Gửi Tin Nhắn (Send Messages)' },
+            { flag: PermissionFlagsBits.EmbedLinks, name: 'Nhúng Liên Kết (Embed Links)' },
+            { flag: PermissionFlagsBits.ReadMessageHistory, name: 'Xem Lịch Sử Tin Nhắn (Read Message History)' },
+            { flag: PermissionFlagsBits.AddReactions, name: 'Thêm Biểu Cảm (Add Reactions)' }
+        ];
+
+        const targetPermissions = requiredFlags
+            ? allPermissions.filter(p => requiredFlags.includes(p.flag))
+            : allPermissions;
+
+        return targetPermissions
+            .filter(perm => !permissions.has(perm.flag))
+            .map(perm => perm.name);
+    }
+
+    async notifyMissingPermissions(message, missingPermissions = null) {
+        if (!message || !message.channel) return;
+
+        const channelId = message.channel.id.toString();
+        const now = Date.now();
+        const lastAlert = this.permissionAlertCooldowns.get(channelId) || 0;
+        // Giới hạn tần suất thông báo (cooldown 60s mỗi kênh) để tránh spam
+        if (now - lastAlert < 60_000) {
+            return;
+        }
+        this.permissionAlertCooldowns.set(channelId, now);
+
+        const missingList = (missingPermissions && missingPermissions.length > 0)
+            ? missingPermissions
+            : this.getMissingPermissions(message.channel);
+
+        const guildName = message.guild ? message.guild.name : 'Server';
+        const channelMention = `<#${channelId}>`;
+
+        const missingText = missingList.length > 0
+            ? missingList.map(p => `• ❌ **${p}**`).join('\n')
+            : '• ❌ **Gửi Tin Nhắn (Send Messages)** hoặc **Nhúng Liên Kết (Embed Links)**';
+
+        const warningText = `⚠️ **[Lỗi Quyền Hạn]** Bot Nối Từ không có đủ quyền để hoạt động trong kênh ${channelMention} (Server: **${guildName}**)!\n\n` +
+            `**Các quyền còn thiếu:**\n${missingText}\n\n` +
+            `👉 **Cách khắc phục:** Vui lòng nhờ Quản trị viên/Admin server kiểm tra và cấp các quyền trên cho Bot hoặc Role của Bot trong Cài đặt Kênh/Server.`;
+
+        // 1. Thử gửi tin nhắn thông báo ra kênh chat (dùng text thuần không cần EmbedLinks)
+        try {
+            await message.channel.send(warningText);
+        } catch (channelError) {
+            logger.warn(`Could not send permission warning to channel ${channelId}: ${channelError.message}`);
+            // 2. Nếu không gửi được ra kênh chat (do thiếu SendMessages, ViewChannel,...), gửi DM riêng cho người nhắn
+            if (message.author && !message.author.bot) {
+                try {
+                    await message.author.send(warningText);
+                } catch (dmError) {
+                    logger.warn(`Could not send permission warning to user ${message.author.tag || message.author.id} via DM: ${dmError.message}`);
+                }
+            }
         }
     }
 
@@ -339,8 +429,15 @@ class DiscordBot {
             channelAllowlist.push(channelId);
             this.saveChannelAllowlist(channelAllowlist);
             const newWord = gameLogic.resetChannelGame(channelId);
+            const missingPerms = this.getMissingPermissions(interaction.channel);
+            let replyContent = `> **Đã thêm phòng game nối từ, MoiChat sẽ trả lời mọi tin nhắn từ phòng này!**\n\n🎮 **Game mới đã bắt đầu!**\nTừ hiện tại: **${newWord}**`;
+            if (missingPerms.length > 0) {
+                replyContent += `\n\n⚠️ **Lưu ý: Bot đang thiếu một số quyền trong kênh này:**\n` +
+                    missingPerms.map(p => `• ❌ **${p}**`).join('\n') +
+                    `\nVui lòng cấp các quyền trên để Bot hoạt động đầy đủ tính năng!`;
+            }
             await interaction.reply({
-                content: `> **Đã thêm phòng game nối từ, MoiChat sẽ trả lời mọi tin nhắn từ phòng này!**\n\n🎮 **Game mới đã bắt đầu!**\nTừ hiện tại: **${newWord}**`,
+                content: replyContent,
                 ephemeral: false
             });
             logger.info(`Thêm phòng mới ${channelId} và bắt đầu game với từ: ${newWord}`);
@@ -1420,6 +1517,31 @@ class DiscordBot {
                 }
             } else {
                 if (this.isChannelAllowed(channelId)) {
+                    const channels = db.read('channels') || {};
+                    const ch = channels[channelId] || {};
+                    const mode = ch.mode || 'bot';
+
+                    const requiredFlags = mode === 'pvp'
+                        ? [
+                            PermissionFlagsBits.ViewChannel,
+                            PermissionFlagsBits.SendMessages,
+                            PermissionFlagsBits.ReadMessageHistory,
+                            PermissionFlagsBits.AddReactions,
+                            PermissionFlagsBits.EmbedLinks
+                        ]
+                        : [
+                            PermissionFlagsBits.ViewChannel,
+                            PermissionFlagsBits.SendMessages,
+                            PermissionFlagsBits.EmbedLinks,
+                            PermissionFlagsBits.ReadMessageHistory
+                        ];
+
+                    const missingPerms = this.getMissingPermissions(message.channel, requiredFlags);
+                    if (missingPerms.length > 0) {
+                        await this.notifyMissingPermissions(message, missingPerms);
+                        return;
+                    }
+
                     if (this.pendingNewGame.has(channelId)) {
                         try {
                             const embed = new EmbedBuilder()
@@ -1436,9 +1558,6 @@ class DiscordBot {
                         return;
                     }
                     const response = gameLogic.checkChannel(userMessage, channelId, userId);
-                    const channels = db.read('channels') || {};
-                    const ch = channels[channelId] || {};
-                    const mode = ch.mode || 'bot';
 
                     if (mode === 'pvp') {
                         await this.handlePvPResponse(message, response);
@@ -1456,6 +1575,9 @@ class DiscordBot {
         } catch (error) {
             logger.error(`Error processing message: ${error.message}`);
             logger.error(`Stack: ${error.stack}`);
+            if (error.code === 50013 || error.message?.includes('Missing Permissions')) {
+                await this.notifyMissingPermissions(message);
+            }
         }
     }
 
@@ -1489,6 +1611,9 @@ class DiscordBot {
             }
         } catch (e) {
             logger.error(`Failed to react in PvP mode: ${e.message}`);
+            if (e.code === 50013 || e.message?.includes('Missing Permissions')) {
+                await this.notifyMissingPermissions(message);
+            }
         }
     }
 
