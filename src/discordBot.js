@@ -120,7 +120,7 @@ class DiscordBot {
                 options: [
                     {
                         name: 'word',
-                        description: 'Từ 2 âm tiết cần thêm (ví dụ: trú mưa, mồi câu)',
+                        description: 'Từ hoặc danh sách từ ngăn cách bởi dấu phẩy (vd: con chó, con mèo)',
                         type: 3, // STRING
                         required: true
                     }
@@ -295,6 +295,8 @@ class DiscordBot {
             } else if (interaction.isButton()) {
                 if (interaction.customId.startsWith('reply_feedback_')) {
                     await this.handleReplyFeedbackButton(interaction);
+                } else if (interaction.customId.startsWith('quick_word_added_')) {
+                    await this.handleQuickWordAddedButton(interaction);
                 } else if (interaction.customId.startsWith('userreply_')) {
                     await this.handleUserReplyButton(interaction);
                 } else if (interaction.customId.startsWith('edit_feedback_')) {
@@ -612,18 +614,40 @@ class DiscordBot {
         const result = gameLogic.addWord(inputWord);
 
         if (result.success) {
+            const addedCount = result.added?.length || 1;
             const embed = new EmbedBuilder()
-                .setTitle('✅ Đã thêm từ mới vào từ điển!')
-                .setDescription(`Từ **"${result.word}"** đã được thêm và có hiệu lực ngay lập tức.\nNgười chơi có thể sử dụng từ này trong game.`)
+                .setTitle(`✅ Đã thêm ${addedCount} từ mới vào từ điển!`)
                 .setColor(0x57F287)
                 .setFooter({ text: 'Đã lưu vào customWords.json' })
                 .setTimestamp();
 
+            let desc = `Các từ sau đã được thêm và có hiệu lực ngay lập tức:\n${result.added.map(w => `• **${w}**`).join('\n')}`;
+
+            if (result.existing && result.existing.length > 0) {
+                desc += `\n\n⚠️ **Đã có sẵn (${result.existing.length}):** ${result.existing.map(w => `"${w}"`).join(', ')}`;
+            }
+            if (result.invalid && result.invalid.length > 0) {
+                desc += `\n\n❌ **Không hợp lệ (${result.invalid.length}):** ${result.invalid.map(w => `"${w}"`).join(', ')} *(phải gồm 2 âm tiết)*`;
+            }
+
+            embed.setDescription(desc.substring(0, 4096));
+
             await interaction.reply({ embeds: [embed], ephemeral: true });
-            logger.info(`Owner ${interaction.user.tag} added new word: "${result.word}"`);
+            logger.info(`Owner ${interaction.user.tag} added words: ${result.added.join(', ')}`);
         } else {
+            let errorMsg = '❌ Không thể thêm từ:\n';
+            if (result.existing && result.existing.length > 0) {
+                errorMsg += `⚠️ **Đã có sẵn trong từ điển:** ${result.existing.map(w => `"${w}"`).join(', ')}\n`;
+            }
+            if (result.invalid && result.invalid.length > 0) {
+                errorMsg += `❌ **Không hợp lệ (phải gồm 2 âm tiết):** ${result.invalid.map(w => `"${w}"`).join(', ')}\n`;
+            }
+            if (!result.existing?.length && !result.invalid?.length) {
+                errorMsg += result.message || 'Lỗi không xác định.';
+            }
+
             await interaction.reply({
-                content: `❌ ${result.message}`,
+                content: errorMsg.trim(),
                 ephemeral: true
             });
         }
@@ -974,9 +998,10 @@ class DiscordBot {
         const parts = interaction.customId.split('_');
         const targetUserId = parts[2];
         const feedbackId = parts[3];
+        const messageId = interaction.message?.id || '';
 
         const modal = new ModalBuilder()
-            .setCustomId(`reply_modal_${targetUserId}_${feedbackId}`)
+            .setCustomId(`reply_modal_${targetUserId}_${feedbackId}_${messageId}`)
             .setTitle('Trả lời phản hồi');
 
         const replyInput = new TextInputBuilder()
@@ -1002,6 +1027,7 @@ class DiscordBot {
         const parts = interaction.customId.split('_');
         const targetUserId = parts[2];
         const feedbackId = parts[3];
+        const messageId = parts[4];
         const replyContent = interaction.fields.getTextInputValue('reply_content');
 
         try {
@@ -1036,10 +1062,117 @@ class DiscordBot {
 
             await targetUser.send({ embeds: [replyEmbed], components: [row] });
 
+            // Update original message in admin DM (keep clickable so admin can send more replies if needed)
+            const repliedBtn = new ButtonBuilder()
+                .setCustomId(`reply_feedback_${targetUserId}_${feedbackId}`)
+                .setLabel('Đã trả lời')
+                .setStyle(ButtonStyle.Secondary)
+                .setEmoji('✅');
+
+            const quickBtn = new ButtonBuilder()
+                .setCustomId(`quick_word_added_${targetUserId}_${feedbackId}`)
+                .setLabel('Đã thêm từ')
+                .setStyle(ButtonStyle.Success)
+                .setEmoji('✨');
+
+            const updatedRow = new ActionRowBuilder().addComponents(repliedBtn, quickBtn);
+
+            try {
+                if (interaction.message) {
+                    await interaction.message.edit({ components: [updatedRow] });
+                } else if (messageId && interaction.channel) {
+                    const origMsg = await interaction.channel.messages.fetch(messageId);
+                    if (origMsg) {
+                        await origMsg.edit({ components: [updatedRow] });
+                    }
+                }
+            } catch (msgErr) {
+                logger.warn(`Could not update original feedback message: ${msgErr.message}`);
+            }
+
             await interaction.editReply({ content: `✅ Đã gửi tin nhắn trả lời thành công tới **${targetUser.tag}**!` });
             logger.info(`Admin replied to feedback ${feedbackId} from user ${targetUserId}`);
         } catch (error) {
             logger.error(`Failed to send reply to user ${targetUserId}: ${error.message}`);
+            if (error.code === 50007) {
+                await interaction.editReply({ content: '❌ Không thể gửi DM cho người dùng này (họ đã tắt nhận DM từ người lạ / bot).' });
+            } else {
+                await interaction.editReply({ content: `❌ Gửi tin nhắn thất bại: ${error.message}` });
+            }
+        }
+    }
+
+    async handleQuickWordAddedButton(interaction) {
+        if (interaction.user.id !== OWNER_ID) {
+            await interaction.reply({ content: '❌ Chỉ admin bot mới có thể thực hiện.', ephemeral: true });
+            return;
+        }
+
+        const parts = interaction.customId.split('_');
+        const targetUserId = parts[3];
+        const feedbackId = parts[4];
+        const quickMessage = 'Từ bạn đóng góp đã được bổ sung và có hiệu lực ngay lập tức, chúc bạn chơi game vui vẻ ❤️';
+
+        try {
+            await interaction.deferReply({ ephemeral: true });
+
+            const targetUser = await this.client.users.fetch(targetUserId);
+            if (!targetUser) {
+                await interaction.editReply({ content: '❌ Không tìm thấy người dùng này trên Discord.' });
+                return;
+            }
+
+            // Save reply to conversation history
+            const feedbacks = gameLogic.getAllFeedbacks();
+            const feedback = feedbacks.find(f => f.id === feedbackId);
+            if (feedback) {
+                if (!feedback.replies) feedback.replies = [];
+                feedback.replies.push({ from: 'admin', content: quickMessage, timestamp: new Date().toISOString() });
+                feedback.status = 'resolved';
+                gameLogic.saveFeedbacks(feedbacks);
+            }
+
+            // Build conversation history embed for the user
+            const replyEmbed = this._buildConversationEmbed(feedback, quickMessage, 'admin');
+
+            // Add reply button for user
+            const userReplyBtn = new ButtonBuilder()
+                .setCustomId(`userreply_${feedbackId}`)
+                .setLabel('Trả lời')
+                .setStyle(ButtonStyle.Primary)
+                .setEmoji('💬');
+
+            const row = new ActionRowBuilder().addComponents(userReplyBtn);
+
+            await targetUser.send({ embeds: [replyEmbed], components: [row] });
+
+            // Update the original message in Admin DM (keep clickable so admin can send more replies if needed)
+            const replyBtn = new ButtonBuilder()
+                .setCustomId(`reply_feedback_${targetUserId}_${feedbackId}`)
+                .setLabel('Trả lời')
+                .setStyle(ButtonStyle.Primary)
+                .setEmoji('💬');
+
+            const addedBtn = new ButtonBuilder()
+                .setCustomId(`quick_word_added_${targetUserId}_${feedbackId}`)
+                .setLabel('Đã báo thêm từ')
+                .setStyle(ButtonStyle.Secondary)
+                .setEmoji('✅');
+
+            const updatedRow = new ActionRowBuilder().addComponents(replyBtn, addedBtn);
+
+            try {
+                if (interaction.message) {
+                    await interaction.message.edit({ components: [updatedRow] });
+                }
+            } catch (msgErr) {
+                logger.warn(`Could not update original feedback message: ${msgErr.message}`);
+            }
+
+            await interaction.editReply({ content: `✅ Đã gửi thông báo thêm từ thành công tới **${targetUser.tag}**!` });
+            logger.info(`Admin sent quick word-added reply to feedback ${feedbackId} from user ${targetUserId}`);
+        } catch (error) {
+            logger.error(`Failed to send quick word-added reply to user ${targetUserId}: ${error.message}`);
             if (error.code === 50007) {
                 await interaction.editReply({ content: '❌ Không thể gửi DM cho người dùng này (họ đã tắt nhận DM từ người lạ / bot).' });
             } else {
@@ -1097,7 +1230,13 @@ class DiscordBot {
                 .setStyle(ButtonStyle.Primary)
                 .setEmoji('💬');
 
-            const row = new ActionRowBuilder().addComponents(replyBtn);
+            const quickAddBtn = new ButtonBuilder()
+                .setCustomId(`quick_word_added_${userId}_${feedbackId}`)
+                .setLabel('Đã thêm từ')
+                .setStyle(ButtonStyle.Success)
+                .setEmoji('✨');
+
+            const row = new ActionRowBuilder().addComponents(replyBtn, quickAddBtn);
 
             await owner.send({ embeds: [historyEmbed], components: [row] });
 
@@ -1205,7 +1344,13 @@ class DiscordBot {
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji('💬');
 
-                const row = new ActionRowBuilder().addComponents(replyBtn);
+                const quickAddBtn = new ButtonBuilder()
+                    .setCustomId(`quick_word_added_${userId}_${feedbackId}`)
+                    .setLabel('Đã thêm từ')
+                    .setStyle(ButtonStyle.Success)
+                    .setEmoji('✨');
+
+                const row = new ActionRowBuilder().addComponents(replyBtn, quickAddBtn);
 
                 await owner.send({ embeds: [dmEmbed], components: [row] });
             } catch (dmErr) {

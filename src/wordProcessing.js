@@ -68,50 +68,82 @@ for (const firstWord in wordPairs) {
 }
 const listWordSet = new Set(listWords);
 
-function addWord(word) {
-  if (!word || typeof word !== 'string') {
+function addWord(input) {
+  if (!input || typeof input !== 'string') {
     return { success: false, message: 'Từ không hợp lệ.' };
   }
 
-  const normalized = normalizeVietnamese(word.trim());
-  const parts = normalized.split(/\s+/);
-
-  if (parts.length !== 2) {
-    return { success: false, message: 'Từ phải gồm đúng 2 âm tiết (ví dụ: "trú mưa").' };
+  const rawItems = input.split(/[,，\n]+/).map(s => s.trim()).filter(Boolean);
+  if (rawItems.length === 0) {
+    return { success: false, message: 'Vui lòng nhập ít nhất một từ.' };
   }
 
-  const [firstWord, secondWord] = parts;
+  const added = [];
+  const existing = [];
+  const invalid = [];
 
-  if (listWordSet.has(normalized)) {
-    return { success: false, message: `Từ **"${normalized}"** đã có sẵn trong từ điển rồi!` };
+  // Read current customData once
+  let customData = {};
+  if (fs.existsSync(customWordsPath)) {
+    try {
+      customData = JSON.parse(fs.readFileSync(customWordsPath, 'utf8'));
+    } catch {
+      customData = {};
+    }
   }
 
-  // 1. Update in-memory structures
-  if (!wordPairs[firstWord]) wordPairs[firstWord] = [];
-  if (!wordPairs[firstWord].includes(secondWord)) wordPairs[firstWord].push(secondWord);
-  listWords.push(normalized);
-  listWordSet.add(normalized);
+  for (const rawItem of rawItems) {
+    const normalized = normalizeVietnamese(rawItem);
+    const parts = normalized.split(/\s+/);
 
-  // 2. Persist to customWords.json
-  try {
-    let customData = {};
-    if (fs.existsSync(customWordsPath)) {
-      try {
-        customData = JSON.parse(fs.readFileSync(customWordsPath, 'utf8'));
-      } catch {
-        customData = {};
-      }
+    if (parts.length !== 2) {
+      invalid.push(rawItem);
+      continue;
     }
 
+    if (listWordSet.has(normalized) || added.includes(normalized)) {
+      existing.push(normalized);
+      continue;
+    }
+
+    const [firstWord, secondWord] = parts;
+
+    // 1. Update in-memory structures
+    if (!wordPairs[firstWord]) wordPairs[firstWord] = [];
+    if (!wordPairs[firstWord].includes(secondWord)) wordPairs[firstWord].push(secondWord);
+    listWords.push(normalized);
+    listWordSet.add(normalized);
+
+    // 2. Prepare customData
     if (!customData[firstWord]) customData[firstWord] = [];
     if (!customData[firstWord].includes(secondWord)) {
       customData[firstWord].push(secondWord);
     }
 
-    fs.writeFileSync(customWordsPath, JSON.stringify(customData, null, 2), 'utf8');
-    return { success: true, word: normalized };
-  } catch (error) {
-    return { success: false, message: `Lỗi khi lưu file: ${error.message}` };
+    added.push(normalized);
+  }
+
+  if (added.length > 0) {
+    try {
+      fs.writeFileSync(customWordsPath, JSON.stringify(customData, null, 2), 'utf8');
+      return {
+        success: true,
+        word: added.length === 1 ? added[0] : added.join(', '),
+        added,
+        existing,
+        invalid
+      };
+    } catch (error) {
+      return { success: false, message: `Lỗi khi lưu file: ${error.message}`, added: [], existing, invalid };
+    }
+  } else {
+    return {
+      success: false,
+      message: 'Không có từ nào được thêm.',
+      added: [],
+      existing,
+      invalid
+    };
   }
 }
 
