@@ -60,8 +60,8 @@ class DiscordBot {
         await this.client.application.commands.set(this.getCommands());
         this.updateBotStatus();
 
-        // Định kỳ cập nhật trạng thái bot mỗi 5 phút
-        setInterval(() => this.updateBotStatus(), 5 * 60 * 1000);
+        // Định kỳ cập nhật trạng thái bot mỗi 1 phút
+        setInterval(() => this.updateBotStatus(), 1 * 60 * 1000);
 
         logger.info(`${this.client.user.tag} is now running!`);
     }
