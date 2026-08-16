@@ -168,7 +168,7 @@ class DiscordBot {
                 activities: [{
                     name: '🎮 Nối từ Tiếng Việt',
                     type: ActivityType.Playing,
-                    state: `Đã chơi ${totalWordsGuessed} từ cùng mọi người`,
+                    state: `Đã chơi ${totalWordsGuessed} lượt cùng mọi người <3`,
                 }],
                 status: 'online'
             });
