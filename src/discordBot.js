@@ -161,14 +161,15 @@ class DiscordBot {
         try {
             if (!this.client?.user) return;
             const globalStats = db.getGlobalStats();
-            const totalGames = (globalStats.total_games || 0).toLocaleString('vi-VN');
-            const totalWordsGuessed = (globalStats.total_words_guessed || 0).toLocaleString('vi-VN');
+            const correct = globalStats.total_words_guessed || 0;
+            const wrong = globalStats.total_wrong_guesses || 0;
+            const totalGuessed = (correct + wrong).toLocaleString('vi-VN');
 
             this.client.user.setPresence({
                 activities: [{
                     name: '🎮 Nối từ Tiếng Việt',
                     type: ActivityType.Playing,
-                    state: `Đã chơi ${totalWordsGuessed} lượt cùng mọi người <3`,
+                    state: `Đã chơi ${totalGuessed} lượt cùng mọi người <3`,
                 }],
                 status: 'online'
             });
