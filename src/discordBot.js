@@ -54,6 +54,84 @@ class DiscordBot {
                 logger.error(`Error in messageCreate event: ${error.message}`);
             }
         });
+
+        // Welcome message when invited to a new server
+        this.client.on('guildCreate', async (guild) => {
+            await this.onGuildCreate(guild);
+        });
+    }
+
+    async onGuildCreate(guild) {
+        logger.info(`Bot joined a new server: ${guild.name} (${guild.id}) with ${guild.memberCount} members`);
+
+        try {
+            const botMember = guild.members.me || await guild.members.fetchMe().catch(() => null);
+            if (!botMember) return;
+
+            const canSendInChannel = (ch) => {
+                if (!ch || !ch.isTextBased() || ch.isVoiceBased()) return false;
+                const perms = ch.permissionsFor(botMember);
+                return perms?.has(PermissionFlagsBits.ViewChannel) &&
+                    perms?.has(PermissionFlagsBits.SendMessages) &&
+                    perms?.has(PermissionFlagsBits.EmbedLinks);
+            };
+
+            let targetChannel = guild.systemChannel;
+            if (!canSendInChannel(targetChannel)) {
+                targetChannel = guild.channels.cache.find(ch => canSendInChannel(ch));
+            }
+
+            if (!targetChannel) {
+                const channels = await guild.channels.fetch().catch(() => null);
+                if (channels) {
+                    targetChannel = channels.find(ch => canSendInChannel(ch));
+                }
+            }
+
+            if (!targetChannel) {
+                logger.warn(`Could not find a suitable channel to send welcome message in ${guild.name} (${guild.id})`);
+                return;
+            }
+
+            const welcomeEmbed = new EmbedBuilder()
+                .setTitle('🎉 Cảm ơn bạn đã mời Bot Nối Từ!')
+                .setDescription(
+                    'Xin chào! Cảm ơn bạn và server đã thêm Bot Nối Từ. Dưới đây là hướng dẫn nhanh để bắt đầu chơi ngay nhé 💚'
+                )
+                .addFields(
+                    {
+                        name: '🎮 Để bắt đầu chơi',
+                        value: [
+                            '`/noitu_add` - Thêm kênh này làm phòng chơi nối từ (chỉ Admin)',
+                            '`/noitu_mode` - Chọn chế độ chơi (chơi với Bot hoặc PvP giữa các thành viên)',
+                            '`/newgame` - Bắt đầu ván mới',
+                            'Hoặc nhắn tin riêng (DM) trực tiếp cho bot để chơi 1 mình!'
+                        ].join('\n')
+                    },
+                    {
+                        name: '📖 Lệnh hữu ích',
+                        value: [
+                            '`/tratu [từ]` - Tra cứu từ điển tiếng Việt',
+                            '`/stats` - Xem thống kê người chơi',
+                            '`/botstats` - Xem thống kê toàn hệ thống của bot',
+                            '`/help` - Xem hướng dẫn đầy đủ',
+                            '`/feedback` - Gửi phản hồi hoặc góp ý từ vựng mới'
+                        ].join('\n')
+                    },
+                    {
+                        name: '🔒 Quyền hạn cần thiết',
+                        value: 'Vui lòng đảm bảo Bot có đủ các quyền: **Xem kênh (View Channel)**, **Gửi tin nhắn (Send Messages)**, **Nhúng liên kết (Embed Links)** và **Thêm biểu cảm (Add Reactions)** để hoạt động tốt nhất.'
+                    }
+                )
+                .setColor(0x57F287)
+                .setFooter({ text: 'Bot Nối Từ 🐧 | Gõ /noitu_add để bắt đầu!' })
+                .setTimestamp();
+
+            await targetChannel.send({ embeds: [welcomeEmbed] });
+            logger.info(`Sent welcome message to server ${guild.name} in channel #${targetChannel.name}`);
+        } catch (error) {
+            logger.error(`Error sending welcome message in guildCreate (${guild.name}): ${error.message}`);
+        }
     }
 
     async onReady() {
