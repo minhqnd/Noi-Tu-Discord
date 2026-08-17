@@ -8,7 +8,11 @@ const gameEngine = new GameEngine();
 // Game logic functions from noitu_bot.js
 function checkChannel(playerWord, idChannel, idUser) {
     if (!playerWord || !idChannel || !idUser) {
-        throw new Error('Missing required parameters: playerWord, idChannel, idUser');
+        return {
+            type: 'error',
+            code: 'invalid_format',
+            message: 'Tin nhắn không hợp lệ.'
+        };
     }
     
     idChannel = idChannel.toString();
@@ -34,7 +38,11 @@ function checkChannel(playerWord, idChannel, idUser) {
 
 function checkUser(playerWord, idUser) {
     if (!playerWord || !idUser) {
-        throw new Error('Missing required parameters: playerWord, idUser');
+        return {
+            type: 'error',
+            code: 'invalid_format',
+            message: 'Tin nhắn không hợp lệ.'
+        };
     }
     
     idUser = idUser.toString();

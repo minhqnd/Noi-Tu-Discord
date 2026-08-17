@@ -1546,7 +1546,9 @@ class DiscordBot {
     async onMessageCreate(message) {
         if (message.author.bot) return;
 
-        const userMessage = message.content.toLowerCase().trim();
+        const userMessage = message.content ? message.content.toLowerCase().trim() : '';
+        if (!userMessage) return;
+
         const channelId = message.channel.id.toString();
         const userId = message.author.id;
         const isDM = this.isDirectMessage(message.channel);
