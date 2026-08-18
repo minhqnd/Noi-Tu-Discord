@@ -859,13 +859,24 @@ class DiscordBot {
         const top10 = playerList.slice(0, 10);
         const medals = ['🥇', '🥈', '🥉'];
 
-        const rankLines = top10.map((player, idx) => {
+        const rankLines = await Promise.all(top10.map(async (player, idx) => {
             const badge = idx < 3 ? medals[idx] : `\`#${idx + 1}\``;
-            if (type === 'wins') {
-                return `${badge} <@${player.userId}>\n┗ 🏆 Thắng: **${player.wins}** | Kỷ lục: **${player.bestStreak}** | Chuỗi hiện tại: **${player.currentStreak}**`;
+            let displayName = `<@${player.userId}>`;
+            
+            if (isDM) {
+                try {
+                    const u = await this.client.users.fetch(player.userId);
+                    displayName = `**${u.username}**`;
+                } catch (e) {
+                    displayName = `ID: ${player.userId}`;
+                }
             }
-            return `${badge} <@${player.userId}>\n┗ 🔥 Kỷ lục: **${player.bestStreak}** từ | Thắng: **${player.wins}** 🏆 | Chuỗi hiện tại: **${player.currentStreak}**`;
-        });
+
+            if (type === 'wins') {
+                return `${badge} ${displayName}\n┗ 🏆 Thắng: **${player.wins}** | Kỷ lục: **${player.bestStreak}** | Chuỗi hiện tại: **${player.currentStreak}**`;
+            }
+            return `${badge} ${displayName}\n┗ 🔥 Kỷ lục: **${player.bestStreak}** từ | Thắng: **${player.wins}** 🏆 | Chuỗi hiện tại: **${player.currentStreak}**`;
+        }));
 
         const myRankIndex = playerList.findIndex(p => p.userId === interaction.user.id);
         const myStats = myRankIndex !== -1 ? playerList[myRankIndex] : null;
