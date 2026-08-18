@@ -249,6 +249,7 @@ class GameEngine {
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.REPEATED,
+                    streakReset: true,
                     message: `Thua cuộc, từ đã được trả lời trước đó!\nChuỗi đạt được: **${userStats.currentStreak}**, kỷ lục: **${userStats.bestStreak}**`,
                     currentWord: newWord,
                     gameData: newGameData
@@ -334,6 +335,7 @@ class GameEngine {
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.NOT_IN_DICT,
+                    streakReset: true,
                     message: `Thua cuộc, từ không có trong bộ từ điển! Chuỗi: **${userStats.currentStreak}**, kỷ lục: **${userStats.bestStreak}**\n-# 💡 Nếu bạn nghĩ từ này tồn tại, hãy dùng \`/feedback\` để báo cho chúng mình!`,
                     currentWord: newWord,
                     gameData: newGameData

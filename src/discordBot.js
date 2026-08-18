@@ -1597,7 +1597,7 @@ class DiscordBot {
                 const response = gameLogic.checkUser(userMessage, userId);
                 const embed = new EmbedBuilder()
                     .setDescription(response.message)
-                    .setColor(response.type === 'success' ? 0x00FF00 : response.type === 'error' ? 0xFF0000 : 0x0099FF);
+                    .setColor(response.type === 'success' ? 0x00FF00 : response.type === 'error' ? (response.streakReset || response.code === 'loss' ? 0xFF0000 : 0xFFFF00) : 0x0099FF);
                 await message.reply({ embeds: [embed] });
                 if (response.currentWord) {
                     await message.channel.send(`Từ hiện tại: **${response.currentWord}**`);
@@ -1651,7 +1651,7 @@ class DiscordBot {
                     } else {
                         const embed = new EmbedBuilder()
                             .setDescription(response.message)
-                            .setColor(response.type === 'success' ? 0x00FF00 : response.type === 'error' ? 0xFF0000 : 0x0099FF);
+                            .setColor(response.type === 'success' ? 0x00FF00 : response.type === 'error' ? (response.streakReset || response.code === 'loss' ? 0xFF0000 : 0xFFFF00) : 0x0099FF);
                         await message.reply({ embeds: [embed] });
                         if (response.currentWord) {
                             await message.channel.send(`Từ hiện tại: **${response.currentWord}**`);
