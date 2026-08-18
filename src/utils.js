@@ -9,6 +9,7 @@ const GAME_CONSTANTS = {
     MAX_LOG_FILES: 3,
     PENDING_GAME_TIMEOUT: 15_000, // 15 seconds
     BLOCK_MESSAGE_TIMEOUT: 3000, // 3 seconds
+    WORD_WRONG_HINT_THRESHOLD: 3, // Show /newgame hint after this many wrong guesses on same word
     MAX_MESSAGE_LOG_LENGTH: 80,
     DICTIONARY_LOOKUP_TIMEOUT_MS: 5000,
     DICTIONARY_LOOKUP_MAX_CONTENT_LENGTH: 128 * 1024,

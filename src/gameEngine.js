@@ -9,6 +9,14 @@ class GameEngine {
         this.logger = logger;
     }
 
+    // Build /newgame hint suffix when wordWrongCount reaches threshold
+    getNewGameHint(wordWrongCount) {
+        if (wordWrongCount >= GAME_CONSTANTS.WORD_WRONG_HINT_THRESHOLD) {
+            return '\n-# 🔄 Từ này quá khó? Gõ `/newgame` để đổi từ mới!';
+        }
+        return '';
+    }
+
     // Utility functions
     lastWord(word) {
         return word.split(' ').slice(-1)[0];
@@ -141,7 +149,7 @@ class GameEngine {
             };
         }
 
-        let { word: currentWord, history = [], players = {}, mode = GAME_MODES.BOT } = gameData;
+        let { word: currentWord, history = [], players = {}, mode = GAME_MODES.BOT, wordWrongCount = 0 } = gameData;
         let userStats = (isDM ? gameData : players[userId]) || {
             currentStreak: 0,
             bestStreak: 0,
@@ -156,6 +164,7 @@ class GameEngine {
             const newGameData = {
                 word: currentWord,
                 history: [currentWord],
+                wordWrongCount: 0,
                 ...(isDM ? {
                     currentStreak: 0,
                     bestStreak: 0,
@@ -184,6 +193,7 @@ class GameEngine {
         if (!this.validateWordNotRepeated(history, playerWord)) {
             db.incrementStat('total_wrong_guesses', 1);
             userStats.wrongCount += 1;
+            wordWrongCount += 1;
 
             if (userStats.wrongCount >= GAME_CONSTANTS.MAX_WRONG_COUNT) {
                 // User loses
@@ -192,12 +202,13 @@ class GameEngine {
                     wins: userStats.wins || 0
                 };
 
-                // In PVP mode, reset streak but keep current word and history
-                if (mode === GAME_MODES.PVP && !isDM) {
+                // In channel mode (both PVP and Bot): reset streak but keep current word and history
+                if (!isDM) {
                     const newGameData = {
                         word: currentWord,
                         history: history,
                         mode: mode,
+                        wordWrongCount: wordWrongCount,
                         players: {
                             ...players,
                             [userId]: {
@@ -209,43 +220,32 @@ class GameEngine {
                         }
                     };
 
-                    this.logger.info(`Channel: [${gameData.id}] MODE=pvp STREAK_RESET REPEATED '${playerWord}' [${(Date.now() - startTime) / 1000}s]`);
+                    this.logger.info(`Channel: [${gameData.id}] MODE=${mode} STREAK_RESET REPEATED '${playerWord}' [${(Date.now() - startTime) / 1000}s]`);
                     return {
                         type: RESPONSE_TYPES.ERROR,
                         code: RESPONSE_CODES.REPEATED,
                         streakReset: true,
-                        message: `Chuỗi của <@${userId}> đã **bị reset** (từ đã được trả lời). Chuỗi đạt được: **${userStats.currentStreak}**, kỷ lục: **${userStats.bestStreak}**`,
+                        message: `Chuỗi của <@${userId}> đã **bị reset** (từ đã được trả lời). Chuỗi đạt được: **${userStats.currentStreak}**, kỷ lục: **${userStats.bestStreak}**${this.getNewGameHint(wordWrongCount)}`,
                         currentWord: currentWord,
                         gameData: newGameData
                     };
                 }
 
-                // Bot mode or DM: reset everything
+                // DM only: reset everything
                 db.incrementStat('total_games', 1);
                 const newWord = this.newWord();
                 const newGameData = {
                     word: newWord,
                     history: [],
                     mode: mode,
-                    ...(isDM ? {
-                        currentStreak: 0,
-                        bestStreak: preserved.bestStreak,
-                        wins: preserved.wins,
-                        wrongCount: 0
-                    } : {
-                        players: {
-                            ...players,
-                            [userId]: {
-                                currentStreak: 0,
-                                bestStreak: preserved.bestStreak,
-                                wins: preserved.wins,
-                                wrongCount: 0
-                            }
-                        }
-                    })
+                    wordWrongCount: 0,
+                    currentStreak: 0,
+                    bestStreak: preserved.bestStreak,
+                    wins: preserved.wins,
+                    wrongCount: 0
                 };
 
-                this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] MODE=${mode} USER_LOSS REPEATED '${playerWord}' -> '${newWord}' [${(Date.now() - startTime) / 1000}s]`);
+                this.logger.info(`DM: [${userId}] MODE=${mode} USER_LOSS REPEATED '${playerWord}' -> '${newWord}' [${(Date.now() - startTime) / 1000}s]`);
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.REPEATED,
@@ -257,6 +257,7 @@ class GameEngine {
                 // Update wrong count
                 const newGameData = {
                     ...gameData,
+                    wordWrongCount: wordWrongCount,
                     ...(isDM ? { wrongCount: userStats.wrongCount } : {
                         players: { ...players, [userId]: userStats }
                     })
@@ -266,7 +267,7 @@ class GameEngine {
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.REPEATED,
-                    message: `**Từ này đã được trả lời trước đó!**. Bạn còn **${GAME_CONSTANTS.MAX_WRONG_COUNT - userStats.wrongCount}** lần đoán.`,
+                    message: `**Từ này đã được trả lời trước đó!**. Bạn còn **${GAME_CONSTANTS.MAX_WRONG_COUNT - userStats.wrongCount}** lần đoán.${this.getNewGameHint(wordWrongCount)}`,
                     currentWord: currentWord,
                     gameData: newGameData
                 };
@@ -277,6 +278,7 @@ class GameEngine {
         if (!this.validateWordInDictionary(playerWord)) {
             db.incrementStat('total_wrong_guesses', 1);
             userStats.wrongCount += 1;
+            wordWrongCount += 1;
 
             if (userStats.wrongCount >= GAME_CONSTANTS.MAX_WRONG_COUNT) {
                 // User loses
@@ -285,12 +287,13 @@ class GameEngine {
                     wins: userStats.wins || 0
                 };
 
-                // In PVP mode, reset streak but keep current word and history
-                if (mode === GAME_MODES.PVP && !isDM) {
+                // In channel mode (both PVP and Bot): reset streak but keep current word and history
+                if (!isDM) {
                     const newGameData = {
                         word: currentWord,
                         history: history,
                         mode: mode,
+                        wordWrongCount: wordWrongCount,
                         players: {
                             ...players,
                             [userId]: {
@@ -302,43 +305,32 @@ class GameEngine {
                         }
                     };
 
-                    this.logger.info(`Channel: [${gameData.id}] MODE=pvp STREAK_RESET NOT_IN_DICT '${playerWord}' [${(Date.now() - startTime) / 1000}s]`);
+                    this.logger.info(`Channel: [${gameData.id}] MODE=${mode} STREAK_RESET NOT_IN_DICT '${playerWord}' [${(Date.now() - startTime) / 1000}s]`);
                     return {
                         type: RESPONSE_TYPES.ERROR,
                         code: RESPONSE_CODES.NOT_IN_DICT,
                         streakReset: true,
-                        message: `Chuỗi của <@${userId}> **bị reset** (không có trong bộ từ).\nChuỗi đạt được: **${userStats.currentStreak}**, kỷ lục: **${userStats.bestStreak}**\n-# 💡 Nếu bạn nghĩ từ này tồn tại, hãy dùng \`/feedback\` để báo cho chúng mình!`,
+                        message: `Chuỗi của <@${userId}> **bị reset** (không có trong bộ từ).\nChuỗi đạt được: **${userStats.currentStreak}**, kỷ lục: **${userStats.bestStreak}**\n-# 💡 Nếu bạn nghĩ từ này tồn tại, hãy dùng \`/feedback\` để báo cho chúng mình!${this.getNewGameHint(wordWrongCount)}`,
                         currentWord: currentWord,
                         gameData: newGameData
                     };
                 }
 
-                // Bot mode or DM: reset everything
+                // DM only: reset everything
                 db.incrementStat('total_games', 1);
                 const newWord = this.newWord();
                 const newGameData = {
                     word: newWord,
                     history: [],
                     mode: mode,
-                    ...(isDM ? {
-                        currentStreak: 0,
-                        bestStreak: preserved.bestStreak,
-                        wins: preserved.wins,
-                        wrongCount: 0
-                    } : {
-                        players: {
-                            ...players,
-                            [userId]: {
-                                currentStreak: 0,
-                                bestStreak: preserved.bestStreak,
-                                wins: preserved.wins,
-                                wrongCount: 0
-                            }
-                        }
-                    })
+                    wordWrongCount: 0,
+                    currentStreak: 0,
+                    bestStreak: preserved.bestStreak,
+                    wins: preserved.wins,
+                    wrongCount: 0
                 };
 
-                this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] MODE=${mode} USER_LOSS NOT_IN_DICT '${playerWord}' -> '${newWord}' [${(Date.now() - startTime) / 1000}s]`);
+                this.logger.info(`DM: [${userId}] MODE=${mode} USER_LOSS NOT_IN_DICT '${playerWord}' -> '${newWord}' [${(Date.now() - startTime) / 1000}s]`);
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.NOT_IN_DICT,
@@ -350,6 +342,7 @@ class GameEngine {
                 // Update wrong count
                 const newGameData = {
                     ...gameData,
+                    wordWrongCount: wordWrongCount,
                     ...(isDM ? { wrongCount: userStats.wrongCount } : {
                         players: { ...players, [userId]: userStats }
                     })
@@ -359,7 +352,7 @@ class GameEngine {
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.NOT_IN_DICT,
-                    message: `**Từ không có trong bộ từ điển!** Bạn còn **${GAME_CONSTANTS.MAX_WRONG_COUNT - userStats.wrongCount}** lần đoán.\n-# 💡 Nếu bạn nghĩ từ này tồn tại, hãy dùng \`/feedback\` để báo cho chúng mình!`,
+                    message: `**Từ không có trong bộ từ điển!** Bạn còn **${GAME_CONSTANTS.MAX_WRONG_COUNT - userStats.wrongCount}** lần đoán.\n-# 💡 Nếu bạn nghĩ từ này tồn tại, hãy dùng \`/feedback\` để báo cho chúng mình!${this.getNewGameHint(wordWrongCount)}`,
                     currentWord: currentWord,
                     gameData: newGameData
                 };
@@ -388,6 +381,7 @@ class GameEngine {
             userStats.currentStreak = (userStats.currentStreak || 0) + 1;
             userStats.bestStreak = Math.max(userStats.bestStreak || 0, userStats.currentStreak);
             userStats.wrongCount = 0;
+            const wordWrongCount = 0; // Reset on valid move
 
             // Check if this is an endword (no next word available)
             const nextWordAvailable = this.getWordStartingWith(this.lastWord(normalizedPlayer), history);
@@ -402,6 +396,7 @@ class GameEngine {
                 const newGameData = {
                     word: newWord,
                     history: [],
+                    wordWrongCount: 0,
                     players: { 
                         ...players, 
                         [userId]: {
@@ -435,6 +430,7 @@ class GameEngine {
             const newGameData = {
                 word: normalizedPlayer,
                 history: history,
+                wordWrongCount: wordWrongCount,
                 players: { ...players, [userId]: userStats },
                 mode: mode
             };
@@ -469,6 +465,7 @@ class GameEngine {
                 word: newWord,
                 history: [],
                 mode: mode,
+                wordWrongCount: 0,
                 ...(isDM ? {
                     currentStreak: nextStreak,
                     bestStreak: best,
@@ -517,6 +514,7 @@ class GameEngine {
                 word: newWord,
                 history: [],
                 mode: mode,
+                wordWrongCount: 0,
                 ...(isDM ? {
                     currentStreak: 0,
                     bestStreak: preserved.bestStreak,
@@ -562,6 +560,7 @@ class GameEngine {
             word: currentWord,
             history: history,
             mode: mode,
+            wordWrongCount: 0,
             ...(isDM ? {
                 currentStreak: userStats.currentStreak,
                 bestStreak: userStats.bestStreak,
@@ -595,6 +594,7 @@ class GameEngine {
             word: currentWord,
             history: [currentWord],
             mode: gameData.mode,
+            wordWrongCount: 0,
             ...(isDM ? {
                 currentStreak: 0,
                 bestStreak: 0,
