@@ -104,18 +104,19 @@ class DiscordBot {
                         value: [
                             '`/noitu_add` - Thêm kênh này làm phòng chơi nối từ (chỉ Admin)',
                             '`/noitu_mode` - Chọn chế độ chơi (chơi với Bot hoặc PvP giữa các thành viên)',
-                            '`/newgame` - Bắt đầu ván mới',
+                            '`/newgame` - Bắt đầu ván mới / bỏ qua từ khó',
                             'Hoặc nhắn tin riêng (DM) trực tiếp cho bot để chơi 1 mình!'
                         ].join('\n')
                     },
                     {
                         name: '📖 Lệnh hữu ích',
                         value: [
+                            '`/leaderboard` - Xem bảng xếp hạng người chơi trong kênh 🏆',
+                            '`/stats` - Xem thống kê cá nhân',
                             '`/tratu [từ]` - Tra cứu từ điển tiếng Việt',
-                            '`/stats` - Xem thống kê người chơi',
                             '`/botstats` - Xem thống kê toàn hệ thống của bot',
-                            '`/help` - Xem hướng dẫn đầy đủ',
-                            '`/feedback` - Gửi phản hồi hoặc góp ý từ vựng mới'
+                            '`/feedback` - Gửi phản hồi hoặc góp ý từ vựng mới',
+                            '`/help` - Xem hướng dẫn đầy đủ'
                         ].join('\n')
                     },
                     {
@@ -185,6 +186,23 @@ class DiscordBot {
                 name: 'stats',
                 description: 'Xem thống kê nối từ hiện tại',
                 contexts: [COMMAND_CONTEXTS.GUILD, COMMAND_CONTEXTS.BOT_DM]
+            },
+            {
+                name: 'leaderboard',
+                description: 'Xem bảng xếp hạng người chơi trong kênh này',
+                contexts: [COMMAND_CONTEXTS.GUILD],
+                options: [
+                    {
+                        name: 'type',
+                        description: 'Loại bảng xếp hạng (mặc định: Kỷ lục chuỗi)',
+                        type: 3, // STRING
+                        required: false,
+                        choices: [
+                            { name: 'Kỷ lục chuỗi (Best Streak)', value: 'streak' },
+                            { name: 'Số trận thắng (Wins)', value: 'wins' }
+                        ]
+                    }
+                ]
             },
             {
                 name: 'botstats',
@@ -439,6 +457,9 @@ class DiscordBot {
                     case 'stats':
                         await this.handleStats(interaction);
                         break;
+                    case 'leaderboard':
+                        await this.handleLeaderboard(interaction);
+                        break;
                     case 'botstats':
                         await this.handleBotStats(interaction);
                         break;
@@ -556,32 +577,45 @@ class DiscordBot {
 
     async handleHelp(interaction) {
         const helpEmbed = new EmbedBuilder()
-            .setTitle('🎮 Moi Nối Từ - Hướng dẫn sử dụng')
-            .setDescription('Bot game nối từ Tiếng Việt với từ gồm 2 chữ')
-            .setColor(0x00ff00)
+            .setTitle('🐧 Bot Nối Từ Tiếng Việt - Hướng dẫn sử dụng')
+            .setDescription('Game nối từ tiếng Việt 2 âm tiết — so tài từ vựng và thi đấu chuỗi nối từ!')
+            .setColor(0x57F287)
             .addFields(
                 {
-                    name: '🎯 Commands Chính',
-                    value: '`/noitu_add` - Thêm phòng game nối từ\n`/noitu_remove` - Xóa phòng game nối từ\n`/newgame` - Bắt đầu game mới\n`/stats` - Xem thống kê cá nhân',
+                    name: '🎮 Lệnh Chơi Game & Quản Lý Kênh',
+                    value: [
+                        '`/noitu_add` — Thêm kênh hiện tại làm phòng nối từ *(Admin)*',
+                        '`/noitu_remove` — Xóa phòng nối từ *(Admin)*',
+                        '`/noitu_mode` — Chuyển chế độ: Chơi với Bot hoặc PvP *(Admin)*',
+                        '`/newgame` — Bắt đầu ván mới / Bỏ qua từ hiện tại'
+                    ].join('\n'),
                     inline: false
                 },
                 {
-                    name: '📚 Tiện ích',
-                    value: '`/tratu [từ]` - Tra cứu từ điển\n`/botstats` - Xem thống kê toàn hệ thống của bot\n`/feedback` - Gửi phản hồi (từ thiếu, lỗi, đề xuất)\n`/noitu_mode [bot|pvp]` - Đặt chế độ chơi của kênh\n`/help` - Hiển thị hướng dẫn này',
+                    name: '🏆 Thống Kê & Bảng Xếp Hạng',
+                    value: [
+                        '`/leaderboard` — Xem bảng xếp hạng Top 10 trong kênh *(theo chuỗi hoặc số trận thắng)*',
+                        '`/stats` — Xem kỷ lục và thống kê cá nhân của bạn',
+                        '`/botstats` — Xem thống kê hoạt động toàn hệ thống của bot'
+                    ].join('\n'),
                     inline: false
                 },
                 {
-                    name: '🎮 Cách chơi',
-                    value: 'Nhập từ gồm 2 chữ.\n• Chế độ bot: bot sẽ đưa ra từ tiếp theo.\n• Chế độ PvP: bot chỉ kiểm tra và thả reaction (✅ đúng, ❌ sai/ko có từ, 🔴 đã lặp, ⚠️ sai format).\n• Từ không có trong từ điển sẽ được coi là sai.',
+                    name: '📖 Tiện Ích & Đóng Góp',
+                    value: [
+                        '`/tratu [từ]` — Tra cứu định nghĩa từ điển tiếng Việt',
+                        '`/feedback` — Đóng góp từ còn thiếu, báo lỗi hoặc đề xuất tính năng',
+                        '`/help` — Hiển thị bảng hướng dẫn này'
+                    ].join('\n'),
                     inline: false
                 },
                 {
-                    name: '⚠️ Lưu ý',
-                    value: 'Nếu gặp lỗi hoặc từ còn thiếu, hãy dùng `/feedback` để báo cho chúng mình nhé!',
+                    name: '📝 Luật Chơi Nhanh',
+                    value: '• Mỗi từ gồm đúng **2 âm tiết** (ví dụ: `học hỏi`, `hỏi han`).\n• Từ nối phải bắt đầu bằng **âm tiết cuối** của từ trước đó.\n• **Chế độ Bot:** Bạn và Bot thay phiên nối từ.\n• **Chế độ PvP:** Các thành viên trong kênh tự do nối từ với nhau.',
                     inline: false
                 }
             )
-            .setFooter({ text: 'Tạo bởi @minhqnd - Game nối từ Tiếng Việt' })
+            .setFooter({ text: 'Bot Nối Từ 🐧 | Chúc bạn chơi game vui vẻ!' })
             .setTimestamp();
 
         await interaction.reply({ embeds: [helpEmbed], ephemeral: false });
@@ -754,6 +788,90 @@ class DiscordBot {
                 await interaction.channel.send(`Từ hiện tại: **${ch.word}**`);
             }
         }
+    }
+
+    async handleLeaderboard(interaction) {
+        if (this.isDirectMessage(interaction.channel)) {
+            await interaction.reply({
+                content: '❌ Bảng xếp hạng chỉ khả dụng trong kênh phòng chơi của server, không hỗ trợ trong tin nhắn riêng (DM).',
+                ephemeral: true
+            });
+            return;
+        }
+
+        const channelId = interaction.channel.id.toString();
+        const channels = db.read('channels') || {};
+        const ch = channels[channelId] || {};
+        const players = ch.players || {};
+
+        const playerList = Object.entries(players).map(([uid, stats]) => ({
+            userId: uid,
+            currentStreak: stats.currentStreak || 0,
+            bestStreak: stats.bestStreak || 0,
+            wins: stats.wins || 0
+        })).filter(p => p.bestStreak > 0 || p.wins > 0 || p.currentStreak > 0);
+
+        if (playerList.length === 0) {
+            await interaction.reply({
+                content: '🏆 **Chưa có ai ghi danh trên bảng xếp hạng của kênh này!**\nHãy bắt đầu nối từ để ghi điểm nhé 🎮',
+                ephemeral: false
+            });
+            return;
+        }
+
+        const type = interaction.options.getString('type') || 'streak';
+
+        // Sắp xếp
+        if (type === 'wins') {
+            playerList.sort((a, b) => {
+                if (b.wins !== a.wins) return b.wins - a.wins;
+                return b.bestStreak - a.bestStreak;
+            });
+        } else {
+            playerList.sort((a, b) => {
+                if (b.bestStreak !== a.bestStreak) return b.bestStreak - a.bestStreak;
+                return b.wins - a.wins;
+            });
+        }
+
+        const top10 = playerList.slice(0, 10);
+        const medals = ['🥇', '🥈', '🥉'];
+
+        const rankLines = top10.map((player, idx) => {
+            const badge = idx < 3 ? medals[idx] : `\`#${idx + 1}\``;
+            if (type === 'wins') {
+                return `${badge} <@${player.userId}>\n┗ 🏆 Thắng: **${player.wins}** | Kỷ lục: **${player.bestStreak}** | Chuỗi hiện tại: **${player.currentStreak}**`;
+            }
+            return `${badge} <@${player.userId}>\n┗ 🔥 Kỷ lục: **${player.bestStreak}** từ | Thắng: **${player.wins}** 🏆 | Chuỗi hiện tại: **${player.currentStreak}**`;
+        });
+
+        const myRankIndex = playerList.findIndex(p => p.userId === interaction.user.id);
+        const myStats = myRankIndex !== -1 ? playerList[myRankIndex] : null;
+
+        const embed = new EmbedBuilder()
+            .setTitle(`🏆 BẢNG XẾP HẠNG ${type === 'wins' ? 'SỐ TRẬN THẮNG' : 'KỶ LỤC CHUỖI'} — #${interaction.channel.name}`)
+            .setDescription(rankLines.join('\n\n'))
+            .setColor(0xFEE75C)
+            .setFooter({ text: `Tổng cộng ${playerList.length} người chơi • Bot Nối Từ 🐧` })
+            .setTimestamp();
+
+        if (myStats) {
+            const myBadge = myRankIndex < 3 ? medals[myRankIndex] : `#${myRankIndex + 1}`;
+            embed.addFields({
+                name: '👤 Thứ hạng của bạn trong kênh',
+                value: `Thứ hạng: **${myBadge}** / ${playerList.length}\n🔥 Kỷ lục: **${myStats.bestStreak}** | 🏆 Thắng: **${myStats.wins}** | Chuỗi: **${myStats.currentStreak}**`,
+                inline: false
+            });
+        } else {
+            embed.addFields({
+                name: '👤 Thứ hạng của bạn trong kênh',
+                value: 'Bạn chưa có điểm trong phòng này. Hãy nối đúng từ để ghi danh nhé!',
+                inline: false
+            });
+        }
+
+        await interaction.reply({ embeds: [embed] });
+        logger.info(`User ${interaction.user.tag} viewed leaderboard in #${interaction.channel.name} (${channelId}) [type=${type}]`);
     }
 
     async handleBotStats(interaction) {
