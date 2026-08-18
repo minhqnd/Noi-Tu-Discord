@@ -959,15 +959,15 @@ class DiscordBot {
     }
 
     async handleFeedback(interaction) {
-        // Rate limit: 1 feedback per user per 5 minutes
+        // Rate limit: 1 feedback per user per 20 seconds
         const userId = interaction.user.id;
         if (!this._feedbackCooldowns) this._feedbackCooldowns = new Map();
         const lastFeedback = this._feedbackCooldowns.get(userId);
         if (lastFeedback) {
             const elapsed = Math.floor((Date.now() - lastFeedback) / 1000);
-            const remaining = 300 - elapsed;
+            const remaining = 20 - elapsed;
             if (remaining > 0) {
-                await interaction.reply({ content: `⏳ Vui lòng chờ ${Math.ceil(remaining / 60)} phút trước khi gửi feedback tiếp.`, ephemeral: true });
+                await interaction.reply({ content: `⏳ Vui lòng chờ ${remaining} giây trước khi gửi feedback tiếp.`, ephemeral: true });
                 return;
             }
         }
