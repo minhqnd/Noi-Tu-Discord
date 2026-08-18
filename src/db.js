@@ -31,7 +31,8 @@ class DB {
                 word TEXT,
                 mode TEXT DEFAULT 'bot',
                 history TEXT DEFAULT '[]',
-                players TEXT DEFAULT '{}'
+                players TEXT DEFAULT '{}',
+                word_wrong_count INTEGER DEFAULT 0
             );
 
             CREATE TABLE IF NOT EXISTS users (
@@ -41,7 +42,8 @@ class DB {
                 current_streak INTEGER DEFAULT 0,
                 best_streak INTEGER DEFAULT 0,
                 wins INTEGER DEFAULT 0,
-                wrong_count INTEGER DEFAULT 0
+                wrong_count INTEGER DEFAULT 0,
+                word_wrong_count INTEGER DEFAULT 0
             );
 
             CREATE TABLE IF NOT EXISTS channel_allowlist (
@@ -78,6 +80,19 @@ class DB {
             logger.info('Migration: added replies column to feedbacks table');
         }
 
+        // Migration: add word_wrong_count column to channels and users if not exists
+        const channelCols = this.db.pragma('table_info(channels)');
+        if (!channelCols.find(c => c.name === 'word_wrong_count')) {
+            this.db.exec(`ALTER TABLE channels ADD COLUMN word_wrong_count INTEGER DEFAULT 0`);
+            logger.info('Migration: added word_wrong_count column to channels table');
+        }
+
+        const userCols = this.db.pragma('table_info(users)');
+        if (!userCols.find(c => c.name === 'word_wrong_count')) {
+            this.db.exec(`ALTER TABLE users ADD COLUMN word_wrong_count INTEGER DEFAULT 0`);
+            logger.info('Migration: added word_wrong_count column to users table');
+        }
+
         // Backfill tracked_players from existing channels and users data
         try {
             const { count: playerCount } = this.db.prepare('SELECT COUNT(*) as count FROM tracked_players').get();
@@ -110,10 +125,10 @@ class DB {
             getChannel: this.db.prepare('SELECT * FROM channels WHERE channel_id = ?'),
             getAllChannels: this.db.prepare('SELECT * FROM channels'),
             upsertChannel: this.db.prepare(`
-                INSERT INTO channels (channel_id, word, mode, history, players)
-                VALUES (@channel_id, @word, @mode, @history, @players)
+                INSERT INTO channels (channel_id, word, mode, history, players, word_wrong_count)
+                VALUES (@channel_id, @word, @mode, @history, @players, @word_wrong_count)
                 ON CONFLICT(channel_id) DO UPDATE SET
-                    word = @word, mode = @mode, history = @history, players = @players
+                    word = @word, mode = @mode, history = @history, players = @players, word_wrong_count = @word_wrong_count
             `),
             deleteChannel: this.db.prepare('DELETE FROM channels WHERE channel_id = ?'),
 
@@ -121,11 +136,11 @@ class DB {
             getUser: this.db.prepare('SELECT * FROM users WHERE user_id = ?'),
             getAllUsers: this.db.prepare('SELECT * FROM users'),
             upsertUser: this.db.prepare(`
-                INSERT INTO users (user_id, word, history, current_streak, best_streak, wins, wrong_count)
-                VALUES (@user_id, @word, @history, @current_streak, @best_streak, @wins, @wrong_count)
+                INSERT INTO users (user_id, word, history, current_streak, best_streak, wins, wrong_count, word_wrong_count)
+                VALUES (@user_id, @word, @history, @current_streak, @best_streak, @wins, @wrong_count, @word_wrong_count)
                 ON CONFLICT(user_id) DO UPDATE SET
                     word = @word, history = @history, current_streak = @current_streak,
-                    best_streak = @best_streak, wins = @wins, wrong_count = @wrong_count
+                    best_streak = @best_streak, wins = @wins, wrong_count = @wrong_count, word_wrong_count = @word_wrong_count
             `),
 
             // Channel Allowlist
@@ -177,6 +192,7 @@ class DB {
             mode: row.mode || 'bot',
             history: JSON.parse(row.history || '[]'),
             players: JSON.parse(row.players || '{}'),
+            wordWrongCount: row.word_wrong_count || 0,
         };
     }
 
@@ -189,6 +205,7 @@ class DB {
             bestStreak: row.best_streak || 0,
             wins: row.wins || 0,
             wrongCount: row.wrong_count || 0,
+            wordWrongCount: row.word_wrong_count || 0,
         };
     }
 
@@ -199,6 +216,7 @@ class DB {
             mode: data.mode || 'bot',
             history: JSON.stringify((data.history || []).slice(-DB_CONSTANTS.MAX_HISTORY_PER_GAME)),
             players: JSON.stringify(data.players || {}),
+            word_wrong_count: data.wordWrongCount || 0,
         };
     }
 
@@ -211,6 +229,7 @@ class DB {
             best_streak: data.bestStreak || 0,
             wins: data.wins || 0,
             wrong_count: data.wrongCount || 0,
+            word_wrong_count: data.wordWrongCount || 0,
         };
     }
 
