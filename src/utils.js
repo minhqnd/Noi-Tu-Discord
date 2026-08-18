@@ -69,7 +69,7 @@ const logFormat = winston.format.combine(
             case 'debug': color = '\x1b[35m'; break;
             default: color = '\x1b[0m';
         }
-        return `\x1b[30;1m${timestamp}\x1b[0m ${color}${level.toUpperCase().padEnd(8)}\x1b[0m \x1b[35m${meta.module || 'unknown'}\x1b[0m -> ${message}`;
+        return `\x1b[30;1m${timestamp}\x1b[0m ${color}${level.toUpperCase().padEnd(6)}\x1b[0m ${message}`;
     })
 );
 

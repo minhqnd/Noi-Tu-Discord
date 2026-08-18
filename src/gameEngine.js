@@ -194,7 +194,7 @@ class GameEngine {
         // Validate word match
         if (!this.validateWordMatch(currentWord, playerWord)) {
             db.incrementStat('total_wrong_guesses', 1);
-            this.logger.info(`${logPfx} [${mode}] MISMATCH '${playerWord}' (cần: '${this.lastWord(currentWord)}')`);
+            this.logger.info(`${logPfx} [${mode}] ERROR MISMATCH '${playerWord}' (cần: '${this.lastWord(currentWord)}')`);
             return {
                 type: RESPONSE_TYPES.ERROR,
                 code: RESPONSE_CODES.MISMATCH,
@@ -234,7 +234,7 @@ class GameEngine {
                         }
                     };
 
-                    this.logger.info(`${logPfx} [${mode}] STREAK_RESET REPEATED '${playerWord}'`);
+                    this.logger.info(`${logPfx} [${mode}] ERROR STREAK_RESET REPEATED '${playerWord}'`);
                     return {
                         type: RESPONSE_TYPES.ERROR,
                         code: RESPONSE_CODES.REPEATED,
@@ -259,7 +259,7 @@ class GameEngine {
                     wrongCount: 0
                 };
 
-                this.logger.info(`${logPfx} [${mode}] LOSS REPEATED '${playerWord}' -> '${newWord}'`);
+                this.logger.info(`${logPfx} [${mode}] ERROR LOSS REPEATED '${playerWord}' -> '${newWord}'`);
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.REPEATED,
@@ -278,7 +278,7 @@ class GameEngine {
                     })
                 };
 
-                this.logger.info(`${logPfx} [${mode}] REPEATED '${playerWord}' (còn: ${GAME_CONSTANTS.MAX_WRONG_COUNT - userStats.wrongCount})`);
+                this.logger.info(`${logPfx} [${mode}] ERROR REPEATED '${playerWord}' (còn: ${GAME_CONSTANTS.MAX_WRONG_COUNT - userStats.wrongCount})`);
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.REPEATED,
@@ -320,7 +320,7 @@ class GameEngine {
                         }
                     };
 
-                    this.logger.info(`${logPfx} [${mode}] STREAK_RESET NOT_IN_DICT '${playerWord}'`);
+                    this.logger.info(`${logPfx} [${mode}] ERROR STREAK_RESET NOT_IN_DICT '${playerWord}'`);
                     return {
                         type: RESPONSE_TYPES.ERROR,
                         code: RESPONSE_CODES.NOT_IN_DICT,
@@ -345,7 +345,7 @@ class GameEngine {
                     wrongCount: 0
                 };
 
-                this.logger.info(`${logPfx} [${mode}] LOSS NOT_IN_DICT '${playerWord}' -> '${newWord}'`);
+                this.logger.info(`${logPfx} [${mode}] ERROR LOSS NOT_IN_DICT '${playerWord}' -> '${newWord}'`);
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.NOT_IN_DICT,
@@ -364,7 +364,7 @@ class GameEngine {
                     })
                 };
 
-                this.logger.info(`${logPfx} [${mode}] NOT_IN_DICT '${playerWord}' (còn: ${GAME_CONSTANTS.MAX_WRONG_COUNT - userStats.wrongCount})`);
+                this.logger.info(`${logPfx} [${mode}] ERROR NOT_IN_DICT '${playerWord}' (còn: ${GAME_CONSTANTS.MAX_WRONG_COUNT - userStats.wrongCount})`);
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.NOT_IN_DICT,
@@ -549,7 +549,7 @@ class GameEngine {
                 })
             };
 
-            this.logger.info(`${logPfx} [${mode}] LOSS '${normalizedPlayer}' -> '${newWord}'`);
+            this.logger.info(`${logPfx} [${mode}] ERROR LOSS '${normalizedPlayer}' -> '${newWord}'`);
             const statsLine = this.formatStatsLine(userId, {
                 currentStreak: userStats.currentStreak || 0,
                 bestStreak: preserved.bestStreak,
