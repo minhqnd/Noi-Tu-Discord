@@ -1,7 +1,8 @@
 const { listWords, listWordSet, wordPairs, normalizeVietnamese } = require('./wordProcessing');
 const { setupLogger, GAME_CONSTANTS, RESPONSE_CODES, RESPONSE_TYPES, GAME_MODES } = require('./utils');
 const db = require('./db');
-
+const fs = require('fs');
+const path = require('path');
 const logger = setupLogger('game_engine');
 
 class GameEngine {
@@ -292,6 +293,17 @@ class GameEngine {
         // Validate in dictionary
         if (!this.validateWordInDictionary(playerWord)) {
             db.incrementStat('total_wrong_guesses', 1);
+            
+            try {
+                // Lưu từ sai vào file wrong_words.txt ở thư mục gốc (hoặc thư mục data)
+                const logPath = path.join(__dirname, '..', 'wrong_words.txt');
+                fs.appendFile(logPath, playerWord + '\n', 'utf8', (err) => {
+                    if (err) this.logger.error('Lỗi khi lưu từ sai:', err);
+                });
+            } catch (err) {
+                this.logger.error('Lỗi try-catch khi lưu từ sai:', err);
+            }
+            
             userStats.wrongCount += 1;
             wordWrongCount += 1;
 
