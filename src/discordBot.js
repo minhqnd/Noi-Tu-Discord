@@ -1020,6 +1020,12 @@ class DiscordBot {
     async handleSelectFeedbackType(interaction) {
         const feedbackType = interaction.values[0];
 
+        const placeholders = {
+            missing_word: 'Nhập từ còn thiếu, ví dụ: "hoa lài", "bình minh"...',
+            bug: 'Mô tả lỗi bạn gặp phải: lỗi gì, khi nào xảy ra...',
+            feature_request: 'Mô tả tính năng bạn muốn đề xuất...'
+        };
+
         const modal = new ModalBuilder()
             .setCustomId(`feedback_modal_${feedbackType}`)
             .setTitle('Gửi phản hồi');
@@ -1028,7 +1034,7 @@ class DiscordBot {
             .setCustomId('feedback_content')
             .setLabel('Nội dung phản hồi')
             .setStyle(TextInputStyle.Paragraph)
-            .setPlaceholder('Mô tả chi tiết phản hồi của bạn...')
+            .setPlaceholder(placeholders[feedbackType] || 'Mô tả chi tiết phản hồi của bạn...')
             .setRequired(true)
             .setMaxLength(1000);
 
