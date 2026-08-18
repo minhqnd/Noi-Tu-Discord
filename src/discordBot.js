@@ -111,7 +111,7 @@ class DiscordBot {
                     {
                         name: '📖 Lệnh hữu ích',
                         value: [
-                            '`/leaderboard` - Xem bảng xếp hạng người chơi trong kênh 🏆',
+                            '`/leaderboard` - Xem bảng xếp hạng người chơi',
                             '`/stats` - Xem thống kê cá nhân',
                             '`/tratu [từ]` - Tra cứu từ điển tiếng Việt',
                             '`/botstats` - Xem thống kê toàn hệ thống của bot',
@@ -184,25 +184,25 @@ class DiscordBot {
             },
             {
                 name: 'stats',
-                description: 'Xem thống kê nối từ hiện tại',
+                description: 'Xem thống kê nối từ hiện tại của bản thân',
                 contexts: [COMMAND_CONTEXTS.GUILD, COMMAND_CONTEXTS.BOT_DM]
             },
             {
                 name: 'leaderboard',
-                description: 'Xem bảng xếp hạng người chơi trong kênh này',
-                contexts: [COMMAND_CONTEXTS.GUILD],
-                options: [
-                    {
-                        name: 'type',
-                        description: 'Loại bảng xếp hạng (mặc định: Kỷ lục chuỗi)',
-                        type: 3, // STRING
-                        required: false,
-                        choices: [
-                            { name: 'Kỷ lục chuỗi (Best Streak)', value: 'streak' },
-                            { name: 'Số trận thắng (Wins)', value: 'wins' }
-                        ]
-                    }
-                ]
+                description: 'Xem bảng xếp hạng người chơi (trong kênh hoặc toàn server)',
+                contexts: [COMMAND_CONTEXTS.GUILD, COMMAND_CONTEXTS.BOT_DM],
+                // options: [
+                //     {
+                //         name: 'type',
+                //         description: 'Loại bảng xếp hạng (mặc định: Kỷ lục chuỗi)',
+                //         type: 3, // STRING
+                //         required: false,
+                //         choices: [
+                //             { name: 'Kỷ lục chuỗi (Best Streak)', value: 'streak' },
+                //             { name: 'Số trận thắng (Wins)', value: 'wins' }
+                //         ]
+                //     }
+                // ]
             },
             {
                 name: 'botstats',
@@ -594,7 +594,7 @@ class DiscordBot {
                 {
                     name: '🏆 Thống Kê & Bảng Xếp Hạng',
                     value: [
-                        '`/leaderboard` — Xem bảng xếp hạng Top 10 trong kênh *(theo chuỗi hoặc số trận thắng)*',
+                        '`/leaderboard` — Xem bảng xếp hạng Top 10 *(theo chuỗi hoặc số trận thắng)*',
                         '`/stats` — Xem kỷ lục và thống kê cá nhân của bạn',
                         '`/botstats` — Xem thống kê hoạt động toàn hệ thống của bot'
                     ].join('\n'),
@@ -791,35 +791,57 @@ class DiscordBot {
     }
 
     async handleLeaderboard(interaction) {
-        if (this.isDirectMessage(interaction.channel)) {
-            await interaction.reply({
-                content: '❌ Bảng xếp hạng chỉ khả dụng trong kênh phòng chơi của server, không hỗ trợ trong tin nhắn riêng (DM).',
-                ephemeral: true
-            });
-            return;
+        let playerList = [];
+        const isDM = this.isDirectMessage(interaction.channel);
+        const type = interaction.options.getString('type') || 'streak';
+
+        if (isDM) {
+            // Lấy toàn bộ channel từ db và gộp lại cho global leaderboard
+            const channels = db.read('channels') || {};
+            const globalPlayers = {};
+
+            for (const chId in channels) {
+                const ch = channels[chId];
+                if (!ch.players) continue;
+
+                for (const uid in ch.players) {
+                    const stats = ch.players[uid];
+                    if (!globalPlayers[uid]) {
+                        globalPlayers[uid] = {
+                            userId: uid,
+                            currentStreak: 0,
+                            bestStreak: 0,
+                            wins: 0
+                        };
+                    }
+                    globalPlayers[uid].bestStreak = Math.max(globalPlayers[uid].bestStreak, stats.bestStreak || 0);
+                    globalPlayers[uid].currentStreak = Math.max(globalPlayers[uid].currentStreak, stats.currentStreak || 0);
+                    globalPlayers[uid].wins += (stats.wins || 0);
+                }
+            }
+
+            playerList = Object.values(globalPlayers).filter(p => p.bestStreak > 0 || p.wins > 0 || p.currentStreak > 0);
+        } else {
+            const channelId = interaction.channel.id.toString();
+            const channels = db.read('channels') || {};
+            const ch = channels[channelId] || {};
+            const players = ch.players || {};
+
+            playerList = Object.entries(players).map(([uid, stats]) => ({
+                userId: uid,
+                currentStreak: stats.currentStreak || 0,
+                bestStreak: stats.bestStreak || 0,
+                wins: stats.wins || 0
+            })).filter(p => p.bestStreak > 0 || p.wins > 0 || p.currentStreak > 0);
         }
-
-        const channelId = interaction.channel.id.toString();
-        const channels = db.read('channels') || {};
-        const ch = channels[channelId] || {};
-        const players = ch.players || {};
-
-        const playerList = Object.entries(players).map(([uid, stats]) => ({
-            userId: uid,
-            currentStreak: stats.currentStreak || 0,
-            bestStreak: stats.bestStreak || 0,
-            wins: stats.wins || 0
-        })).filter(p => p.bestStreak > 0 || p.wins > 0 || p.currentStreak > 0);
 
         if (playerList.length === 0) {
             await interaction.reply({
-                content: '🏆 **Chưa có ai ghi danh trên bảng xếp hạng của kênh này!**\nHãy bắt đầu nối từ để ghi điểm nhé 🎮',
+                content: `🏆 **Chưa có ai ghi danh trên bảng xếp hạng ${isDM ? 'toàn máy chủ' : 'của kênh này'}!**\nHãy bắt đầu nối từ để ghi điểm nhé 🎮`,
                 ephemeral: false
             });
             return;
         }
-
-        const type = interaction.options.getString('type') || 'streak';
 
         // Sắp xếp
         if (type === 'wins') {
@@ -848,8 +870,9 @@ class DiscordBot {
         const myRankIndex = playerList.findIndex(p => p.userId === interaction.user.id);
         const myStats = myRankIndex !== -1 ? playerList[myRankIndex] : null;
 
+        const title = `🏆 BẢNG XẾP HẠNG ${type === 'wins' ? 'SỐ TRẬN THẮNG' : 'KỶ LỤC CHUỖI'} — ${isDM ? 'TOÀN MÁY CHỦ' : '#' + interaction.channel.name}`;
         const embed = new EmbedBuilder()
-            .setTitle(`🏆 BẢNG XẾP HẠNG ${type === 'wins' ? 'SỐ TRẬN THẮNG' : 'KỶ LỤC CHUỖI'} — #${interaction.channel.name}`)
+            .setTitle(title)
             .setDescription(rankLines.join('\n\n'))
             .setColor(0xFEE75C)
             .setFooter({ text: `Tổng cộng ${playerList.length} người chơi • Bot Nối Từ 🐧` })
@@ -858,20 +881,20 @@ class DiscordBot {
         if (myStats) {
             const myBadge = myRankIndex < 3 ? medals[myRankIndex] : `#${myRankIndex + 1}`;
             embed.addFields({
-                name: '👤 Thứ hạng của bạn trong kênh',
+                name: `👤 Thứ hạng của bạn ${isDM ? 'toàn máy chủ' : 'trong kênh'}`,
                 value: `Thứ hạng: **${myBadge}** / ${playerList.length}\n🔥 Kỷ lục: **${myStats.bestStreak}** | 🏆 Thắng: **${myStats.wins}** | Chuỗi: **${myStats.currentStreak}**`,
                 inline: false
             });
         } else {
             embed.addFields({
-                name: '👤 Thứ hạng của bạn trong kênh',
-                value: 'Bạn chưa có điểm trong phòng này. Hãy nối đúng từ để ghi danh nhé!',
+                name: `👤 Thứ hạng của bạn ${isDM ? 'toàn máy chủ' : 'trong kênh'}`,
+                value: `Bạn chưa có điểm ${isDM ? 'trên toàn máy chủ' : 'trong phòng này'}. Hãy nối đúng từ để ghi danh nhé!`,
                 inline: false
             });
         }
 
         await interaction.reply({ embeds: [embed] });
-        logger.info(`User ${interaction.user.tag} viewed leaderboard in #${interaction.channel.name} (${channelId}) [type=${type}]`);
+        logger.info(`User ${interaction.user.tag} viewed leaderboard in ${isDM ? 'DM (Global)' : '#' + interaction.channel.name} [type=${type}]`);
     }
 
     async handleBotStats(interaction) {
@@ -1819,12 +1842,12 @@ class DiscordBot {
                 }
             } else {
                 const reactionEmoji = response.code === 'invalid_format' ? '⚠️' : response.type === 'error' ? '❌' : 'ℹ️';
-                await message.react(reactionEmoji).catch(() => {});
+                await message.react(reactionEmoji).catch(() => { });
 
                 const embed = new EmbedBuilder()
                     .setDescription(response.message)
                     .setColor(response.type === 'success' ? 0x00FF00 : response.type === 'error' ? (response.streakReset || response.code === 'loss' ? 0xFF0000 : 0xFFFF00) : 0x0099FF);
-                
+
                 await message.reply({ embeds: [embed] });
                 if (response.currentWord) {
                     await message.channel.send(`Từ hiện tại: **${response.currentWord}**`);
