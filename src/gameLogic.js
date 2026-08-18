@@ -6,7 +6,7 @@ const logger = setupLogger('game_logic');
 const gameEngine = new GameEngine();
 
 // Game logic functions from noitu_bot.js
-function checkChannel(playerWord, idChannel, idUser) {
+function checkChannel(playerWord, idChannel, idUser, context = null) {
     if (!playerWord || !idChannel || !idUser) {
         return {
             type: 'error',
@@ -22,7 +22,7 @@ function checkChannel(playerWord, idChannel, idUser) {
         const channels = db.read('channels') || {};
         const channelData = channels[idChannel] || {};
 
-        const result = gameEngine.processMove({ ...channelData, id: idChannel }, playerWord, idUser, false);
+        const result = gameEngine.processMove({ ...channelData, id: idChannel }, playerWord, idUser, false, context);
 
         // Save updated game data if present
         if (result.gameData) {
@@ -36,7 +36,7 @@ function checkChannel(playerWord, idChannel, idUser) {
     }
 }
 
-function checkUser(playerWord, idUser) {
+function checkUser(playerWord, idUser, context = null) {
     if (!playerWord || !idUser) {
         return {
             type: 'error',
@@ -51,7 +51,7 @@ function checkUser(playerWord, idUser) {
         const users = db.read('users') || {};
         const userData = users[idUser] || {};
 
-        const result = gameEngine.processMove({ ...userData, id: idUser }, playerWord, idUser, true);
+        const result = gameEngine.processMove({ ...userData, id: idUser }, playerWord, idUser, true, context);
 
         // Save updated game data if present
         if (result.gameData) {
@@ -65,7 +65,7 @@ function checkUser(playerWord, idUser) {
     }
 }
 
-function resetUserGame(idUser) {
+function resetUserGame(idUser, context = null) {
     if (!idUser) {
         throw new Error('Missing required parameter: idUser');
     }
@@ -76,7 +76,7 @@ function resetUserGame(idUser) {
         const users = db.read('users') || {};
         const userData = users[idUser] || {};
 
-        const newGameData = gameEngine.resetGame({ ...userData, id: idUser }, true);
+        const newGameData = gameEngine.resetGame({ ...userData, id: idUser }, true, context);
         db.store('users', { [idUser]: newGameData });
 
         return newGameData.word;
@@ -86,7 +86,7 @@ function resetUserGame(idUser) {
     }
 }
 
-function resetChannelGame(idChannel) {
+function resetChannelGame(idChannel, context = null) {
     if (!idChannel) {
         throw new Error('Missing required parameter: idChannel');
     }
@@ -97,7 +97,7 @@ function resetChannelGame(idChannel) {
         const channels = db.read('channels') || {};
         const channelData = channels[idChannel] || {};
 
-        const newGameData = gameEngine.resetGame({ ...channelData, id: idChannel }, false);
+        const newGameData = gameEngine.resetGame({ ...channelData, id: idChannel }, false, context);
         db.store('channels', { [idChannel]: newGameData });
 
         return newGameData.word;

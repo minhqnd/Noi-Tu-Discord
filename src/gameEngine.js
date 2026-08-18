@@ -17,6 +17,19 @@ class GameEngine {
         return '';
     }
 
+    getLogPrefix(isDM, userId, gameData, context) {
+        if (context) {
+            if (isDM) {
+                return `[DM | @${context.userName || userId}]`;
+            }
+            const guild = context.guildName || 'Guild';
+            const channel = context.channelName ? `#${context.channelName}` : (gameData?.id || 'Channel');
+            const user = context.userName ? `@${context.userName}` : userId;
+            return `[${guild} > ${channel} | ${user}]`;
+        }
+        return isDM ? `[DM | ${userId}]` : `[Channel: ${gameData?.id}]`;
+    }
+
     // Utility functions
     lastWord(word) {
         return word.split(' ').slice(-1)[0];
@@ -118,7 +131,7 @@ class GameEngine {
     }
 
     // Core game logic
-    processMove(gameData, playerWord, userId, isDM = false) {
+    processMove(gameData, playerWord, userId, isDM = false, context = null) {
         // Input validation
         if (!gameData || typeof gameData !== 'object') {
             throw new Error('Invalid gameData parameter');
@@ -135,6 +148,7 @@ class GameEngine {
         
         const startTime = Date.now();
         const normalizedPlayer = normalizeVietnamese(playerWord.trim());
+        const logPfx = this.getLogPrefix(isDM, userId, gameData, context);
 
         // Validate format
         if (!this.validateWordFormat(playerWord)) {
@@ -173,14 +187,14 @@ class GameEngine {
                 } : { players: { ...players } })
             };
 
-            this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] NEW '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
+            this.logger.info(`${logPfx} [${mode}] NEW '${playerWord}' -> '${currentWord}'`);
             return { type: RESPONSE_TYPES.INFO, message: '', currentWord: currentWord, gameData: newGameData };
         }
 
         // Validate word match
         if (!this.validateWordMatch(currentWord, playerWord)) {
             db.incrementStat('total_wrong_guesses', 1);
-            this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] MODE=${mode} MISMATCH '${playerWord}' -> needs '${this.lastWord(currentWord)}' [${(Date.now() - startTime) / 1000}s]`);
+            this.logger.info(`${logPfx} [${mode}] MISMATCH '${playerWord}' (cần: '${this.lastWord(currentWord)}')`);
             return {
                 type: RESPONSE_TYPES.ERROR,
                 code: RESPONSE_CODES.MISMATCH,
@@ -220,7 +234,7 @@ class GameEngine {
                         }
                     };
 
-                    this.logger.info(`Channel: [${gameData.id}] MODE=${mode} STREAK_RESET REPEATED '${playerWord}' [${(Date.now() - startTime) / 1000}s]`);
+                    this.logger.info(`${logPfx} [${mode}] STREAK_RESET REPEATED '${playerWord}'`);
                     return {
                         type: RESPONSE_TYPES.ERROR,
                         code: RESPONSE_CODES.REPEATED,
@@ -245,7 +259,7 @@ class GameEngine {
                     wrongCount: 0
                 };
 
-                this.logger.info(`DM: [${userId}] MODE=${mode} USER_LOSS REPEATED '${playerWord}' -> '${newWord}' [${(Date.now() - startTime) / 1000}s]`);
+                this.logger.info(`${logPfx} [${mode}] LOSS REPEATED '${playerWord}' -> '${newWord}'`);
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.REPEATED,
@@ -264,7 +278,7 @@ class GameEngine {
                     })
                 };
 
-                this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] MODE=${mode} ERROR REPEATED '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
+                this.logger.info(`${logPfx} [${mode}] REPEATED '${playerWord}' (còn: ${GAME_CONSTANTS.MAX_WRONG_COUNT - userStats.wrongCount})`);
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.REPEATED,
@@ -306,7 +320,7 @@ class GameEngine {
                         }
                     };
 
-                    this.logger.info(`Channel: [${gameData.id}] MODE=${mode} STREAK_RESET NOT_IN_DICT '${playerWord}' [${(Date.now() - startTime) / 1000}s]`);
+                    this.logger.info(`${logPfx} [${mode}] STREAK_RESET NOT_IN_DICT '${playerWord}'`);
                     return {
                         type: RESPONSE_TYPES.ERROR,
                         code: RESPONSE_CODES.NOT_IN_DICT,
@@ -331,7 +345,7 @@ class GameEngine {
                     wrongCount: 0
                 };
 
-                this.logger.info(`DM: [${userId}] MODE=${mode} USER_LOSS NOT_IN_DICT '${playerWord}' -> '${newWord}' [${(Date.now() - startTime) / 1000}s]`);
+                this.logger.info(`${logPfx} [${mode}] LOSS NOT_IN_DICT '${playerWord}' -> '${newWord}'`);
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.NOT_IN_DICT,
@@ -350,7 +364,7 @@ class GameEngine {
                     })
                 };
 
-                this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] MODE=${mode} ERROR NOT_IN_DICT '${playerWord}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
+                this.logger.info(`${logPfx} [${mode}] NOT_IN_DICT '${playerWord}' (còn: ${GAME_CONSTANTS.MAX_WRONG_COUNT - userStats.wrongCount})`);
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.NOT_IN_DICT,
@@ -362,10 +376,10 @@ class GameEngine {
         }
 
         // Valid move - process based on mode
-        return this.processValidMove(gameData, normalizedPlayer, userId, isDM, startTime);
+        return this.processValidMove(gameData, normalizedPlayer, userId, isDM, startTime, logPfx);
     }
 
-    processValidMove(gameData, normalizedPlayer, userId, isDM, startTime) {
+    processValidMove(gameData, normalizedPlayer, userId, isDM, startTime, logPfx) {
         let { word: currentWord, history = [], players = {}, mode = GAME_MODES.BOT } = gameData;
         let userStats = (isDM ? gameData : players[userId]) || {
             currentStreak: 0,
@@ -412,7 +426,7 @@ class GameEngine {
                     mode: mode
                 };
 
-                this.logger.info(`Channel: [${gameData.id}] PVP_WIN '${normalizedPlayer}' -> '${newWord}' [${(Date.now() - startTime) / 1000}s]`);
+                this.logger.info(`${logPfx} [${mode}] WIN '${normalizedPlayer}' -> '${newWord}'`);
                 const statsLine = this.formatStatsLine(userId, {
                     currentStreak: userStats.currentStreak || 0,
                     bestStreak: userStats.bestStreak || 0,
@@ -437,7 +451,7 @@ class GameEngine {
                 mode: mode
             };
 
-            this.logger.info(`Channel: [${gameData.id}] MODE=pvp OK '${normalizedPlayer}' [${(Date.now() - startTime) / 1000}s]`);
+            this.logger.info(`${logPfx} [${mode}] OK '${normalizedPlayer}'`);
             const statsLine = this.formatStatsLine(userId, {
                 currentStreak: userStats.currentStreak || 0,
                 bestStreak: userStats.bestStreak || 0
@@ -486,7 +500,7 @@ class GameEngine {
                 })
             };
 
-            this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] WIN '${normalizedPlayer}' -> '${newWord}' [${(Date.now() - startTime) / 1000}s]`);
+            this.logger.info(`${logPfx} [${mode}] WIN '${normalizedPlayer}' -> '${newWord}'`);
             const statsLine = this.formatStatsLine(userId, {
                 currentStreak: nextStreak,
                 bestStreak: best,
@@ -535,7 +549,7 @@ class GameEngine {
                 })
             };
 
-            this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] LOSS '${normalizedPlayer}' -> '${newWord}' [${(Date.now() - startTime) / 1000}s]`);
+            this.logger.info(`${logPfx} [${mode}] LOSS '${normalizedPlayer}' -> '${newWord}'`);
             const statsLine = this.formatStatsLine(userId, {
                 currentStreak: userStats.currentStreak || 0,
                 bestStreak: preserved.bestStreak,
@@ -573,7 +587,7 @@ class GameEngine {
             })
         };
 
-        this.logger.info(`${isDM ? 'DM' : 'Channel'}: [${isDM ? userId : gameData.id}] MODE=${mode} OK '${normalizedPlayer}' -> '${currentWord}' [${(Date.now() - startTime) / 1000}s]`);
+        this.logger.info(`${logPfx} [${mode}] OK '${normalizedPlayer}' -> '${currentWord}'`);
         const statsLine = this.formatStatsLine(userId, {
             currentStreak: userStats.currentStreak,
             bestStreak: userStats.bestStreak,
@@ -589,7 +603,7 @@ class GameEngine {
         };
     }
 
-    resetGame(gameData, isDM = false) {
+    resetGame(gameData, isDM = false, context = null) {
         db.incrementStat('total_games', 1);
         const currentWord = this.newWord();
         const newGameData = {
@@ -607,7 +621,8 @@ class GameEngine {
             })
         };
 
-        this.logger.info(`Reset ${isDM ? 'user' : 'channel'} game for [${isDM ? gameData.id : gameData.id}], new word: ${currentWord}`);
+        const logPfx = this.getLogPrefix(isDM, isDM ? gameData.id : null, gameData, context);
+        this.logger.info(`${logPfx} Reset game -> '${currentWord}'`);
         return newGameData;
     }
 }

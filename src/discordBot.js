@@ -507,7 +507,12 @@ class DiscordBot {
         } else {
             channelAllowlist.push(channelId);
             this.saveChannelAllowlist(channelAllowlist);
-            const newWord = gameLogic.resetChannelGame(channelId);
+            const context = {
+                guildName: interaction.guild?.name || 'Server',
+                channelName: interaction.channel?.name || channelId,
+                userName: interaction.user.username
+            };
+            const newWord = gameLogic.resetChannelGame(channelId, context);
             const missingPerms = this.getMissingPermissions(interaction.channel);
             let replyContent = `> **Đã thêm phòng game nối từ, MoiChat sẽ trả lời mọi tin nhắn từ phòng này!**\n\n🎮 **Game mới đã bắt đầu!**\nTừ hiện tại: **${newWord}**`;
             if (missingPerms.length > 0) {
@@ -645,7 +650,8 @@ class DiscordBot {
         }
 
         if (this.isDirectMessage(interaction.channel)) {
-            const newWord = gameLogic.resetUserGame(userId);
+            const context = { isDM: true, userName: interaction.user.username };
+            const newWord = gameLogic.resetUserGame(userId, context);
             await interaction.reply({
                 content: `🎮 **Game mới đã bắt đầu!**\nTừ hiện tại: **${newWord}**`,
                 ephemeral: false
@@ -696,7 +702,12 @@ class DiscordBot {
                 collector.on('end', async (collected, reason) => {
                     if (!cancelled) {
                         try {
-                            const newWord = gameLogic.resetChannelGame(channelId);
+                            const context = {
+                                guildName: interaction.guild?.name || 'Server',
+                                channelName: interaction.channel?.name || channelId,
+                                userName: interaction.user.username
+                            };
+                            const newWord = gameLogic.resetChannelGame(channelId, context);
                             await gameMsg.edit({
                                 content: `> **${interaction.user}** đã yêu cầu bỏ qua từ hiện tại. Bắt đầu từ mới!\n\n🔤 Từ mới: **${newWord}**`,
                                 components: []
@@ -1561,13 +1572,14 @@ class DiscordBot {
 
         try {
             if (isDM) {
+                const context = { isDM: true, userName: message.author.username };
                 // Check if this is a first-time DM user (no existing game data)
                 const users = db.read('users') || {};
                 const existingUserData = users[userId];
 
                 if (!existingUserData || !existingUserData.word) {
                     // First-time user: send welcome + start game
-                    const response = gameLogic.checkUser(userMessage, userId);
+                    const response = gameLogic.checkUser(userMessage, userId, context);
 
                     const welcomeEmbed = new EmbedBuilder()
                         .setTitle('👋 Chào mừng bạn đến với Nối Từ!')
@@ -1594,7 +1606,7 @@ class DiscordBot {
                     return;
                 }
 
-                const response = gameLogic.checkUser(userMessage, userId);
+                const response = gameLogic.checkUser(userMessage, userId, context);
                 const embed = new EmbedBuilder()
                     .setDescription(response.message)
                     .setColor(response.type === 'success' ? 0x00FF00 : response.type === 'error' ? (response.streakReset || response.code === 'loss' ? 0xFF0000 : 0xFFFF00) : 0x0099FF);
@@ -1644,7 +1656,13 @@ class DiscordBot {
                         }
                         return;
                     }
-                    const response = gameLogic.checkChannel(userMessage, channelId, userId);
+                    const context = {
+                        isDM: false,
+                        guildName: message.guild?.name || 'Server',
+                        channelName: message.channel.name || channelId,
+                        userName: message.author.username
+                    };
+                    const response = gameLogic.checkChannel(userMessage, channelId, userId, context);
 
                     if (mode === 'pvp') {
                         await this.handlePvPResponse(message, response);
@@ -1681,23 +1699,21 @@ class DiscordBot {
                 if (response.currentWord) {
                     await message.channel.send(`🎮 **Game mới bắt đầu!**\nTừ hiện tại: **${response.currentWord}**`);
                 }
-            } else if (response.code === 'mismatch') {
-                await message.react('❌');
-                await message.reply({ content: `${response.message}\nTừ hiện tại: **${response.currentWord}**` });
-            } else if (response.code === 'repeated') {
-                await message.react('❌');
-                await message.reply({ content: `${response.message}\nTừ hiện tại: **${response.currentWord}**` });
-            } else if (response.code === 'not_in_dict') {
-                await message.react('❌');
-                await message.reply({ content: `${response.message}\nTừ hiện tại: **${response.currentWord}**` });
-            } else if (response.code === 'invalid_format') {
-                await message.react('⚠️');
-                await message.reply({ content: `${response.message}\nTừ hiện tại: **${response.currentWord}**` });
             } else {
-                await message.react('ℹ️');
+                const reactionEmoji = response.code === 'invalid_format' ? '⚠️' : response.type === 'error' ? '❌' : 'ℹ️';
+                await message.react(reactionEmoji).catch(() => {});
+
+                const embed = new EmbedBuilder()
+                    .setDescription(response.message)
+                    .setColor(response.type === 'success' ? 0x00FF00 : response.type === 'error' ? (response.streakReset || response.code === 'loss' ? 0xFF0000 : 0xFFFF00) : 0x0099FF);
+                
+                await message.reply({ embeds: [embed] });
+                if (response.currentWord) {
+                    await message.channel.send(`Từ hiện tại: **${response.currentWord}**`);
+                }
             }
         } catch (e) {
-            logger.error(`Failed to react in PvP mode: ${e.message}`);
+            logger.error(`Failed to handle PvP response: ${e.message}`);
             if (e.code === 50013 || e.message?.includes('Missing Permissions')) {
                 await this.notifyMissingPermissions(message);
             }
