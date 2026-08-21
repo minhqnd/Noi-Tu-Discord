@@ -217,7 +217,7 @@ class DiscordBot {
             {
                 name: 'addword',
                 description: '[OWNER] Thêm từ mới vào từ điển',
-                contexts: [COMMAND_CONTEXTS.GUILD, COMMAND_CONTEXTS.BOT_DM],
+                contexts: [COMMAND_CONTEXTS.BOT_DM],
                 options: [
                     {
                         name: 'word',
@@ -862,7 +862,7 @@ class DiscordBot {
         const rankLines = await Promise.all(top10.map(async (player, idx) => {
             const badge = idx < 3 ? medals[idx] : `\`#${idx + 1}\``;
             let displayName = `<@${player.userId}>`;
-            
+
             if (isDM) {
                 try {
                     const u = await this.client.users.fetch(player.userId);
