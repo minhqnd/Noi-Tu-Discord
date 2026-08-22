@@ -1,6 +1,6 @@
 nhẹ tễnh
 thủi lủi
-thủi thui
+// thủi thui
 vai rộng
 là gì
 là phẳng
@@ -14,7 +14,7 @@ láy từ
 yêu em
 yêu anh
 // tinh quoái
-nhi nhỉ
+// nhi nhỉ
 thiệp chúc
 tàu con
 thiệp cưới
@@ -41,7 +41,7 @@ khôn ranh
 khôn thế
 // khôn lỗi
 thố lố
-với những
+// với những
 với tới
 thố cơm
 quang quắc
@@ -61,107 +61,107 @@ lên đỉnh
 cơn mơ
 cơn mê
 cơn nghiện
-tàu trượt
+// tàu trượt
 xã đàn
 đó giờ
-xã dao
+// xã dao
 cơ hàm
-cựu thành
+// cựu thành
 quái xế
 quái thú
-mệnh cách
+// mệnh cách
 nắng ấm
-đề đạc
-mép lồn
-mép tay
-mép miệng
-mép mồm
+// đề đạc
+// mép lồn
+// mép tay
+// mép miệng
+// mép mồm
 cốm xanh
 lõi kép
 mép môi
-lõi quye
-mép bò
-lõi quỷ
+// lõi quye
+// mép bò
+// lõi quỷ
 lõi lọc
-mép râu
+// mép râu
 lõi lạc
 đời bạc
-lại đâu
-lại là
-lại lại
-lại đi
-mình mẩyu
+// lại đâu
+// lại là
+// lại lại
+// lại đi
+// mình mẩyu
 bạc đời
-giống con
+// giống con
 kịch hài
 phận người
 phận đời
-mép ria
+// mép ria
 đen xì
-sì hơi
-mép phép
-sì dách
-sì quần
+// sì hơi
+// mép phép
+// sì dách
+// sì quần
 đài cát
-đời bạn
+// đời bạn
 thù ác
 sắt gỉ
-ty nạn
+// ty nạn
 ty tỷ
 vụn vỡ
 vụn bánh
 ty thể
-ty bối
+// ty bối
 quắp nách
-quắp co
-thánh giống
+// quắp co
+// thánh giống
 gióng lên
-gióng vật
-chú ngôn
-chú ngụ
+// gióng vật
+// chú ngôn
+// chú ngụ
 chú thuật
-chú pháp
+// chú pháp
 nhì bảng
 thức đêm
-táo dai
-phận ngừoi
-tuyển trọn
-chọn đại
+// táo dai
+// phận ngừoi
+// tuyển trọn
+// chọn đại
 quyền trượng
-chọn nhặt
+// chọn nhặt
 lọc nước
-cườm lượm
-bọc nước
-bọc cứt
-cườm khô
+// cườm lượm
+// bọc nước
+// bọc cứt
+// cườm khô
 giấy trắng
 cườm mắt
-cườm chân
-lứa dôi
-lứa trê
+// cườm chân
+// lứa dôi
+// lứa trê
 nghiệp trướng
 ngôn tình
 án oan
-đũa đàng
-lệch kệch
+// đũa đàng
+// lệch kệch
 lệch nhau
 mạng mẽo
-pha ke
-mạng xã
-mặt nươc
+// pha ke
+// mạng xã
+// mặt nươc
 chế rượu
 trời quang
-ơi ơi
+// ơi ơi
 át bích
-át vị
+// át vị
 cách cách
-nguyệt c
-át mùi
+// nguyệt c
+// át mùi
 // nguyệt k
-át chít
+// át chít
 // vật k
 vật tế
-át sát
+// át sát
 tế công
 át giọng
 át đi
@@ -298,10 +298,10 @@ mạng đoạt
 sống sinh
 chích chèo
 ảnh ọt
-ý xời
+// ý xời
 chụp choẹt
-ý ới
-ý oi
+// ý ới
+// ý oi
 minh quan
 sơ xác
 mò chim
@@ -358,8 +358,8 @@ hò ca
 hét toáng
 hét hò
 hò hla
-ó ỏ
-ó ó
+// ó ỏ
+// ó ó
 mè rang
 mè sửng
 gỉ tinh
@@ -518,7 +518,7 @@ nhánh nhóng
 nhánh đen
 cảm cúm
 mạnh rạn
-// thoại cổ
+thoại cổ
 mạnh ghê
 bụi bẩn
 bụi bám
@@ -667,7 +667,7 @@ loạn choạn
 vải chua
 vải dệt
 ơi hỡi
-ơi ả
+// ơi ả
 ơi gì
 nại lực
 đâu rồi
@@ -731,7 +731,7 @@ ta ơi
 nga ngố
 nga cổ
 nga ơi
-nga à
+// nga à
 đáp gọn
 bang mai
 bang hành
@@ -813,13 +813,13 @@ xuân xuân
 nghẽn nghẽn
 ốc vít
 túi sách
-// báo đốm
+báo đốm
 bổng nhiên
 mà mị
 bổng bóng
 mà anh
 bổng bay
-// thoại mỹ
+thoại mỹ
 bệu hình
 bệu iu
 bệu bệu
@@ -922,7 +922,7 @@ dương dã
 thỉ chung
 buôn thương
 buôn chuyện
-// thoại văn
+thoại văn
 con muỗi
 tên giả
 con lợn
@@ -946,7 +946,7 @@ cưa cẩm
 cưa đổ
 cưa khét
 cưa rỉ
-cưa ư
+// cưa ư
 cưa vang
 cưa hư
 cưa nhỏ
@@ -982,9 +982,9 @@ là thỏ
 tết nguyên
 là cây
 là bà
-muốn ý
+// muốn ý
 muốn ước
-niệm phâth
+// niệm phâth
 chét bơ
 muốn chơi
 muốn mong
@@ -1002,7 +1002,7 @@ bày bừa
 tỏ lòng
 rạp cưới
 khuẩn kháng
-nguyện ý
+// nguyện ý
 khuẩn chiến
 nguyện dâng
 khuẩn cấp
@@ -1162,7 +1162,7 @@ hạc bay
 lạt đạt
 hạc trắng
 nghệch ngoạc
-è un
+// è un
 hoi hỏi
 hoi hảo
 mại dô
@@ -1198,7 +1198,7 @@ dở tệ
 nghẽn cống
 rẽ qua
 rẽ phải
-// thoại bản
+thoại bản
 rẽ bước
 cải lộn
 mạng người
@@ -1220,7 +1220,7 @@ hơi thúi
 dốc lửng
 tròng nhòng
 độ trời
-sì lì
+// sì lì
 noãn noãn
 trai trái
 tráng bánh
@@ -1235,9 +1235,9 @@ an an
 nữ chánh
 là ai
 là em
-// thoại máy
+thoại máy
 cục thuế
-sì líp
+// sì líp
 chân trái
 chân dài
 chân tường
@@ -1252,7 +1252,7 @@ nách váy
 ngốn tiền
 nách mách
 nách lép
-// khôn lõi
+khôn lõi
 đan túi
 đan điền
 lõng lẽo
@@ -1448,7 +1448,7 @@ chuồi chân
 treo tuyền
 bộ nhá
 sông lam
-điển hìh
+// điển hìh
 mặt lon
 súng ổn
 nhện nhọ
@@ -1721,7 +1721,7 @@ chát dắng
 chát đắng
 trướng mắt
 phó bang
-y pháp
+// y pháp
 chót lọt
 điểm chót
 nguồn suối
@@ -1776,7 +1776,7 @@ dứa vàng
 phận con
 phận lòng
 phận my
-phận ý
+// phận ý
 thành thủ
 hơn thế
 hơn ít
@@ -1796,7 +1796,7 @@ vách khung
 vách núi
 // vật chats
 tỏm tỏm
-tỏm t
+// tỏm t
 dầu xả
 phép màu
 nghìn đồng
@@ -1808,7 +1808,7 @@ hỏi nhau
 gỉ sét
 lử người
 suối lavie
-// thoại phạm
+thoại phạm
 tống hạo
 tống gia
 nhoẻn nụ
@@ -1843,7 +1843,7 @@ lỏng lảnh
 đếm ngược
 húy kì
 lủi vô
-// thoại nghi
+thoại nghi
 dẹt vàng
 dẹt may
 dẹt là
@@ -1887,7 +1887,7 @@ mắt lé
 mũi miệng
 mũi chó
 tẹt lét
-tẹt cdh
+// tẹt cdh
 tẹt ga
 tẹt xuống
 tẹt tẹt
@@ -2060,7 +2060,7 @@ ngồi thuyền
 hồ câu
 thoại hội
 ráo nước
-// thoại họa
+thoại họa
 đới lạnh
 đới nhiệt
 cự cãi
@@ -2073,7 +2073,7 @@ lại chối
 lại kia
 lại có
 lại lạ
-lại đó
+// lại đó
 cháy rừng
 cháy máy
 cháy lớn
@@ -2159,7 +2159,7 @@ chay cháy
 chay chường
 chay chay
 đen đuốc
-ối ả
+// ối ả
 sả lả
 họp bang
 thuế chấp
@@ -2234,7 +2234,7 @@ sao việt
 nạp tiền
 nạp thẻ
 // nạp card
-nạp vip
+// nạp vip
 nạp mực
 nạp khí
 nạp lượng
@@ -2288,7 +2288,7 @@ thuế giá
 thuế đơn
 thuế vat
 biết nhiều
-gì á
+// gì á
 gì có
 là trời
 là bạn
@@ -2462,7 +2462,7 @@ chơi bóng
 lớp phó
 lớp trưởng
 sao nữa
-sao chăngh
+// sao chăngh
 mũi két
 vèo vẹo
 quên rùi
@@ -2532,7 +2532,7 @@ chất ghê
 hậu đạu
 hậu giác
 đậu má
-đậu đh
+// đậu đh
 mạng kém
 đỏ quá
 lửa trời
@@ -2700,7 +2700,7 @@ má ửng
 ngủ đi
 ngon nha
 // truyền hinhd
-ăn nhâph
+// ăn nhâph
 chóp đỉnh
 chóp mũi
 xanh xủng
@@ -2709,7 +2709,7 @@ hạng gia
 nhất nhì
 sách toán
 găm đinh
-trưa trâth
+// trưa trâth
 trưa ròii
 găm túi
 găm nước
@@ -2736,10 +2736,10 @@ bảng viết
 xoá xổ
 sàn cam
 yếm đào
-trời ơiiiiii
+// trời ơiiiiii
 móc khóa
 móc treo
-ơi à
+// ơi à
 móc áo
 tay đau
 bảng phấn
@@ -2757,7 +2757,7 @@ tởm lợn
 tởm dị
 nhung gấm
 lợm ngợm
-là emmmm
+// là emmmm
 lẫm thẫm
 tình lờ
 mai sớm
@@ -2866,7 +2866,7 @@ sườn xám
 sườn đồi
 chép giòn
 phải chịu
-// láy đôi
+láy đôi
 thủy ngoạn
 tuệ lâm
 voi bản
@@ -2888,7 +2888,7 @@ chuông chùa
 viên phấn
 vả mồm
 ngắn cổ
-ý trời
+// ý trời
 ty ty
 cạn bể
 ty công
@@ -2909,7 +2909,7 @@ chích cá
 nhận đồ
 nhận phúc
 tai thính
-mà à
+// mà à
 trệt lụi
 thần đằng
 mà kì
@@ -3016,7 +3016,7 @@ cối hư
 bồi hòi
 cối lối
 thoại đàm
-// thoại nhân
+thoại nhân
 sơn cặc
 vai gãy
 sơn tặc
@@ -3030,10 +3030,10 @@ thúy liễu
 thuý lệ
 thúy điền
 thuý hồng
-ổ vịt
-ổ chim
+// ổ vịt
+// ổ chim
 bú bút
-ổ điện
+// ổ điện
 bú mú
 bú vú
 ra đây
@@ -3128,7 +3128,7 @@ quả xoài
 lý lẻ
 hoàng tự
 lý tử
-tộc t
+// tộc t
 hương tràm
 hương giang
 hương mùi
@@ -3207,7 +3207,7 @@ thiện thiên
 thôn làng
 phệ cố
 phệ hồn
-hành t
+// hành t
 tính phí
 phệ tinh
 mủ cây
@@ -3342,7 +3342,7 @@ bò húc
 nê nếp
 bò viên
 nê nết
-sùi t
+// sùi t
 mồm nói
 sùi mào
 bò trường
@@ -3417,7 +3417,7 @@ canh me
 nhị rữa
 nhị nhân
 // nhị cl
-hiểu ý
+// hiểu ý
 cơ bụng
 đều được
 đều đặng
@@ -3439,7 +3439,7 @@ chủng loài
 trội dậy
 vị vua
 lăm phút
-lăm e
+// lăm e
 chanh vàng
 da báo
 da nang
@@ -3505,7 +3505,7 @@ sơn nghĩa
 sơn nước
 nọ dọ
 sơn sởn
-sơn ã
+// sơn ã
 sơn sơn
 sơn chơi
 sơn ơi
@@ -3627,7 +3627,7 @@ loa độ
 loa phường
 loa to
 loa nhỏ
-loa bluetooth
+// loa bluetooth
 loa ồn
 loa loả
 loa nghe
@@ -3702,7 +3702,7 @@ lỗi tôi
 lỗi tôu
 rẽ ngỏ
 cầm thù
-kì cuth
+// kì cuth
 thiếp thê
 thiếp thần
 lơi thơi
@@ -3757,7 +3757,7 @@ quánh lại
 học dốt
 lắm mối
 vai diễn
-ma quye
+// ma quye
 kỵ sỹ
 hơi nóng
 hơi gầy
@@ -3933,7 +3933,7 @@ mà kia
 mà gì
 láy lại
 láy điệu
-// láy cò
+láy cò
 mà chắc
 mà hay
 lợn béo
@@ -3986,7 +3986,7 @@ nhắp rượu
 xỉu xiu
 sống bẩn
 nhắp câu
-đang ở
+// đang ở
 đang đi
 đang học
 đang ỉa
@@ -4006,8 +4006,8 @@ rông kinh
 // rông rôngd
 hàm nghi
 sánh bằng
-trên trời
-trên cao
+// trên trời
+// trên cao
 chĩa mõn
 chĩa mũi
 cãi cùn
@@ -4158,7 +4158,7 @@ tăng xông
 bầy bừa
 được học
 đuôi mèo
-dưới trên
+// dưới trên
 dưới đất
 dùng thử
 dùng súng
@@ -4219,7 +4219,7 @@ cùm cụm
 cúm ho
 cúm cảm
 mỡ dầu
-cúm a
+// cúm a
 đạc đẽo
 đạc tượng
 hậu vị
@@ -4245,7 +4245,7 @@ cóng lòng
 đạc lạc
 từ truờng
 lưng chống
-thọ y
+// thọ y
 thọ mộc
 nức nôi
 mép tai
@@ -4308,7 +4308,7 @@ vị mặn
 vị chua
 đề tớ
 đạo tu
-mà mà
+// mà mà
 kiểu gì
 lĩnh toái
 lĩnh kỉnh
@@ -4374,7 +4374,7 @@ thủi thỉu
 sách giáo
 sách văn
 sơn móng
-đoán ý
+// đoán ý
 viết cho
 trượng nghĩa
 hỏa ấn
@@ -4537,7 +4537,7 @@ nhớt đen
 giáo quan
 gác sách
 dục công
-chức y
+// chức y
 bếp núp
 // bếp gas
 việc riêng
@@ -4621,7 +4621,7 @@ xẹp nát
 trình trự
 xẹp lốp
 xẹp bóng
-khuẩn t
+// khuẩn t
 xẹp phổi
 khuẩn trùng
 khuẩn gây
@@ -4710,7 +4710,7 @@ này cậu
 đần thế
 rình trộm
 đần dốt
-độ c
+// độ c
 xẹp tóc
 viện kiểm
 thôn nhỏ
@@ -4791,7 +4791,7 @@ nhánh nhỏ
 nhánh mới
 véo má
 nhánh phải
-văn t
+// văn t
 ve chó
 // hóa kiêod
 hạ hoà
@@ -4962,7 +4962,7 @@ trường chuyên
 dã tượng
 nữa cmm
 quan hợp
-nữa à
+// nữa à
 nữa đấy
 nữa khoai
 suối reo
@@ -5037,14 +5037,14 @@ tập chơi
 xạc xạo
 tập làm
 nghiệp chức
-nghiệp i
-nghiệp a
+// nghiệp i
+// nghiệp a
 mình mẫy
 mình chịu
 lị khẩu
 lực trọng
 gió tai
-đẽo u
+// đẽo u
 ken nguyen
 ken ken
 lòng lóng
@@ -5199,7 +5199,7 @@ sứ gốm
 nâu tối
 tạo nét
 nâu sáng
-sự ý
+// sự ý
 qua tuông
 hỏi ai
 nhà ma
@@ -5389,9 +5389,9 @@ mành tre
 rập xê
 rập thống
 rập saudi
-ỉ ôi
+// ỉ ôi
 cuồng yêu
-ỉ lại
+// ỉ lại
 lành lại
 đi cút
 dựng rạp
@@ -5415,7 +5415,7 @@ dòng cổ
 dòng sản
 nhạn môn
 nhạn bay
-è ái
+// è ái
 nhạn băng
 chịa chịa
 bãi thép
@@ -5455,7 +5455,7 @@ nhạo bán
 lọi sáng
 nhạo chuyện
 lọi nước
-ỉ ngựa
+// ỉ ngựa
 lọi rọi
 lọi sói
 hạm bộ
@@ -5673,7 +5673,7 @@ dưỡng trắng
 nhái ếch
 nhái đêm
 nhái con
-nhái e
+// nhái e
 nhái đồ
 ván bay
 ván game
@@ -5740,7 +5740,7 @@ nhủ nhiên
 lịnh bà
 nhủ nhau
 lịnh ái
-loét ố
+// loét ố
 ăn đập
 loét rách
 lịnh sai
@@ -5825,7 +5825,7 @@ múa kiếm
 ối trời
 thun lạnh
 thù kem
-ối à
+// ối à
 thù đẹm
 ối bì
 thù dó
@@ -5949,7 +5949,7 @@ lam trường
 duy mạnh
 trì và
 cạch mặt
-o tròn
+// o tròn
 hoãn loạn
 hoãn hồn
 hoãn xử
@@ -6026,7 +6026,7 @@ dương sỉ
 là kìa
 tá ma
 tá uy
-tá y
+// tá y
 tá chàm
 rông rả
 lượt bớt
@@ -6439,7 +6439,7 @@ dầm mưa
 mạng yếu
 dịu nhẹ
 bỏ con
-// thoại đáp
+thoại đáp
 tụy gà
 tụy tinh
 ngãi bùa
@@ -6605,7 +6605,7 @@ gở miệng
 mép viền
 nệm êm
 nệm bông
-đản ở
+// đản ở
 đản quan
 chiếu ohim
 hai năm
@@ -6788,7 +6788,7 @@ tượng ngưòi
 dục dã
 hình hịc
 sồi non
-phim ảmh
+// phim ảmh
 ảnh minh
 ảnh mạng
 sồi sột
@@ -6844,10 +6844,10 @@ xỉu rìn
 cày đấy
 xỉu thẻ
 cày chay
-xỉu quyh
+// xỉu quyh
 xỉu quỵ
 hợp cạ
-ô sít
+// ô sít
 xỉu rũ
 ren màu
 cu to
@@ -6879,7 +6879,7 @@ cốt vương
 lõi tứ
 huệ huệ
 long đao
-sì tai
+// sì tai
 suối trúc
 lõi từ
 mẫu mới
@@ -6909,7 +6909,7 @@ kép tủa
 dự tiệc
 kép nam
 hò rô
-hét t
+// hét t
 hét ta
 vất vã
 kiếp nổ
@@ -7075,7 +7075,7 @@ trụi lông
 bời bạc
 trụi trơ
 gia thụy
-trụi uiiiiii
+// trụi uiiiiii
 trụi lóc
 dưng dửng
 lời hay
@@ -7086,37 +7086,37 @@ thủi một
 trôi nước
 điểm trở
 trôi xa
-// thoại ngữ
+thoại ngữ
 dào có
 lô cồ
-// thoại lạc
+thoại lạc
 tổ đội
 thoại thoại
 huyết trưng
-// thoại ca
+thoại ca
 huyết tươi
-// thoại sư
-// thoại gia
+thoại sư
+thoại gia
 máu tươi
 lửa rực
 thoại thoai
 lửa phật
-// thoại từ
+thoại từ
 sảo quyệt
-// thoại lại
-// thoại sao
+thoại lại
+thoại sao
 sảo trá
 sách vơt
-// thoại bàn
-// thoại viên
-// thoại viện
-// thoại hải
+thoại bàn
+thoại viên
+thoại viện
+thoại hải
 sảo sắc
-// thoại tình
-// thoại duy
-// thoại mai
+thoại tình
+thoại duy
+thoại mai
 thoại thanh
-// thoại nguyễn
+thoại nguyễn
 nhân hentai
 vải thều
 vải nho
@@ -7126,7 +7126,7 @@ thiều thiều
 thiều thiệu
 thiều thạc
 ngã xe
-lên trên
+// lên trên
 minh trí
 vú xệ
 chỉ chúng
@@ -7157,7 +7157,7 @@ nong đích
 nong sâu
 nong đờm
 thủi lùi
-vâng ạ
+// vâng ạ
 long long
 lời hát
 dương hóa
@@ -7167,7 +7167,7 @@ bặt kì
 bặt ki
 me bay
 em đây
-em à
+// em à
 bặt âm
 tằm sợi
 bặt tai
@@ -7338,10 +7338,10 @@ vác dao
 vác theo
 vác lưỡi
 vác mạc
-a da
-a phúc
-a mẫn
-a a
+// a da
+// a phúc
+// a mẫn
+// a a
 dua xe
 nói nhanh
 chanh day
@@ -7415,7 +7415,7 @@ mạc mạ
 mạc lo
 mạc so
 mạc su
-mạc á
+// mạc á
 nặn cmm
 mạc no
 mạc xo
@@ -7608,7 +7608,7 @@ bị khùng
 nắp nồi
 hộp thiết
 viết mực
-cách mangh
+// cách mangh
 quả dư
 quả ngọt
 quả cam
@@ -7659,8 +7659,8 @@ tích nước
 chia đôi
 cắt lìa
 cắt phăng
-// thoại nghị
-// thoại lời
+thoại nghị
+thoại lời
 đởm dáng
 chồng giấy
 ềnh ệnh
@@ -7783,7 +7783,7 @@ long tay
 lệnh điệu
 // sức ngươid
 đoán mau
-mì ý
+// mì ý
 mì mặn
 mì mò
 mì khô
@@ -7813,7 +7813,7 @@ từ nghữ
 lan anh
 trọng kích
 là kẹo
-là saoooooooo
+// là saoooooooo
 là giề
 tống tự
 lượt like
@@ -7853,7 +7853,7 @@ kho gạo
 khang khô
 long hoàng
 lô đỉnh
-hạp ý
+// hạp ý
 hạp rơ
 hạp gu
 cư cư
@@ -7888,7 +7888,7 @@ sách cổ
 dài ngoằn
 lợm khợm
 lợm vọng
-bậc ư
+// bậc ư
 chuyện khuyê
 ngòng ngèo
 là cái
@@ -7908,7 +7908,7 @@ ngửa bụng
 hồn là
 nhiêu đó
 vía vịa
-// thoại âm
+thoại âm
 vía may
 mất em
 dĩ an
@@ -7964,13 +7964,13 @@ sư đạo
 kê kiển
 huynh đài
 kê đệm
-// thoại cho
-// thoại điện
+thoại cho
+thoại điện
 bái sư
 bái lạy
 màng cửa
 nhện úc
-// thoại nói
+thoại nói
 liệt cặc
 liệt tay
 muội cc
@@ -8064,9 +8064,9 @@ mình thích
 hàng ngang
 bản con
 bản đen
-// thoại lồn
-// thoại giao
-// thoại ngoại
+thoại lồn
+thoại giao
+thoại ngoại
 mạc chược
 phạm thị
 mạc dầu
@@ -8081,7 +8081,7 @@ the thẻ
 táng gia
 muốn lấy
 đang đảm
-đang đang
+// đang đang
 người sống
 miệng rộng
 miệng mòm
@@ -8154,7 +8154,7 @@ chuyền banh
 trời mọc
 xanh ngát
 nhắc bài
-ác quye
+// ác quye
 báo trí
 vi phảm
 tội tày
@@ -8262,7 +8262,7 @@ lệnh nã
 lệnh tội
 nhọt độc
 tải lại
-ảnh oth
+// ảnh oth
 đất bẩn
 giác cảm
 nát tan
@@ -8598,7 +8598,7 @@ lang son
 bời cc
 binh tốt
 cười nói
-cười ẻ
+// cười ẻ
 cười khểnh
 cười tươi
 cười to
@@ -8616,7 +8616,7 @@ chục nghìn
 chục chục
 chục trứng
 lọc bút
-nữa á
+// nữa á
 phấn trắng
 sắt rỉ
 cán tôn
@@ -8736,7 +8736,7 @@ rồng lộn
 rồng bay
 pi tien
 pi thon
-pi t
+// pi t
 pi ti
 cung khủ
 pi nô
@@ -8781,7 +8781,7 @@ sục khí
 xo đo
 sục sục
 xo đọ
-máu m
+// máu m
 giấy vở
 giấy cắt
 lộc tinh
@@ -8846,10 +8846,10 @@ luy bạn
 đoàn binh
 đoàn công
 tiên cá
-// khôn siết
-// khôn dành
-// khôn nỗi
-// khôn lòi
+khôn siết
+khôn dành
+khôn nỗi
+khôn lòi
 là moi
 nhớt nhầy
 lợm người
@@ -8862,7 +8862,7 @@ lừa tình
 nặn bột
 chét vô
 chét màu
-chét ơ
+// chét ơ
 mậu thân
 mậu ngọ
 chiều gió
@@ -8949,7 +8949,7 @@ ngựa bà
 ngựa ghê
 lốt chân
 lốt xe
-nang y
+// nang y
 nang thận
 hơi ngu
 cam vắt
@@ -8966,7 +8966,7 @@ táng tụng
 táng phí
 táng tang
 táng ngôn
-táng ở
+// táng ở
 táng gió
 táng táng
 lại nào
@@ -9152,7 +9152,7 @@ bản đò
 đoi mói
 bở đít
 lớn không
-bở à
+// bở à
 gan thận
 đệm massage
 giải rượu
@@ -9227,7 +9227,7 @@ giang nhà
 dán nhãn
 ngậm thuốc
 ơn tình
-kẽ ô
+// kẽ ô
 kẽ vạch
 quì gối
 cầm lửa
@@ -9364,7 +9364,7 @@ chào bác
 con sếu
 đà lạc
 con sâu
-con c
+// con c
 con nhện
 lọng quá
 hạt bí
@@ -9591,7 +9591,7 @@ bò tái
 dưới bàn
 lan phương
 nhất nhà
-định hướngh
+// định hướngh
 cóc ghẻ
 phận kiều
 phận dâu
@@ -9610,7 +9610,7 @@ cơm gà
 kinh văn
 khi trưa
 đó nó
-lạ vâyh
+// lạ vâyh
 lùng sùng
 lượng thu
 rợ hung
@@ -9618,7 +9618,7 @@ ban tổ
 ban acc
 // đầu cak
 đường tăng
-đường ngoth
+// đường ngoth
 đường đá
 đây nữa
 // là k
@@ -9756,13 +9756,13 @@ có đó
 tạng mạng
 lệ sầu
 có nấy
-rồ ah
+// rồ ah
 có kia
 có nọ
 lệ thưởng
 có cò
 có có
-rồ à
+// rồ à
 // tượng daid
 giã tràng
 gái mái
@@ -9790,7 +9790,7 @@ quải có
 quải và
 cỡn cợt
 quải trong
-quải trên
+// quải trên
 quải vận
 quải nhữ
 làm lụm
@@ -9810,7 +9810,7 @@ quải ngã
 quải vật
 quải vung
 dột nhập
-dột á
+// dột á
 đỏ đỏ
 dột quỵ
 đỏ mệnh
@@ -9980,7 +9980,7 @@ dạn tay
 đã nào
 đã gì
 đã nhỉ
-đã đã
+// đã đã
 đã thật
 đã nghèo
 rát mong
@@ -10020,7 +10020,7 @@ cày tiền
 cày mãi
 cày được
 bô mồm
-bô ị
+// bô ị
 rít rịt
 rít róng
 rít giọng
@@ -10083,7 +10083,7 @@ nhỉ nhoắt
 cày quốc
 điểu sư
 trọc đầu
-là lah
+// là lah
 là lã
 cày game
 ngựa phi
@@ -10098,8 +10098,8 @@ cục xúc
 thắng kiện
 trà đá
 nam thần
-trên lầu
-trên mạng
+// trên lầu
+// trên mạng
 rít rít
 nữ quàng
 ánh viên
@@ -10269,8 +10269,8 @@ cóc ổi
 cóc trời
 huy hùng
 vơi đi
-// thoại đầu
+thoại đầu
 tạo phòng
 phố hàng
 tạo chữ
-// thoại ngu
+thoại ngu
