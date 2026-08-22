@@ -2948,17 +2948,17 @@ viên phấn
 // ty ty
 // cạn bể
 // ty công
-ty thiếu
-nữa vời
-tùng xèng
-tùng toàng
-tám ngón
-đạo sỹ
+// ty thiếu
+// nữa vời
+// tùng xèng
+// tùng toàng
+// tám ngón
+// đạo sỹ
 hậu thư
 đồ sát
-đằng đó
-tùng cuac
-tùng cú
+// đằng đó
+// tùng cuac
+// tùng cú
 nhận lộc
 chích điện
 chích cá
@@ -2966,82 +2966,82 @@ nhận đồ
 nhận phúc
 tai thính
 // mà à
-trệt lụi
-thần đằng
-mà kì
-mà trời
-mà nhỏ
+// trệt lụi
+// thần đằng
+// mà kì
+// mà trời
+// mà nhỏ
 trạch nữ
 thần chưởng
-mà ơi
-mà vẫn
-rồi đấy
-đuối khô
-đuối mắm
+// mà ơi
+// mà vẫn
+// rồi đấy
+// đuối khô
+// đuối mắm
 đuối lả
-đuối cc
-trạch địa
-cười quá
-cười với
+// đuối cc
+// trạch địa
+// cười quá
+// cười với
 bạch xà
 giả lập
-lỗ nhị
-lỗ hậu
-đít bự
-đít to
-đít địt
-đít đi
+// lỗ nhị
+// lỗ hậu
+// đít bự
+// đít to
+// đít địt
+// đít đi
 đít chảo
 đít nồi
 nỗi đau
-đít nhỏ
+// đít nhỏ
 đít chai
-đít nàng
-đít đê
-đít lên
-đít đụ
-đít bú
+// đít nàng
+// đít đê
+// đít lên
+// đít đụ
+// đít bú
 đít xoong
-đít đất
-đít dy
-đít mông
-đít gãi
-đít đít
-đít cứt
-mà là
+// đít đất
+// đít dy
+// đít mông
+// đít gãi
+// đít đít
+// đít cứt
+// mà là
 dứa chín
-nguyệt huyết
-nguyệt lí
-thỉ thủ
-thỉ con
-thỉ thị
-thỉ nhỏ
-hụp ga
+// nguyệt huyết
+// nguyệt lí
+// thỉ thủ
+// thỉ con
+// thỉ thị
+// thỉ nhỏ
+// hụp ga
 hụp xuống
 hụp sâu
 hiên nhà
-nhợt pha
-nhợt trong
-nhợt lợt
-nhợt quá
-nhợt đậm
+// nhợt pha
+// nhợt trong
+// nhợt lợt
+// nhợt quá
+// nhợt đậm
 khương hoàng
-khương thượng
+// khương thượng
 chốt sổ
-khương sinh
+// khương sinh
 chốt chặn
 chốt lời
-giảo binh
-rồi luôn
+// giảo binh
+// rồi luôn
 lưỡi dài
 lưỡi bò
-rồi kìa
+// rồi kìa
 rét lạnh
-rét buốc
+// rét buốc
 rét run
-lì lượm
-thổ nhĩ
-mửa củi
+// lì lượm
+// thổ nhĩ
+// mửa củi
 mửa ra
 khê khét
 khê nồng
@@ -3051,192 +3051,192 @@ khê đặc
 khê ẩm
 đoạn tiệt
 đoạn đường
-răng đe
-khê nước
-đoạn tiệc
+// răng đe
+// khê nước
+// đoạn tiệc
 răng sâu
 đoạn tụ
 răng sún
-đoạn các
+// đoạn các
 đoạn kết
-nhan nhãn
-lê duy
-hóc môn
+// nhan nhãn
+// lê duy
+// hóc môn
 lê bước
 hóc xương
 tạ đơn
-bú liếm
-cối xây
-cối cối
-cối hư
-bồi hòi
-cối lối
-thoại đàm
-thoại nhân
-sơn cặc
-vai gãy
+// bú liếm
+// cối xây
+// cối cối
+// cối hư
+// bồi hòi
+// cối lối
+// thoại đàm
+// thoại nhân
+// sơn cặc
+// vai gãy
 sơn tặc
 sơn nhà
-vai ai
-bú dái
-bú cu
+// vai ai
+// bú dái
+// bú cu
 bú sữa
-thúy kiều
-thúy liễu
-thuý lệ
-thúy điền
-thuý hồng
+// thúy kiều
+// thúy liễu
+// thuý lệ
+// thúy điền
+// thuý hồng
 // ổ vịt
 // ổ chim
-bú bút
+// bú bút
 // ổ điện
-bú mú
-bú vú
+// bú mú
+// bú vú
 ra đây
-bú đãm
-bú đẫm
+// bú đãm
+// bú đẫm
 về đi
-bú khu
-lột quần
+// bú khu
+// lột quần
 ướp thịt
 bụng bự
-nào có
+// nào có
 bụng to
-dương lục
-lụi thụi
-nhớt nhèo
-lạc lẽo
-lạc lẻo
+// dương lục
+// lụi thụi
+// nhớt nhèo
+// lạc lẽo
+// lạc lẻo
 lạc quẻ
-tai uóng
-gàn dọng
-vẫn nại
-vẫn vậy
-vẫn thế
-vẫn bị
+// tai uóng
+// gàn dọng
+// vẫn nại
+// vẫn vậy
+// vẫn thế
+// vẫn bị
 tuồng tích
 tuồng đời
 tuồng hát
 sơn tường
 sơn cửa
 sơn đen
-tiếng tâm
-là rõ
+// tiếng tâm
+// là rõ
 lệnh bài
 lệnh vua
 đản sinh
-đản đản
-công lông
-sơn nguyễn
-sơn sông
-sơn gạch
-nghiệm dương
-nghiệm nhân
+// đản đản
+// công lông
+// sơn nguyễn
+// sơn sông
+// sơn gạch
+// nghiệm dương
+// nghiệm nhân
 nghiệm kép
 nghiệm nguyên
 hò dô
 xưa cũ
-hà giang
+// hà giang
 chú cháu
 nghiệm lý
 thu đông
 biển sâu
-son màu
+// son màu
 son hồng
 son đỏ
-chương mở
+// chương mở
 hồi kết
-son chói
+// son chói
 tai xệ
-son đẹp
-son đắt
+// son đẹp
+// son đắt
 // son dior
-son mac
-bở rơ
-bở rở
+// son mac
+// bở rơ
+// bở rở
 bở hơi
 bở ra
-nên là
-bở ngỡ
+// nên là
+// bở ngỡ
 bở nát
-vía von
-vía người
-nhiên đăng
+// vía von
+// vía người
+// nhiên đăng
 thiên đế
 lọc trà
 lọc sạch
-mủ câu
+// mủ câu
 ngày dài
 cột đình
-reo tên
-reo vần
-reo chuông
+// reo tên
+// reo vần
+// reo chuông
 điện giật
 đá lỡ
-tử trang
+// tử trang
 gói bánh
 phách nhạc
 trời trong
-ơi trời
+// ơi trời
 quả xoài
-điếm chó
-điếm thúi
-lý lẻ
-hoàng tự
-lý tử
+// điếm chó
+// điếm thúi
+// lý lẻ
+// hoàng tự
+// lý tử
 // tộc t
-hương tràm
-hương giang
-hương mùi
-cưng cặc
+// hương tràm
+// hương giang
+// hương mùi
+// cưng cặc
 // cưng cl
-giá đáo
-cưng cửng
-rút gối
+// giá đáo
+// cưng cửng
+// rút gối
 xưa xửa
 nghề trộm
-xưa cỗ
+// xưa cỗ
 rút quẻ
 // cỡ xl
-khí đụ
+// khí đụ
 binh tướng
-binh trưởng
+// binh trưởng
 cỡ chữ
-mà nói
-mà có
-chóc nã
+// mà nói
+// mà có
+// chóc nã
 cỡ đại
-mà thế
-mà sợ
-cỡ cặc
-sả xui
-chóc lóc
+// mà thế
+// mà sợ
+// cỡ cặc
+// sả xui
+// chóc lóc
 mà má
-sả sa
-chóc chách
-sả tê
-chóc lát
-thôi thể
-thôi nha
+// sả sa
+// chóc chách
+// sả tê
+// chóc lát
+// thôi thể
+// thôi nha
 sả ớt
 cỡ bự
-sả củ
-cỡ áo
-sả thân
-thôi xin
-cỡ vóc
-về đâu
-hưu sừng
-hưu sao
+// sả củ
+// cỡ áo
+// sả thân
+// thôi xin
+// cỡ vóc
+// về đâu
+// hưu sừng
+// hưu sao
 vía thiêng
-hưu quách
+// hưu quách
 van ga
 mắt bò
-nên mua
+// nên mua
 bay vèo
 bay cao
-cháy khói
-sả xu
+// cháy khói
+// sả xu
 kho xưởng
 kho đồ
 kho hàng
@@ -3247,25 +3247,25 @@ nén lại
 nén nhang
 trận game
 nén khí
-nén nót
-nén nén
-nén moi
+// nén nót
+// nén nén
+// nén moi
 lẽ loi
-đản nhật
+// đản nhật
 sống trọn
 sống trẻ
 lương cao
 đời tống
-giấc mồn
-trướng lãnh
+// giấc mồn
+// trướng lãnh
 thiện lương
-thiện thiên
+// thiện thiên
 thôn làng
-phệ cố
-phệ hồn
+// phệ cố
+// phệ hồn
 // hành t
 tính phí
-phệ tinh
+// phệ tinh
 mủ cây
 nuôi chim
 tỉa lông
@@ -3273,7 +3273,7 @@ sót mót
 hai hàng
 sót thương
 trảm tướng
-trưởng phu
+// trưởng phu
 hai tư
 bần hèn
 trảm thủ
@@ -3282,66 +3282,66 @@ trảm thủ
 đụn gỗ
 đêm qua
 soát bài
-đêm sao
+// đêm sao
 soát lại
-môi to
-môi khô
+// môi to
+// môi khô
 giũa móng
-môi múc
-đạo âm
-giũa dẹp
-dăng dẻ
+// môi múc
+// đạo âm
+// giũa dẹp
+// dăng dẻ
 vé phim
 môi dưới
-vé khu
+// vé khu
 vé tàu
 giũa sắt
 giũa tròn
 giũa dao
 giũa nhẵn
-dẫn dường
-giũa may
-chay gì
+// dẫn dường
+// giũa may
+// chay gì
 vé vàng
-mép cười
+// mép cười
 giũa mài
 vé xe
-chét le
-ruỗng tuếch
+// chét le
+// ruỗng tuếch
 cắp trộm
-phờ lông
-thị đô
-phờ phọt
+// phờ lông
+// thị đô
+// phờ phọt
 viên chiên
 xì khói
 xì tin
 nám da
-lượng thức
+// lượng thức
 đống củi
 nám mặt
 cậy mạnh
 cậy của
-cậy cửa
+// cậy cửa
 cậy quyền
 thân mời
 nám sạm
 cậy chức
-cậy két
-cậy tủ
-cậy đá
-cậy bố
+// cậy két
+// cậy tủ
+// cậy đá
+// cậy bố
 muội muội
 củi bếp
-nám đốm
-chét mi
+// nám đốm
+// chét mi
 mạc nhiên
 củi tro
 chét vữa
-liệu xiệu
-chét mày
+// liệu xiệu
+// chét mày
 liệu rằng
-chét cớt
-tiệt dời
+// chét cớt
+// tiệt dời
 heo sữa
 cục sạc
 heo vàng
@@ -3349,81 +3349,81 @@ cục vàng
 cục gạch
 heo đất
 dẫn đi
-sĩ sớn
+// sĩ sớn
 xanh đỏ
-liệu như
-na tra
-ngũ xã
+// liệu như
+// na tra
+// ngũ xã
 môi đỏ
-đó mà
+// đó mà
 gan hùm
 môi mọng
 tửu lâu
-mị ma
+// mị ma
 mị lực
 nhận hàng
-tửu tịu
+// tửu tịu
 tay thuận
 tửu ly
-lẻo lắt
+// lẻo lắt
 lái lụa
 tăng cấp
 bàn trà
-là con
-nén nhan
-nê địa
-dạ dầy
-sụp đôe
+// là con
+// nén nhan
+// nê địa
+// dạ dầy
+// sụp đôe
 mi nhon
-nhiên nhi
-nhiên phát
-nghệch ngỡm
-mi nắt
-quạu quậy
-mạc định
+// nhiên nhi
+// nhiên phát
+// nghệch ngỡm
+// mi nắt
+// quạu quậy
+// mạc định
 quạu quạu
-nhiên khoá
+// nhiên khoá
 canh ba
-nê cổ
-quạu điên
+// nê cổ
+// quạu điên
 khuya vắng
-thuật chiến
-bớ giam
-bớ người
+// thuật chiến
+// bớ giam
+// bớ người
 nút thắt
 nghệch mặt
-bớ làng
-nê chán
+// bớ làng
+// nê chán
 bò húc
-nê nếp
+// nê nếp
 bò viên
-nê nết
+// nê nết
 // sùi t
 mồm nói
 sùi mào
-bò trường
-chi giác
+// bò trường
+// chi giác
 bầu bì
-nê hà
-nê nần
+// nê hà
+// nê nần
 mép đường
 ngô luộc
-bên bển
+// bên bển
 tranh thêu
-bẻo cặc
-tay dài
-khoa để
-tay ngắn
-lớt thớt
+// bẻo cặc
+// tay dài
+// khoa để
+// tay ngắn
+// lớt thớt
 // đỏ lomg
-lớt léo
-lòm dòm
-lòm ngó
-lửa nóng
-cái đực
+// lớt léo
+// lòm dòm
+// lòm ngó
+// lửa nóng
+// cái đực
 lửa thiêng
-là kia
-hán từ
+// là kia
+// hán từ
 hán tử
 úp sọt
 úp rổ
@@ -3433,596 +3433,596 @@ màn chiếu
 ngô non
 rẽ ngôi
 rẽ lối
-trần chuồng
+// trần chuồng
 hầm cầu
 hầm bom
 gan heo
 giá rẻ
 hương trầm
-giá lời
+// giá lời
 lây bệnh
-ngợp ngờm
-ngợp bởi
-ngợp ngạt
-ngợp ngạc
+// ngợp ngờm
+// ngợp bởi
+// ngợp ngạt
+// ngợp ngạc
 rẽ trái
 rẽ vào
-rẽ ranh
+// rẽ ranh
 trường nghề
-ngợp thở
+// ngợp thở
 trời nồm
-lè lọ
-lẹ lè
-ngay từ
-mạc kính
-lửa đốt
-mạc võng
+// lè lọ
+// lẹ lè
+// ngay từ
+// mạc kính
+// lửa đốt
+// mạc võng
 mạc phủ
 nhà mạng
-mạc ly
-cực chẳng
-bạ giá
+// mạc ly
+// cực chẳng
+// bạ giá
 đề thi
-lại thua
+// lại thua
 ghép lại
 ghép hình
 lĩnh ngộ
 xay đá
 hẹp dài
 canh me
-nhị rữa
-nhị nhân
+// nhị rữa
+// nhị nhân
 // nhị cl
 // hiểu ý
 cơ bụng
-đều được
-đều đặng
+// đều được
+// đều đặng
 hẹn nhau
 hẹn em
 tỳ hưu
-hẹn cô
-hẹn chú
-hẹn bác
-hẹn hẹn
+// hẹn cô
+// hẹn chú
+// hẹn bác
+// hẹn hẹn
 viết chữ
 ho ho
 máu đông
 mép tủ
-mộ dung
+// mộ dung
 mộ đá
-sắc xảo
-chủng loài
-trội dậy
+// sắc xảo
+// chủng loài
+// trội dậy
 vị vua
-lăm phút
+// lăm phút
 // lăm e
 chanh vàng
 da báo
-da nang
+// da nang
 người nghèo
 chanh muối
 chanh dây
 gửi đến
 gửi đi
-thép thép
-đai máu
-đai đất
-lưng bụng
-thủi đi
-thủi ra
-chừng mắt
-nào thì
-nào nào
-thủi công
-nào sao
-thủi thân
-chêm chểm
+// thép thép
+// đai máu
+// đai đất
+// lưng bụng
+// thủi đi
+// thủi ra
+// chừng mắt
+// nào thì
+// nào nào
+// thủi công
+// nào sao
+// thủi thân
+// chêm chểm
 chêm xen
 chêm lời
 vai gáy
 quét nhà
 quét mã
 quét sân
-loan châu
+// loan châu
 quậy đục
 phá lấu
-thúy nga
-thúy quỳnh
-thuý quỳnh
-thúy vịt
-thuý ngân
-thúy mai
-thuý nga
-thuý châu
-thuý kiều
-thúy ngân
-thúy vân
-thuý thị
-thuý thuý
-thúy thần
-thúy lồn
-ông can
+// thúy nga
+// thúy quỳnh
+// thuý quỳnh
+// thúy vịt
+// thuý ngân
+// thúy mai
+// thuý nga
+// thuý châu
+// thuý kiều
+// thúy ngân
+// thúy vân
+// thuý thị
+// thuý thuý
+// thúy thần
+// thúy lồn
+// ông can
 mấy hôm
 tịnh thất
 tịnh dưỡng
 lưng cong
 tịnh tâm
-réo còi
+// réo còi
 bốn bánh
-réo téo
-réo cứt
-nhuận âm
+// réo téo
+// réo cứt
+// nhuận âm
 ngoái lại
-ngoái lệ
-nọ lem
-rí rí
-nọ hoa
-sơn nghĩa
+// ngoái lệ
+// nọ lem
+// rí rí
+// nọ hoa
+// sơn nghĩa
 sơn nước
-nọ dọ
-sơn sởn
+// nọ dọ
+// sơn sởn
 // sơn ã
-sơn sơn
-sơn chơi
-sơn ơi
-sơn suntori
-ri rích
-ri bỉ
-ranh rảnh
+// sơn sơn
+// sơn chơi
+// sơn ơi
+// sơn suntori
+// ri rích
+// ri bỉ
+// ranh rảnh
 thôi rồi
-ranh đua
+// ranh đua
 rỉ nước
 sính ngoại
 nổi hứng
-thiệu tử
-thiệu phong
-thiệu bản
-thiệu suất
-viên viển
-ấy nhau
-loét toét
+// thiệu tử
+// thiệu phong
+// thiệu bản
+// thiệu suất
+// viên viển
+// ấy nhau
+// loét toét
 loét ruột
 loét họng
 lính mới
-vọng la
+// vọng la
 bịch thuốc
 loét da
-bịch mủ
-vọng nguyện
-bịch bịch
+// bịch mủ
+// vọng nguyện
+// bịch bịch
 bịch rác
-rợ hồ
-loét dạ
-muốn đái
-loét đường
-loét loẹt
-rợ nhau
-muốn móng
-loét tét
-muốn chó
-muốn màng
+// rợ hồ
+// loét dạ
+// muốn đái
+// loét đường
+// loét loẹt
+// rợ nhau
+// muốn móng
+// loét tét
+// muốn chó
+// muốn màng
 loét mắt
-muốn éo
+// muốn éo
 muốn ngủ
 nanh sói
-rợ của
+// rợ của
 nanh độc
 loét loét
 nanh hổ
-muốn rau
-thui lưat
+// muốn rau
+// thui lưat
 thui lửa
 được mất
-na yêu
+// na yêu
 thui chó
 thui bò
 trói chặt
 thui heo
-ná đạn
-lịnh tịnh
-lịnh bài
-lịnh khịnh
-lịnh lịnh
-ná na
+// ná đạn
+// lịnh tịnh
+// lịnh bài
+// lịnh khịnh
+// lịnh lịnh
+// ná na
 lủi đi
 lủi vào
-ná thủ
-chúa kiến
-chúa giêsu
+// ná thủ
+// chúa kiến
+// chúa giêsu
 liệu mồm
-ná thở
+// ná thở
 // dịch covid
 cùm cum
-ná bắn
-chi dân
-thích na
-chi chỉ
+// ná bắn
+// chi dân
+// thích na
+// chi chỉ
 // họ hangg
 quán phở
-huê huể
-huê ký
-huê kí
-huê cc
-xíu nguội
-huê huề
+// huê huể
+// huê ký
+// huê kí
+// huê cc
+// xíu nguội
+// huê huề
 xíu xiu
-huê huế
+// huê huế
 dâm dê
 dâm tặc
 hoãn thi
 giống cây
 giống tốt
-bụt rụt
-bụt bxo
-thai lị
-bụt bẽo
+// bụt rụt
+// bụt bxo
+// thai lị
+// bụt bẽo
 thai to
 thai kỳ
 thai kì
-thai lan
+// thai lan
 cán bột
-độn vú
-vía nhả
+// độn vú
+// vía nhả
 vía mạnh
 vía yếu
 vía rén
-xuống lên
-xuống tù
+// xuống lên
+// xuống tù
 vía hay
-bảo táp
-long trời
-long cong
+// bảo táp
+// long trời
+// long cong
 gác chân
 gác đêm
-ải chỉa
-mạo nhiên
-thâm háng
+// ải chỉa
+// mạo nhiên
+// thâm háng
 bét nhẹt
-thâm nách
-loa độ
+// thâm nách
+// loa độ
 loa phường
 loa to
 loa nhỏ
 // loa bluetooth
-loa ồn
-loa loả
-loa nghe
-mạo yêu
+// loa ồn
+// loa loả
+// loa nghe
+// mạo yêu
 giải nhất
-lự tự
-lự hành
-lự lự
-lự lử
-lự kính
-lự trù
-khánh hòa
+// lự tự
+// lự hành
+// lự lự
+// lự lử
+// lự kính
+// lự trù
+// khánh hòa
 vi cá
-nhè nháo
-trù ngự
-tuyền đen
-tuyền tuyến
-tuyền truyền
-tuyền tuyền
-kia kỉa
-quấn váy
+// nhè nháo
+// trù ngự
+// tuyền đen
+// tuyền tuyến
+// tuyền truyền
+// tuyền tuyền
+// kia kỉa
+// quấn váy
 thời không
-hữu trí
+// hữu trí
 kiếp này
 kiếp nạn
 bóc trứng
 quả na
-nhiên nhiển
-nhiên thiên
-nhiên nhiên
+// nhiên nhiển
+// nhiên thiên
+// nhiên nhiên
 thuốc lắc
 thuốc đắng
-đạm nhiều
+// đạm nhiều
 tuyến vú
-lòm nhòm
-là nhà
-là chà
-là mày
+// lòm nhòm
+// là nhà
+// là chà
+// là mày
 giày bệt
 giày nhảy
-với bồ
-thai thai
-cớ phận
-nhãng vãng
-nhãng lãng
-đứt độ
+// với bồ
+// thai thai
+// cớ phận
+// nhãng vãng
+// nhãng lãng
+// đứt độ
 đứt dây
-đứt chuỗi
-đứt cứt
-đứt đứt
+// đứt chuỗi
+// đứt cứt
+// đứt đứt
 đứt tay
-đứt cặp
-nào ta
-ít ít
-thai hoài
-thai dưỡng
-thai nữa
+// đứt cặp
+// nào ta
+// ít ít
+// thai hoài
+// thai dưỡng
+// thai nữa
 hồn xiêu
 vía tốt
 vía lành
-đồng bach
+// đồng bach
 vía dữ
-chiêng cá
-chiêng rán
-vía hè
+// chiêng cá
+// chiêng rán
+// vía hè
 chiêng đồng
 đan len
-đan trang
+// đan trang
 đan giỏ
-lỗi tôi
-đan trường
-lỗi tôu
-rẽ ngỏ
-cầm thù
+// lỗi tôi
+// đan trường
+// lỗi tôu
+// rẽ ngỏ
+// cầm thù
 // kì cuth
-thiếp thê
-thiếp thần
-lơi thơi
+// thiếp thê
+// thiếp thần
+// lơi thơi
 lơi lơi
 viên tròn
 vãng sanh
-viên viên
-thế sao
-cớ cớ
-sao cớ
+// viên viên
+// thế sao
+// cớ cớ
+// sao cớ
 độ cận
-hoạn hoãn
-lộ chim
+// hoạn hoãn
+// lộ chim
 rừng dừa
 liễu châu
 rừng trồng
-liễu ngạn
-liễu mi
-liễu nhiễu
-nạ gai
-liễu sự
-liễu giati
-liễu giải
+// liễu ngạn
+// liễu mi
+// liễu nhiễu
+// nạ gai
+// liễu sự
+// liễu giati
+// liễu giải
 dòng suối
 nước cạn
 mồm điêu
 mồm rộng
 đoạn thơ
 đoạn văn
-lệnh cốc
-nhạn thư
+// lệnh cốc
+// nhạn thư
 nhạn trắng
 nhạn đen
-nhạn nhan
-tuệ nghi
-nhạn nhạn
-tuệ hải
-nhạn hà
-cọc trâu
+// nhạn nhan
+// tuệ nghi
+// nhạn nhạn
+// tuệ hải
+// nhạn hà
+// cọc trâu
 cọc tiền
-cọc tính
+// cọc tính
 cọc khoan
 cọc gỗ
 mắt cận
-tuệ tây
-tuệ lạc
+// tuệ tây
+// tuệ lạc
 mắt phải
-quánh nhau
-quánh lộn
+// quánh nhau
+// quánh lộn
 quánh đặc
 quánh lại
 học dốt
 lắm mối
 vai diễn
 // ma quye
-kỵ sỹ
+// kỵ sỹ
 hơi nóng
 hơi gầy
-bở bời
-bở tay
+// bở bời
+// bở tay
 nước trong
-bở rời
-cho tiền
-thái dao
-lẻ tet
-giá đông
-luận loan
+// bở rời
+// cho tiền
+// thái dao
+// lẻ tet
+// giá đông
+// luận loan
 ngắt hoa
 // luận giảiq
-cao cút
+// cao cút
 quả chuối
 quả pháo
 vay vốn
 quả cóc
 quả mận
 đất ruộng
-trữ tích
-chóc da
-chóc thu
-chóc cho
-chóc chóc
-chóc và
+// trữ tích
+// chóc da
+// chóc thu
+// chóc cho
+// chóc chóc
+// chóc và
 lết xác
-lết đết
-lết đến
+// lết đết
+// lết đến
 đẻ mổ
 bê con
-đó bạn
+// đó bạn
 điệu nhảy
-pha trộng
-động tơ
+// pha trộng
+// động tơ
 sỏi thận
 sỏi mật
-sỏi mới
+// sỏi mới
 sỏi cuội
 sỏi cứng
-sỏi nhỏ
-sỏi bé
+// sỏi nhỏ
+// sỏi bé
 sỏi đá
-mạng miếc
-sỏi xíu
-sỏi vôi
+// mạng miếc
+// sỏi xíu
+// sỏi vôi
 om dưa
-om em
+// om em
 máu kinh
-om sầm
-sòm sỏi
-sòm sòm
-sòm đi
-sòm soi
-sòm cặc
-sòm có
-phùng phùng
+// om sầm
+// sòm sỏi
+// sòm sòm
+// sòm đi
+// sòm soi
+// sòm cặc
+// sòm có
+// phùng phùng
 nhện tinh
-liệu đà
-phùng trợ
+// liệu đà
+// phùng trợ
 // liệu miêngk
-phùng trùng
+// phùng trùng
 liệu miệng
-phùng khùng
+// phùng khùng
 tin mật
-tin rưởng
+// tin rưởng
 tin báo
-bóng gay
-mía sạch
-bảy chọ
-bảy sáu
-bảy viên
-bảy bảy
-bảy meo
-giờ mỹ
-giờ đẹp
-thù ghéc
-địch địt
-địch ta
-địch khắm
-sư quan
+// bóng gay
+// mía sạch
+// bảy chọ
+// bảy sáu
+// bảy viên
+// bảy bảy
+// bảy meo
+// giờ mỹ
+// giờ đẹp
+// thù ghéc
+// địch địt
+// địch ta
+// địch khắm
+// sư quan
 tu đạo
-lổng lẻo
-hiệu lờ
-lổng không
-suất phát
+// lổng lẻo
+// hiệu lờ
+// lổng không
+// suất phát
 suất cơm
-suất xưởng
-suất suất
-lổng ghép
-lệnh lộc
-vàng nổi
-nhang nhảng
-hay đấy
-hoe sắc
-hoe hoắt
-lửa khói
+// suất xưởng
+// suất suất
+// lổng ghép
+// lệnh lộc
+// vàng nổi
+// nhang nhảng
+// hay đấy
+// hoe sắc
+// hoe hoắt
+// lửa khói
 rẽ hướng
 tường nhà
 tắt ngúm
 thanh mát
-mai đó
-phún viếng
-tả nnhana
-tả văn
+// mai đó
+// phún viếng
+// tả nnhana
+// tả văn
 chơi cờ
-phún miếng
-sát vực
-khiếu dam
-nại xe
-nại kia
-nại kìa
-nại tố
-nại nữa
-phún phụn
-nại của
-vượng đất
-vượng vạn
-vượng râu
-vượng vượng
-xộn lào
-vượng rau
-xộn xàng
-vượng huhu
-xộn gì
-vượng phúc
-vượng lồn
+// phún miếng
+// sát vực
+// khiếu dam
+// nại xe
+// nại kia
+// nại kìa
+// nại tố
+// nại nữa
+// phún phụn
+// nại của
+// vượng đất
+// vượng vạn
+// vượng râu
+// vượng vượng
+// xộn lào
+// vượng rau
+// xộn xàng
+// vượng huhu
+// xộn gì
+// vượng phúc
+// vượng lồn
 muối tinh
 phá nhà
-ngùng ngùng
+// ngùng ngùng
 // ngùng nguongq
-ngùng khi
-vờ lờ
+// ngùng khi
+// vờ lờ
 rang lạc
 rang tôm
-vờ hờ
+// vờ hờ
 // ngùng l
-ngùng ngượng
-vờ nhau
-ngùng ngương
-rang hạt
-rang rang
-quới chới
+// ngùng ngượng
+// vờ nhau
+// ngùng ngương
+// rang hạt
+// rang rang
+// quới chới
 rang ngô
-quới nhân
-rang ráng
-quới vưới
-thẩm du
+// quới nhân
+// rang ráng
+// quới vưới
+// thẩm du
 phong long
-yêu na
-tao khôn
-mày ngu
-trở thanh
-mày hay
-nhi ơi
-tao tại
-thế đấy
-lõi vỏ
-tao yếu
-tao giỏi
+// yêu na
+// tao khôn
+// mày ngu
+// trở thanh
+// mày hay
+// nhi ơi
+// tao tại
+// thế đấy
+// lõi vỏ
+// tao yếu
+// tao giỏi
 lõi ngô
 kho vàng
 theo chồng
-lõi trĩu
+// lõi trĩu
 biển số
 muội tử
-lăm năm
-đức gay
-lăm tháng
-mà làm
-mà kia
-mà gì
+// lăm năm
+// đức gay
+// lăm tháng
+// mà làm
+// mà kia
+// mà gì
 láy lại
 láy điệu
-láy cò
-mà chắc
-mà hay
+// láy cò
+// mà chắc
+// mà hay
 lợn béo
-nệ luật
+// nệ luật
 cú đêm
 cú lừa
-kế đoạt
+// kế đoạt
 nhạt dần
-cào mèo
+// cào mèo
 cào xước
 nộ hoả
-miệng to
+// miệng to
 thù dai
 mỏ khoáng
 hoạn thư
 cung đấu
-bíu xíu
-bíu líu
-bíu víu
+// bíu xíu
+// bíu líu
+// bíu víu
 hóc cổ
-hóc hác
+// hóc hác
 hóc họng
 thần đèn
 mạng internet
 // mạng lag
 đốm đỏ
 đốm lưỡi
-ra là
-đốm chó
+// ra là
+// đốm chó
 đốm trắng
 đốm đen
-kha thuần
-kha ly
+// kha thuần
+// kha ly
 ép ngực
 kế tử
 đốt nhánh
@@ -4030,45 +4030,45 @@ kế tử
 truyền nối
 mai đào
 giải nhát
-chi vậy
-chết qoeo
-xá lạy
-mặt ngu
+// chi vậy
+// chết qoeo
+// xá lạy
+// mặt ngu
 chết queo
-nhắp môi
-nhắp chuột
-thiết phục
-nhắp rượu
-xỉu xiu
+// nhắp môi
+// nhắp chuột
+// thiết phục
+// nhắp rượu
+// xỉu xiu
 sống bẩn
-nhắp câu
+// nhắp câu
 // đang ở
-đang đi
-đang học
-đang ỉa
-đang ngủ
+// đang đi
+// đang học
+// đang ỉa
+// đang ngủ
 quả roi
 quả đắng
-tôi là
-tôi muốn
-đó nha
-đó rồi
-đó đo
-này nha
+// tôi là
+// tôi muốn
+// đó nha
+// đó rồi
+// đó đo
+// này nha
 thuế khoán
 nỡ đành
 nỡ lòng
-rông kinh
+// rông kinh
 // rông rôngd
-hàm nghi
+// hàm nghi
 sánh bằng
 // trên trời
 // trên cao
-chĩa mõn
+// chĩa mõn
 chĩa mũi
 cãi cùn
-lệnh mệnh
-bản đôn
+// lệnh mệnh
+// bản đôn
 lui quân
 lui ra
 bầy đàn
@@ -4076,9 +4076,9 @@ cắc bạc
 bầy con
 rau củ
 chèo thuyền
-chèo cổ
+// chèo cổ
 triệu bạc
-giàn dụa
+// giàn dụa
 bùng mụn
 bùng kèo
 lính nguỵ
@@ -4089,138 +4089,138 @@ sụn khớp
 pha tối
 pha nước
 pha mì
-thự cơ
-thự lý
-thự hiên
-thự danh
-thự viên
+// thự cơ
+// thự lý
+// thự hiên
+// thự danh
+// thự viên
 sơn sửa
 mắt kiếng
-lăm lặng
-lăm bệnh
-bầy bàn
+// lăm lặng
+// lăm bệnh
+// bầy bàn
 miệng mũi
-trương phềnh
+// trương phềnh
 tuyền châu
-cách ra
+// cách ra
 ải quái
-tôi ước
-tôi tồi
-tôi thích
+// tôi ước
+// tôi tồi
+// tôi thích
 môn toán
 trà sữa
 gà rán
 trà xanh
 gà nướng
 gà kho
-thế nhị
+// thế nhị
 gỗ mộc
-trưởng lớp
-xỉu lẻ
+// trưởng lớp
+// xỉu lẻ
 xỉu ngang
-sọ nhi
-xỉu xìu
-xỉu chẵn
-sọ to
-xỉu luôn
-ràng tóc
+// sọ nhi
+// xỉu xìu
+// xỉu chẵn
+// sọ to
+// xỉu luôn
+// ràng tóc
 nút giao
-nút gan
+// nút gan
 nút ấn
-cuội non
-là thế
-cuội con
-cuội cát
-ken gỗ
-ken cửa
-ken tủ
-ken gạch
-ken đông
-hỏi là
-xuân hè
+// cuội non
+// là thế
+// cuội con
+// cuội cát
+// ken gỗ
+// ken cửa
+// ken tủ
+// ken gạch
+// ken đông
+// hỏi là
+// xuân hè
 xuân thì
 xuân sang
-bi bủng
-bi viên
+// bi bủng
+// bi viên
 dính chặt
 gan to
 thiếp đi
 gái trẻ
 mạo phạm
 được mà
-được đó
-mủ lòng
-tủa tua
-giựt con
-nhân tày
+// được đó
+// mủ lòng
+// tủa tua
+// giựt con
+// nhân tày
 nổ đùng
 tai phải
 thuốc cảm
-lõng ốc
+// lõng ốc
 mắt lòi
-mà giả
-lăng nhăn
-quất chau
-bì bợm
-bì chả
+// mà giả
+// lăng nhăn
+// quất chau
+// bì bợm
+// bì chả
 biết tuốt
-sệ dái
-xứ giả
-chùa sư
+// sệ dái
+// xứ giả
+// chùa sư
 chùa vàng
 văn mẫu
 thi cốt
-thi tốt
+// thi tốt
 lộ hàng
-lộ lớn
+// lộ lớn
 bạ đâu
-bạ tùy
-bin tua
-quất quất
-quất quật
+// bạ tùy
+// bin tua
+// quất quất
+// quất quật
 hầm thịt
 mủ vàng
-độ vú
+// độ vú
 độ xe
 nặn đất
-chân giữa
+// chân giữa
 nặn gốm
-chân chân
+// chân chân
 nặn mặt
-chí thanh
+// chí thanh
 chuyện nhỏ
-này tày
-này độ
-này béo
+// này tày
+// này độ
+// này béo
 giỡn chơi
 cối chày
 khoan đất
 rơn rớm
-rơn rớn
+// rơn rớn
 rộ bông
-rộ rạ
+// rộ rạ
 rộ tin
 rộ lên
 rộ ra
 đường đua
 cầu cây
-cầu cưa
+// cầu cưa
 vọng âm
-sao dợ
-sao nèo
+// sao dợ
+// sao nèo
 xe độ
 tăng xông
-độ loa
-bầy bừa
-được học
+// độ loa
+// bầy bừa
+// được học
 đuôi mèo
 // dưới trên
 dưới đất
 dùng thử
 dùng súng
 // dùng tv
-dùng đồ
-khuẩn trương
+// dùng đồ
+// khuẩn trương
 ngủ sớm
 hầm ngục
 // gái les
@@ -4229,132 +4229,132 @@ sói con
 kính ngữ
 kính gửi
 tượng vàng
-đuôi lọt
+// đuôi lọt
 đuôi xe
 đuôi tóc
 đan tre
-đan sa
-quế phượng
+// đan sa
+// quế phượng
 quế thanh
-đã mất
+// đã mất
 đồ điên
-đồ đạt
-vẹt bút
+// đồ đạt
+// vẹt bút
 bán nhà
-tả lợn
-lý nhã
+// tả lợn
+// lý nhã
 bời rời
-nhủ nhỉ
+// nhủ nhỉ
 nhủ thầm
 giác hút
-mạc mạc
-mạc lộ
-bạ danh
-ngụ ngoin
-có gì
-tứ viện
-có bạn
-đó vậy
+// mạc mạc
+// mạc lộ
+// bạ danh
+// ngụ ngoin
+// có gì
+// tứ viện
+// có bạn
+// đó vậy
 lá xanh
 xay mịn
-xay đắm
-dễ đai
+// xay đắm
+// dễ đai
 dầu gấc
-dầu sang
+// dầu sang
 dầu hào
 mỡ lợn
 xay lúa
-mỡ béo
+// mỡ béo
 xay hạt
 huyết tế
-huyết máu
-xay hai
+// huyết máu
+// xay hai
 phiếu ăn
 phiếu thu
 cùm cụm
 cúm ho
 cúm cảm
-mỡ dầu
+// mỡ dầu
 // cúm a
-đạc đẽo
-đạc tượng
+// đạc đẽo
+// đạc tượng
 hậu vị
 trèo cao
-huyết dực
-trá trí
-vương hùng
-vương nhạc
-khí sư
+// huyết dực
+// trá trí
+// vương hùng
+// vương nhạc
+// khí sư
 sụn tai
 sụn xương
 tấu chương
 viết sai
-thinh thỉnh
+// thinh thỉnh
 viết thơ
-cóng sành
+// cóng sành
 cóng cóng
-cóng cá
-cóng chum
-cóng chim
-cóng lòng
-đạc đạc
-đạc lạc
-từ truờng
-lưng chống
+// cóng cá
+// cóng chum
+// cóng chim
+// cóng lòng
+// đạc đạc
+// đạc lạc
+// từ truờng
+// lưng chống
 // thọ y
-thọ mộc
-nức nôi
-mép tai
-mép mép
-nức nô
+// thọ mộc
+// nức nôi
+// mép tai
+// mép mép
+// nức nô
 tường gỗ
-tường vu
-đầm lầu
-lụa tơ
-lụa vải
+// tường vu
+// đầm lầu
+// lụa tơ
+// lụa vải
 lĩnh thưởng
-sà lỏn
-sà đơn
+// sà lỏn
+// sà đơn
 sà xuống
 // nhạc rock
 nhạc buồn
-lại đầy
-lại vô
-cóng rét
-liềm đời
+// lại đầy
+// lại vô
+// cóng rét
+// liềm đời
 liềm liệm
 đá lạnh
-cóng phẩm
-mạc sầu
+// cóng phẩm
+// mạc sầu
 liềm sắt
-mạc mộc
-liềm dao
-liềm cắt
-chóp bớt
+// mạc mộc
+// liềm dao
+// liềm cắt
+// chóp bớt
 lên đầu
 lĩnh án
-trang tria
-tuệ minh
-tuệ mẫn
+// trang tria
+// tuệ minh
+// tuệ mẫn
 chum đồng
 chum đựng
 chum rượu
-bé bi
+// bé bi
 chum nước
-bé oanh
+// bé oanh
 chum vại
 húp nước
 húp cháo
 sáp lại
 sáp gần
-ngốt ngát
+// ngốt ngát
 húp canh
-hơ hơ
-chóp chóp
-nam gay
-đạn phái
+// hơ hơ
+// chóp chóp
+// nam gay
+// đạn phái
 đạn pháo
-chóp nhoáng
+// chóp nhoáng
 hỏi chấm
 dò mìn
 đề nháp
@@ -4362,76 +4362,76 @@ dây thừng
 đạo dụ
 vị mặn
 vị chua
-đề tớ
-đạo tu
+// đề tớ
+// đạo tu
 // mà mà
-kiểu gì
-lĩnh toái
-lĩnh kỉnh
+// kiểu gì
+// lĩnh toái
+// lĩnh kỉnh
 điện bàn
 sông dài
 bướm chúa
 bướm vàng
 lựu đỏ
-trạng quỳnh
-bướm nát
+// trạng quỳnh
+// bướm nát
 của quý
-bướm bươm
-địa bàng
+// bướm bươm
+// địa bàng
 vận may
-quân độ
-ngoại quải
-ngoại tử
-cọ cây
+// quân độ
+// ngoại quải
+// ngoại tử
+// cọ cây
 nâu đất
-ngoại quả
-cảm hắc
+// ngoại quả
+// cảm hắc
 chu di
-thuyền mạn
-quan con
-thuyền nguyệt
+// thuyền mạn
+// quan con
+// thuyền nguyệt
 tài lẻ
 lanh lẹo
-lanh cưa
-mủng tôn
-mủng dừa
+// lanh cưa
+// mủng tôn
+// mủng dừa
 mủng tre
-lẹ hơn
-bi vàng
-bi biển
-ngãi nhân
+// lẹ hơn
+// bi vàng
+// bi biển
+// ngãi nhân
 bi tròn
 đất thổ
-sao kia
-cái lồn
-mủng màn
+// sao kia
+// cái lồn
+// mủng màn
 lửa than
 trúc tre
 lửa điện
-lửa lửa
-này lại
-này nấy
-nách phố
-rìa tầng
-rìa phía
-rìa của
-chung vô
-nách theo
-rìa đời
-thám dái
+// lửa lửa
+// này lại
+// này nấy
+// nách phố
+// rìa tầng
+// rìa phía
+// rìa của
+// chung vô
+// nách theo
+// rìa đời
+// thám dái
 nắng hè
-thức phim
-trọng tử
-thủi thiu
-thủi thỉu
+// thức phim
+// trọng tử
+// thủi thiu
+// thủi thỉu
 đoán vận
-đoán tính
+// đoán tính
 đoán xem
-sách giáo
+// sách giáo
 sách văn
 sơn móng
 // đoán ý
-viết cho
+// viết cho
 trượng nghĩa
 hỏa ấn
 dương khí
@@ -4439,20 +4439,20 @@ bước đến
 chợ hoa
 chợ đêm
 nguyện thề
-ơn nghĩ
-dương âm
+// ơn nghĩ
+// dương âm
 than tre
 than hồng
 trông trẻ
-le thi
-le van
+// le thi
+// le van
 bám dai
 mong cầu
-muốn đợi
-huệ hoa
+// muốn đợi
+// huệ hoa
 bám đuôi
 ngộ không
-chín mùi
+// chín mùi
 chín cựa
 gác mộ
 gác mái
@@ -4460,244 +4460,244 @@ cổng thành
 cổng sạc
 cổng trường
 cổng trời
-ăn cứt
-ôn lằn
-crô đi
-bíu vấu
+// ăn cứt
+// ôn lằn
+// crô đi
+// bíu vấu
 cổng làng
-crô đô
-crô đa
-cổng trẻ
-đoán được
-đoán là
-cổng lan
-đoán rằng
-đoán ra
-crô mi
-biển cá
-nọ này
-bíu mm
+// crô đô
+// crô đa
+// cổng trẻ
+// đoán được
+// đoán là
+// cổng lan
+// đoán rằng
+// đoán ra
+// crô mi
+// biển cá
+// nọ này
+// bíu mm
 hồng cam
-kia nọ
-hồng miêu
+// kia nọ
+// hồng miêu
 hồng thắm
 vật chứa
-dương tên
-dương văn
-dương phản
-lông lồn
-lông cặt
+// dương tên
+// dương văn
+// dương phản
+// lông lồn
+// lông cặt
 bột sữa
 bột phấn
-hào sơn
-hào vị
+// hào sơn
+// hào vị
 toát lên
-ra vô
-đi đi
-bời bợi
-bời bợt
-bời nhời
-bời bới
+// ra vô
+// đi đi
+// bời bợi
+// bời bợt
+// bời nhời
+// bời bới
 si đa
-buồi bổ
-buồi bé
+// buồi bổ
+// buồi bé
 đỏ đô
-buồi thơm
+// buồi thơm
 minh mạng
-cục cứt
+// cục cứt
 cốt đột
 cân kí
 cân ký
-điểm gi
-buồi ngọt
+// điểm gi
+// buồi ngọt
 điểm mạnh
 lên dốc
-non cơ
+// non cơ
 nhớt máy
-đà lãnh
-này mày
-tàu to
+// đà lãnh
+// này mày
+// tàu to
 hưng yên
-đầy cốc
+// đầy cốc
 móc mắt
 trọng tình
 trọng nghĩa
-vàng cứt
-chết mất
-chết rồi
-ký bút
+// vàng cứt
+// chết mất
+// chết rồi
+// ký bút
 chết ngắc
 ký cóp
-lưới tản
+// lưới tản
 quả chay
 mỹ tho
-giặt rũ
+// giặt rũ
 giặt áo
-chất phát
+// chất phát
 bổ gan
 tủ đồ
 chuẩn chỉnh
-phòng binh
-úy tá
+// phòng binh
+// úy tá
 phó trưởng
-lòm đi
+// lòm đi
 phó chủ
-lòm òm
+// lòm òm
 phó thủ
 phó giám
 khen khéo
 thở gấp
-ngụ trụ
-biết rồi
-ngụ trú
-lẽ nhec
-lẽ nhẽ
-pháp lệch
+// ngụ trụ
+// biết rồi
+// ngụ trú
+// lẽ nhec
+// lẽ nhẽ
+// pháp lệch
 quay xuống
-xỉu tài
-lệnh cho
+// xỉu tài
+// lệnh cho
 huệ trắng
-cấm tuyệt
-lan lách
-đức tài
+// cấm tuyệt
+// lan lách
+// đức tài
 cấm túc
-đức đạo
-hố tử
+// đức đạo
+// hố tử
 hố sâu
-mày béo
-nhã phong
-bạnh mông
-bạnh mập
+// mày béo
+// nhã phong
+// bạnh mông
+// bạnh mập
 bạnh ra
-nhủ với
-thoi gian
+// nhủ với
+// thoi gian
 // thi hanhd
 điểm mười
 loa đài
 loa loa
 loa nén
-loa ly
+// loa ly
 kèn sáo
 kèn xe
-kèn con
+// kèn con
 đũa thần
 kẹt tiền
 kẹt xỉ
 xe sang
-giải dứa
-khao tiền
+// giải dứa
+// khao tiền
 tán thủ
-suất sơ
+// suất sơ
 tán cây
 nhớt đen
 giáo quan
-gác sách
-dục công
+// gác sách
+// dục công
 // chức y
-bếp núp
+// bếp núp
 // bếp gas
 việc riêng
 bếp nướng
 bếp lửa
 bếp điện
-đĩ hoa
-độ lý
-độ tày
+// đĩ hoa
+// độ lý
+// độ tày
 già khú
 lầu cao
-lầu nhà
-ních ga
-ních chính
+// lầu nhà
+// ních ga
+// ních chính
 dạt ra
 cả đám
 đào mộ
-lại chết
-đây ngay
+// lại chết
+// đây ngay
 cả đàn
-ních bụng
-là cứt
+// ních bụng
+// là cứt
 áo hoa
 bò trườn
-sữa gián
-tùng môn
+// sữa gián
+// tùng môn
 tùng cheng
 hợp thể
 hán phục
 cửa gỗ
-ngầm ngùi
-nhung môi
-nhung nhắm
+// ngầm ngùi
+// nhung môi
+// nhung nhắm
 lụa ren
 kê thuốc
-kê mon
-mạc bang
-mạc đăng
-mạc tử
-mạc thị
-mạc văn
-mạc bục
-mạc phụ
-ngạch ngưỡng
+// kê mon
+// mạc bang
+// mạc đăng
+// mạc tử
+// mạc thị
+// mạc văn
+// mạc bục
+// mạc phụ
+// ngạch ngưỡng
 giữa đời
 giữa sông
 giữa sân
-chừ đi
+// chừ đi
 nhủ con
-nhủ nhủ
-chừ chừ
-chừ đây
-chừ sao
-chừ chần
+// nhủ nhủ
+// chừ chừ
+// chừ đây
+// chừ sao
+// chừ chần
 xẻ tà
 xẻ cao
 tông lào
-lý hải
+// lý hải
 kinh thiên
-thôi nhé
-cao trầu
-cao nha
-liệu đấy
-liệu đạo
+// thôi nhé
+// cao trầu
+// cao nha
+// liệu đấy
+// liệu đạo
 // trận chiênd
-ngãi heo
-ngãi ngùng
-ngãi đắng
-máng heo
-ngãi quảng
-trúc sư
-trúc phúc
-ngãi đụ
+// ngãi heo
+// ngãi ngùng
+// ngãi đắng
+// máng heo
+// ngãi quảng
+// trúc sư
+// trúc phúc
+// ngãi đụ
 máng điện
 tạo dáng
-lại làm
-lại lao
-lại lạc
-lại quen
+// lại làm
+// lại lao
+// lại lạc
+// lại quen
 xẹp nát
-trình trự
+// trình trự
 xẹp lốp
 xẹp bóng
 // khuẩn t
 xẹp phổi
-khuẩn trùng
-khuẩn gây
-khuẩn ecoli
-khuẩn khoane
-đuốc hải
+// khuẩn trùng
+// khuẩn gây
+// khuẩn ecoli
+// khuẩn khoane
+// đuốc hải
 xẹp đốt
-lõng tử
-lõng trong
-lõng nhõng
-lõng thòng
-lõng bông
-lõng lõng
+// lõng tử
+// lõng trong
+// lõng nhõng
+// lõng thòng
+// lõng bông
+// lõng lõng
 cương cứng
 trị xạ
-lá cuộc
-lá cuội
+// lá cuộc
+// lá cuội
 tâm tịnh
 tót lên
-quả béo
+// quả béo
 // phim sex
 thưa ngài
 tấu hề
@@ -4708,40 +4708,40 @@ xẹp bánh
 quẹt rác
 quẹt diêm
 quẹt sơn
-giang dở
+// giang dở
 bày mưu
 cỏ xanh
-cỏ tí
-nào nhặn
+// cỏ tí
+// nào nhặn
 vụ trộm
 gạo ngon
 gạo thơm
 tay bẩn
-tay táy
-khánh duy
+// tay táy
+// khánh duy
 sống khoẻ
 siết eo
 sống khỏe
-có cứt
-có ai
+// có cứt
+// có ai
 sót sa
-đâu tây
-hơi tụ
+// đâu tây
+// hơi tụ
 hơi khê
 mũi lợn
 chĩa dao
-mũi tật
+// mũi tật
 gái hiền
 bóng banh
 // tia sex
 // tia setd
-xộn quá
-xộn hết
-xộn xào
+// xộn quá
+// xộn hết
+// xộn xào
 nhạt toẹt
 nhạt nhòe
-phai phi
-tót đi
+// phai phi
+// tót đi
 rang cơm
 rang muối
 rang bơ
@@ -4754,273 +4754,273 @@ sông suối
 sông quê
 giấy dán
 giấy chứng
-phận số
+// phận số
 cung gỗ
-chịa đã
+// chịa đã
 ngồi khểnh
-này ci
-này cu
-mã siêu
-này em
-này cậu
-đần thế
+// này ci
+// này cu
+// mã siêu
+// này em
+// này cậu
+// đần thế
 rình trộm
-đần dốt
+// đần dốt
 // độ c
-xẹp tóc
-viện kiểm
-thôn nhỏ
+// xẹp tóc
+// viện kiểm
+// thôn nhỏ
 đong đầy
 đong đếm
 lỡ như
 lỡ đất
 bớt đi
-xẹp xẹp
+// xẹp xẹp
 hét giá
-trị mập
-hồn ngọc
-say gió
-dốc đường
-hạ phuộc
+// trị mập
+// hồn ngọc
+// say gió
+// dốc đường
+// hạ phuộc
 mò cua
 mò tôm
 mò sông
 chất cấm
-tộc kin
+// tộc kin
 tộc kinh
 mò biển
-từ tiện
-là nước
-nước cứt
-mơ sấy
-luyện sư
+// từ tiện
+// là nước
+// nước cứt
+// mơ sấy
+// luyện sư
 tiết lợn
 bã chó
 đậu mềm
-đao loát
+// đao loát
 // đao kiêmd
-tớ bạn
-tớ cậu
-tớ nè
+// tớ bạn
+// tớ cậu
+// tớ nè
 tàu đắm
 tàu dừa
 phận nô
 rơn rỉ
-tớ vất
-tớ đây
-tỏm tỉm
-tỏm lọ
-tớ này
-tỏm tủm
-tỏm thật
-chông chiêng
-tỏm quá
-tỏm vậy
-rồi này
-tớ ấy
-rồi bâu
-rồi rào
+// tớ vất
+// tớ đây
+// tỏm tỉm
+// tỏm lọ
+// tớ này
+// tỏm tủm
+// tỏm thật
+// chông chiêng
+// tỏm quá
+// tỏm vậy
+// rồi này
+// tớ ấy
+// rồi bâu
+// rồi rào
 // him her
-rồi bôi
-bớt sự
+// rồi bôi
+// bớt sự
 sụn vi
-sụn đầu
+// sụn đầu
 sụn cánh
 sụn sườn
-sụn nhân
-lét vân
-đầu bòi
-dăng làm
+// sụn nhân
+// lét vân
+// đầu bòi
+// dăng làm
 tâm quan
-dăng thể
-khối nhà
-dăng không
-dăng cho
-khối hình
+// dăng thể
+// khối nhà
+// dăng không
+// dăng cho
+// khối hình
 khối lớp
-máu lồn
+// máu lồn
 rút nước
 nhánh lan
 mủ tai
-hồi hợp
+// hồi hợp
 nhánh nhỏ
 nhánh mới
 véo má
-nhánh phải
+// nhánh phải
 // văn t
 ve chó
 // hóa kiêod
-hạ hoà
+// hạ hoà
 trúc non
-vãn vãn
-uống aura
+// vãn vãn
+// uống aura
 máu tanh
-cóng nạp
-cóng tiến
-miệng nhỏ
-miệng nó
-thui cháy
-thui mò
-vay tín
-lê xuân
-lê thị
+// cóng nạp
+// cóng tiến
+// miệng nhỏ
+// miệng nó
+// thui cháy
+// thui mò
+// vay tín
+// lê xuân
+// lê thị
 cóng đơ
-cóng lồn
-lê lai
-thủi mm
-thủi hoắc
-là nơi
-khoán nợ
+// cóng lồn
+// lê lai
+// thủi mm
+// thủi hoắc
+// là nơi
+// khoán nợ
 nỗi nhớ
-khoán công
+// khoán công
 vấn đạo
-lệ ước
+// lệ ước
 khoán việc
 xuân về
-xuân yêu
+// xuân yêu
 chủ đất
-cảng cái
+// cảng cái
 cảng tàu
 cảng thuyền
-mả mồ
-mả êm
-mả táng
-mả yên
-mả tổ
-mả thầy
-mả mai
+// mả mồ
+// mả êm
+// mả táng
+// mả yên
+// mả tổ
+// mả thầy
+// mả mai
 dựng xây
-giũa đồng
+// giũa đồng
 khóc lớn
 lóc chóc
 lóc xương
 lóc thịt
-mả mộ
-hoạn họe
+// mả mộ
+// hoạn họe
 chuối chiên
-nên giữ
+// nên giữ
 triệu đồng
-tắp nập
-lự chọn
+// tắp nập
+// lự chọn
 mời bác
 tạng gầy
 // tạng mmb
-tạng phụ
+// tạng phụ
 tạng tỳ
-tạng thịt
-vựng dụng
+// tạng thịt
+// vựng dụng
 nơi trốn
-gãy ghẻ
-tạng qình
-gái con
+// gãy ghẻ
+// tạng qình
+// gái con
 gái lùn
-gái ghẹo
-tửu đô
-tửu lượnng
-khảm bảo
-khảm rơm
+// gái ghẹo
+// tửu đô
+// tửu lượnng
+// khảm bảo
+// khảm rơm
 khảm trai
-khảm hành
+// khảm hành
 phi tử
-khảm thuỷ
-khảm động
+// khảm thuỷ
+// khảm động
 tía má
-khảm lỏng
+// khảm lỏng
 khảm nạm
-xiểng niểng
-xiểng xỉch
+// xiểng niểng
+// xiểng xỉch
 ngàn lớp
 bảy ba
 bảy màu
 sông sâu
 mưa rơi
-hạc tiêu
-cướp nhà
-khai khốc
+// hạc tiêu
+// cướp nhà
+// khai khốc
 cướp trộm
-nhắp nhổn
-nhắp nhổm
-lận tận
-lận đậm
+// nhắp nhổn
+// nhắp nhổm
+// lận tận
+// lận đậm
 ảnh hậu
-ảnh thơ
+// ảnh thơ
 ảnh thờ
-dạ chữa
+// dạ chữa
 dạ chửa
 dò vé
-dò lò
-hoạch hoẹ
-kinh đấy
-ca sỉ
-tụng king
-tụng queen
-nhuyễn ngọc
+// dò lò
+// hoạch hoẹ
+// kinh đấy
+// ca sỉ
+// tụng king
+// tụng queen
+// nhuyễn ngọc
 nhuyễn nát
-liệu giờ
+// liệu giờ
 loa ngoài
-loa nhạc
+// loa nhạc
 kèn lá
 trải lòng
 nhập hồn
-quái đảng
-viên trức
-nang giải
-vãn bối
-vãn kinh
-vãn kiếp
+// quái đảng
+// viên trức
+// nang giải
+// vãn bối
+// vãn kinh
+// vãn kiếp
 còn gì
 còn non
 dùng từ
 này nè
-chầy xước
+// chầy xước
 dùng tiền
-nọ vương
+// nọ vương
 dùng để
-chầy cối
-nọ ki
-rỡ mỡ
-binh boong
-đệ du
-nữa thì
-vê vang
+// chầy cối
+// nọ ki
+// rỡ mỡ
+// binh boong
+// đệ du
+// nữa thì
+// vê vang
 gác đền
-nậu hồng
+// nậu hồng
 bụng đói
-nậu ma
+// nậu ma
 giáp tết
-giáp nhị
-thọ tồn
+// giáp nhị
+// thọ tồn
 tảo lục
-kiều dương
-dong chơi
+// kiều dương
+// dong chơi
 chó mẹ
-câng cứng
-ngắt ti
-quãng ninh
+// câng cứng
+// ngắt ti
+// quãng ninh
 việc vặt
 đông trùng
 đông đá
 lính lác
 rã đông
-chọi trọc
+// chọi trọc
 chọi chim
-chọi chọi
-hồn lài
-hồn làng
-gà gép
-gà tẻ
+// chọi chọi
+// hồn lài
+// hồn làng
+// gà gép
+// gà tẻ
 mừng xuân
 gà viên
-gà chollibee
+// gà chollibee
 vang trời
 gà luộc
 trường chuyên
 dã tượng
-nữa cmm
-quan hợp
+// nữa cmm
+// quan hợp
 // nữa à
-nữa đấy
-nữa khoai
+// nữa đấy
+// nữa khoai
 suối reo
 trâu vàng
 cá hấp
@@ -5028,26 +5028,26 @@ sữa mẹ
 cá nướng
 sữa tắm
 sữa dâu
-phim heo
-cọc cây
+// phim heo
+// cọc cây
 phim ma
 nghịch ngu
 phim hài
-con mm
+// con mm
 phim nhật
-con ngu
-phim tài
+// con ngu
+// phim tài
 phim hàn
-phim tật
-phim phai
+// phim tật
+// phim phai
 đếm tiền
-con cạc
+// con cạc
 long châu
 tranh hoạ
-thị nở
-cặc buồi
+// thị nở
+// cặc buồi
 // phượng hoangg
-trạch đông
+// trạch đông
 trạch chồng
 trạch đồng
 trạch quảng
