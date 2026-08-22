@@ -4,7 +4,7 @@ thủi lủi
 vai rộng
 là gì
 là phẳng
-// phương tuấn
+phương tuấn
 vào hang
 đen tuyền
 láy vần
@@ -22,7 +22,7 @@ thiệp cưới
 mời cưới
 mời khách
 lĩnh lương
-// tung lồn
+tung lồn
 mọc lông
 // độ mĩi
 mọc rêu
@@ -314,8 +314,8 @@ cơm canh
 // cơm chua
 cơm trắng
 // cơm chưa
-// chiên cơm
-// chiên xào
+chiên cơm
+chiên xào
 chiên thịt
 // chiên nấu
 chiên trứng
