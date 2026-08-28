@@ -1662,11 +1662,45 @@ class DiscordBot {
 
         try {
             const feedbackId = gameLogic.storeFeedback(userId, username, fullContent, channelId);
+
+            // Pre-parse words for missing_word type to give user format feedback
+            let parsedWordCount = 0;
+            let hasInvalidFormat = false;
+            if (feedbackType === 'missing_word') {
+                const rawItems = content.split(/[,，;\n]+/).map(s => s.trim()).filter(Boolean);
+                for (const rawItem of rawItems) {
+                    const normalized = gameLogic.normalizeVietnamese(rawItem);
+                    const parts = normalized.split(/\s+/);
+                    if (parts.length === 2) {
+                        parsedWordCount++;
+                    }
+                }
+                if (parsedWordCount === 0) {
+                    hasInvalidFormat = true;
+                }
+            }
+
+            let description = `Cảm ơn bạn đã gửi phản hồi! Chúng tôi sẽ xem xét và cải thiện.\n\n**Loại:** ${typeLabel}\n**ID phản hồi:** ${feedbackId}`;
+
+            if (feedbackType === 'missing_word' && parsedWordCount > 0) {
+                description += `\n\n📋 Đã nhận diện **${parsedWordCount}** từ hợp lệ. Admin sẽ xem xét và duyệt sớm!`;
+            }
+
             const embed = new EmbedBuilder()
-                .setTitle('✅ Phản hồi đã được gửi')
-                .setDescription(`Cảm ơn bạn đã gửi phản hồi! Chúng tôi sẽ xem xét và cải thiện.\n\n**Loại:** ${typeLabel}\n**ID phản hồi:** ${feedbackId}`)
-                .setColor(0x00FF00)
+                .setTitle(hasInvalidFormat ? '⚠️ Phản hồi đã gửi nhưng format chưa đúng' : '✅ Phản hồi đã được gửi')
+                .setDescription(description)
+                .setColor(hasInvalidFormat ? 0xFFA500 : 0x00FF00)
                 .setTimestamp();
+
+            if (hasInvalidFormat) {
+                embed.addFields({
+                    name: '💡 Hướng dẫn nhập từ đúng format',
+                    value: '**Mỗi từ gồm 2 âm tiết**, cách nhau bằng **dấu phẩy**.\n\n' +
+                        'Ví dụ: `khô cá, khô bò, bình minh`\n\n' +
+                        'Phản hồi vẫn được gửi tới admin, nhưng bạn có thể gửi lại với format đúng để được duyệt nhanh hơn!',
+                    inline: false
+                });
+            }
 
             await interaction.reply({ embeds: [embed], ephemeral: true });
 
