@@ -2342,6 +2342,8 @@ class DiscordBot {
                 for (const [uid, data] of userWordMap) {
                     try {
                         const targetUser = await this.client.users.fetch(uid);
+                        // Use first feedbackId for reply thread
+                        const replyFeedbackId = [...data.feedbackIds][0];
                         const userEmbed = new EmbedBuilder()
                             .setTitle('✅ Từ của bạn đã được thêm vào từ điển!')
                             .setDescription(`Các từ sau đã được duyệt và có hiệu lực ngay lập tức:\n\n**${data.words.join(', ')}**\n\nCảm ơn bạn đã đóng góp phát triển Bot Nối Từ ❤️`)
@@ -2349,18 +2351,33 @@ class DiscordBot {
                             .setFooter({ text: 'Bot Nối Từ 🐧' })
                             .setTimestamp();
 
-                        await targetUser.send({ embeds: [userEmbed] });
+                        const userReplyBtn = new ButtonBuilder()
+                            .setCustomId(`userreply_${replyFeedbackId}`)
+                            .setLabel('Trả lời')
+                            .setStyle(ButtonStyle.Primary)
+                            .setEmoji('💬');
+
+                        const userRow = new ActionRowBuilder().addComponents(userReplyBtn);
+                        await targetUser.send({ embeds: [userEmbed], components: [userRow] });
                     } catch (dmErr) {
                         logger.warn(`Could not DM user ${uid}: ${dmErr.message}`);
                     }
                 }
             }
 
-            // Mark all related feedbacks as resolved
+            // Mark all related feedbacks as resolved + save reply history
             const feedbacks = gameLogic.getAllFeedbacks();
             for (const fbId of bulk.feedbackIds) {
                 const fb = feedbacks.find(f => f.id === fbId);
-                if (fb) fb.status = 'resolved';
+                if (fb) {
+                    fb.status = 'resolved';
+                    if (!fb.replies) fb.replies = [];
+                    fb.replies.push({
+                        from: 'admin',
+                        content: `[Duyệt tổng] Đã duyệt ${totalApproved} từ: ${result.added?.join(', ') || 'không có'}`,
+                        timestamp: new Date().toISOString()
+                    });
+                }
             }
             gameLogic.saveFeedbacks(feedbacks);
 
