@@ -1876,8 +1876,26 @@ class DiscordBot {
             pending.selectedWords = selectedWords;
         }
 
-        // Update the approve button label to reflect selection count
+        // Rebuild components with updated select menu defaults and button label
         const components = interaction.message.components.map((row, index) => {
+            if (index === 0) {
+                // Select menu row — rebuild with updated default states
+                const allWords = pending ? pending.allWords : [];
+                const selectOptions = allWords.slice(0, 25).map(word => ({
+                    label: word,
+                    value: word,
+                    default: selectedWords.includes(word)
+                }));
+
+                const selectMenu = new StringSelectMenuBuilder()
+                    .setCustomId(`word_select_${feedbackId}`)
+                    .setPlaceholder('Chọn từ muốn duyệt')
+                    .setMinValues(0)
+                    .setMaxValues(selectOptions.length)
+                    .addOptions(selectOptions);
+
+                return new ActionRowBuilder().addComponents(selectMenu);
+            }
             if (index === 1) {
                 // Buttons row — update approve button label
                 const newRow = ActionRowBuilder.from(row);
