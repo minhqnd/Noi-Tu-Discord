@@ -481,9 +481,15 @@ class DiscordBot {
                     await this.handleSelectFeedback(interaction);
                 } else if (interaction.customId === 'select_feedback_type') {
                     await this.handleSelectFeedbackType(interaction);
+                } else if (interaction.customId.startsWith('word_select_')) {
+                    await this.handleWordSelectionChange(interaction);
                 }
             } else if (interaction.isButton()) {
-                if (interaction.customId.startsWith('reply_feedback_')) {
+                if (interaction.customId.startsWith('approve_words_') && !interaction.customId.startsWith('approve_words_done_')) {
+                    await this.handleApproveWords(interaction);
+                } else if (interaction.customId.startsWith('reject_words_') && !interaction.customId.startsWith('reject_words_done_')) {
+                    await this.handleRejectAllWords(interaction);
+                } else if (interaction.customId.startsWith('reply_feedback_')) {
                     await this.handleReplyFeedbackButton(interaction);
                 } else if (interaction.customId.startsWith('quick_word_added_')) {
                     await this.handleQuickWordAddedButton(interaction);
@@ -1184,7 +1190,7 @@ class DiscordBot {
         const feedbackType = interaction.values[0];
 
         const placeholders = {
-            missing_word: 'Nhập từ còn thiếu, ví dụ: "hoa lài", "bình minh"...',
+            missing_word: 'Nhập từ cách nhau bằng dấu phẩy, ví dụ: khô cá, khô bò, bình minh',
             bug: 'Mô tả lỗi bạn gặp phải: lỗi gì, khi nào xảy ra...',
             feature_request: 'Mô tả tính năng bạn muốn đề xuất...'
         };
@@ -1668,36 +1674,17 @@ class DiscordBot {
             if (!this._feedbackCooldowns) this._feedbackCooldowns = new Map();
             this._feedbackCooldowns.set(userId, Date.now());
 
-            // Send DM to owner with reply button
+            // Send DM to owner
             try {
                 const owner = await this.client.users.fetch(OWNER_ID);
-                const dmEmbed = new EmbedBuilder()
-                    .setTitle('📬 Feedback mới')
-                    .setDescription(content)
-                    .addFields(
-                        { name: 'Loại', value: typeLabel, inline: true },
-                        { name: 'Từ', value: `${username} (${userId})`, inline: true },
-                        { name: 'Kênh', value: channelId || 'DM', inline: true },
-                        { name: 'ID', value: feedbackId, inline: true }
-                    )
-                    .setColor(0xFFA500)
-                    .setTimestamp();
 
-                const replyBtn = new ButtonBuilder()
-                    .setCustomId(`reply_feedback_${userId}_${feedbackId}`)
-                    .setLabel('Trả lời')
-                    .setStyle(ButtonStyle.Primary)
-                    .setEmoji('💬');
-
-                const quickAddBtn = new ButtonBuilder()
-                    .setCustomId(`quick_word_added_${userId}_${feedbackId}`)
-                    .setLabel('Đã thêm từ')
-                    .setStyle(ButtonStyle.Success)
-                    .setEmoji('✨');
-
-                const row = new ActionRowBuilder().addComponents(replyBtn, quickAddBtn);
-
-                await owner.send({ embeds: [dmEmbed], components: [row] });
+                if (feedbackType === 'missing_word') {
+                    // Auto-parse words from content for missing_word feedback
+                    await this._sendParsedWordFeedbackDM(owner, content, userId, username, channelId, feedbackId, typeLabel);
+                } else {
+                    // Default DM for other feedback types
+                    await this._sendDefaultFeedbackDM(owner, content, userId, username, channelId, feedbackId, typeLabel);
+                }
             } catch (dmErr) {
                 logger.warn(`Could not DM owner: ${dmErr.message}`);
             }
@@ -1709,6 +1696,353 @@ class DiscordBot {
                 ephemeral: true
             });
             logger.error(`Failed to store feedback: ${error.message}`);
+        }
+    }
+
+    /**
+     * Parse words from feedback content and send DM to admin with select menu + approve/reject buttons
+     */
+    async _sendParsedWordFeedbackDM(owner, content, userId, username, channelId, feedbackId, typeLabel) {
+        // Parse words: split by comma, newline, or semicolon
+        const rawItems = content.split(/[,，;\n]+/).map(s => s.trim()).filter(Boolean);
+        const parsedWords = [];
+        const invalidItems = [];
+
+        for (const rawItem of rawItems) {
+            const normalized = gameLogic.normalizeVietnamese(rawItem);
+            const parts = normalized.split(/\s+/);
+            if (parts.length === 2) {
+                parsedWords.push(normalized);
+            } else {
+                invalidItems.push(rawItem);
+            }
+        }
+
+        if (parsedWords.length > 0) {
+            // Build enhanced DM with select menu
+            const dmEmbed = new EmbedBuilder()
+                .setTitle('📬 Feedback mới — Từ còn thiếu')
+                .setDescription(content)
+                .addFields(
+                    { name: 'Từ hợp lệ', value: parsedWords.map(w => `• **${w}**`).join('\n').substring(0, 1024), inline: false },
+                    { name: 'Từ', value: `${username} (${userId})`, inline: true },
+                    { name: 'Kênh', value: channelId || 'DM', inline: true },
+                    { name: 'ID', value: feedbackId, inline: true }
+                )
+                .setColor(0xFFA500)
+                .setTimestamp();
+
+            if (invalidItems.length > 0) {
+                dmEmbed.addFields({
+                    name: '⚠️ Không hợp lệ (bỏ qua)',
+                    value: invalidItems.map(w => `• ${w}`).join('\n').substring(0, 1024),
+                    inline: false
+                });
+            }
+
+            const components = [];
+
+            // Select menu for choosing words to approve (max 25 options)
+            const selectOptions = parsedWords.slice(0, 25).map(word => ({
+                label: word,
+                value: word,
+                default: true // All selected by default
+            }));
+
+            const selectMenu = new StringSelectMenuBuilder()
+                .setCustomId(`word_select_${feedbackId}`)
+                .setPlaceholder('Chọn từ muốn duyệt (mặc định chọn hết)')
+                .setMinValues(0)
+                .setMaxValues(selectOptions.length)
+                .addOptions(selectOptions);
+
+            components.push(new ActionRowBuilder().addComponents(selectMenu));
+
+            // Buttons row
+            const approveBtn = new ButtonBuilder()
+                .setCustomId(`approve_words_${userId}_${feedbackId}`)
+                .setLabel(`✅ Duyệt từ đã chọn (${parsedWords.length})`)
+                .setStyle(ButtonStyle.Success);
+
+            const rejectBtn = new ButtonBuilder()
+                .setCustomId(`reject_words_${userId}_${feedbackId}`)
+                .setLabel('❌ Từ chối tất cả')
+                .setStyle(ButtonStyle.Danger);
+
+            const replyBtn = new ButtonBuilder()
+                .setCustomId(`reply_feedback_${userId}_${feedbackId}`)
+                .setLabel('💬 Trả lời')
+                .setStyle(ButtonStyle.Primary);
+
+            components.push(new ActionRowBuilder().addComponents(approveBtn, rejectBtn, replyBtn));
+
+            // Store parsed words for later retrieval
+            if (!this._pendingWordApprovals) this._pendingWordApprovals = new Map();
+            this._pendingWordApprovals.set(feedbackId, {
+                allWords: parsedWords,
+                selectedWords: [...parsedWords], // Default: all selected
+                userId,
+                username
+            });
+
+            await owner.send({ embeds: [dmEmbed], components });
+        } else {
+            // No valid words parsed — fallback to default DM
+            await this._sendDefaultFeedbackDM(owner, content, userId, username, channelId, feedbackId, typeLabel);
+        }
+    }
+
+    /**
+     * Send default feedback DM to admin (for non-word feedback types or when parsing fails)
+     */
+    async _sendDefaultFeedbackDM(owner, content, userId, username, channelId, feedbackId, typeLabel) {
+        const dmEmbed = new EmbedBuilder()
+            .setTitle('📬 Feedback mới')
+            .setDescription(content)
+            .addFields(
+                { name: 'Loại', value: typeLabel, inline: true },
+                { name: 'Từ', value: `${username} (${userId})`, inline: true },
+                { name: 'Kênh', value: channelId || 'DM', inline: true },
+                { name: 'ID', value: feedbackId, inline: true }
+            )
+            .setColor(0xFFA500)
+            .setTimestamp();
+
+        const replyBtn = new ButtonBuilder()
+            .setCustomId(`reply_feedback_${userId}_${feedbackId}`)
+            .setLabel('Trả lời')
+            .setStyle(ButtonStyle.Primary)
+            .setEmoji('💬');
+
+        const quickAddBtn = new ButtonBuilder()
+            .setCustomId(`quick_word_added_${userId}_${feedbackId}`)
+            .setLabel('Đã thêm từ')
+            .setStyle(ButtonStyle.Success)
+            .setEmoji('✨');
+
+        const row = new ActionRowBuilder().addComponents(replyBtn, quickAddBtn);
+        await owner.send({ embeds: [dmEmbed], components: [row] });
+    }
+
+    /**
+     * Handle word selection change from admin select menu
+     */
+    async handleWordSelectionChange(interaction) {
+        if (interaction.user.id !== OWNER_ID) {
+            await interaction.reply({ content: '❌ Chỉ admin bot mới có thể thực hiện.', ephemeral: true });
+            return;
+        }
+
+        const feedbackId = interaction.customId.replace('word_select_', '');
+        const selectedWords = interaction.values; // Array of selected word values
+
+        if (!this._pendingWordApprovals) this._pendingWordApprovals = new Map();
+        const pending = this._pendingWordApprovals.get(feedbackId);
+        if (pending) {
+            pending.selectedWords = selectedWords;
+        }
+
+        // Update the approve button label to reflect selection count
+        const components = interaction.message.components.map((row, index) => {
+            if (index === 1) {
+                // Buttons row — update approve button label
+                const newRow = ActionRowBuilder.from(row);
+                const approveBtn = newRow.components[0];
+                if (approveBtn && approveBtn.data.custom_id?.startsWith('approve_words_')) {
+                    const updatedBtn = ButtonBuilder.from(approveBtn)
+                        .setLabel(`✅ Duyệt từ đã chọn (${selectedWords.length})`);
+                    newRow.components[0] = updatedBtn;
+                }
+                return newRow;
+            }
+            return ActionRowBuilder.from(row);
+        });
+
+        await interaction.update({ components });
+    }
+
+    /**
+     * Handle "Duyệt từ đã chọn" button — auto addWord + notify user
+     */
+    async handleApproveWords(interaction) {
+        if (interaction.user.id !== OWNER_ID) {
+            await interaction.reply({ content: '❌ Chỉ admin bot mới có thể thực hiện.', ephemeral: true });
+            return;
+        }
+
+        const parts = interaction.customId.split('_');
+        const targetUserId = parts[2];
+        const feedbackId = parts[3];
+
+        if (!this._pendingWordApprovals) this._pendingWordApprovals = new Map();
+        const pending = this._pendingWordApprovals.get(feedbackId);
+
+        if (!pending || pending.selectedWords.length === 0) {
+            await interaction.reply({ content: '⚠️ Không có từ nào được chọn để duyệt.', ephemeral: true });
+            return;
+        }
+
+        try {
+            await interaction.deferUpdate();
+
+            // Add words using gameLogic.addWord (accepts comma-separated string)
+            const wordsToAdd = pending.selectedWords.join(', ');
+            const result = gameLogic.addWord(wordsToAdd);
+
+            // Build result summary
+            let resultDesc = '';
+            if (result.success && result.added?.length > 0) {
+                resultDesc += `✅ **Đã thêm (${result.added.length}):** ${result.added.map(w => `**${w}**`).join(', ')}\n`;
+            }
+            if (result.existing?.length > 0) {
+                resultDesc += `⚠️ **Đã có sẵn (${result.existing.length}):** ${result.existing.join(', ')}\n`;
+            }
+            if (result.invalid?.length > 0) {
+                resultDesc += `❌ **Không hợp lệ (${result.invalid.length}):** ${result.invalid.join(', ')}\n`;
+            }
+
+            const totalApproved = (result.added?.length || 0);
+            const totalSelected = pending.selectedWords.length;
+            const totalAll = pending.allWords.length;
+
+            // Update admin embed
+            const updatedEmbed = EmbedBuilder.from(interaction.message.embeds[0])
+                .setTitle(`📬 Feedback — Đã duyệt ${totalApproved}/${totalAll} từ`)
+                .setColor(0x57F287);
+
+            if (resultDesc) {
+                updatedEmbed.addFields({ name: '📊 Kết quả duyệt', value: resultDesc.substring(0, 1024), inline: false });
+            }
+
+            // Disable all buttons
+            const disabledRow = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`approve_words_done_${feedbackId}`)
+                    .setLabel(`✅ Đã duyệt ${totalApproved} từ`)
+                    .setStyle(ButtonStyle.Success)
+                    .setDisabled(true),
+                new ButtonBuilder()
+                    .setCustomId(`reject_words_done_${feedbackId}`)
+                    .setLabel('❌ Từ chối')
+                    .setStyle(ButtonStyle.Secondary)
+                    .setDisabled(true),
+                new ButtonBuilder()
+                    .setCustomId(`reply_feedback_${targetUserId}_${feedbackId}`)
+                    .setLabel('💬 Trả lời')
+                    .setStyle(ButtonStyle.Primary)
+            );
+
+            await interaction.editReply({ embeds: [updatedEmbed], components: [disabledRow] });
+
+            // Notify user via DM if words were added
+            if (totalApproved > 0) {
+                try {
+                    const targetUser = await this.client.users.fetch(targetUserId);
+                    const addedList = result.added.join(', ');
+                    const userEmbed = new EmbedBuilder()
+                        .setTitle('✅ Từ của bạn đã được thêm vào từ điển!')
+                        .setDescription(`Các từ sau đã được duyệt và có hiệu lực ngay lập tức:\n\n**${addedList}**\n\nCảm ơn bạn đã đóng góp phát triển Bot Nối Từ ❤️`)
+                        .setColor(0x57F287)
+                        .setFooter({ text: 'Bot Nối Từ 🐧' })
+                        .setTimestamp();
+
+                    const userReplyBtn = new ButtonBuilder()
+                        .setCustomId(`userreply_${feedbackId}`)
+                        .setLabel('Trả lời')
+                        .setStyle(ButtonStyle.Primary)
+                        .setEmoji('💬');
+
+                    const userRow = new ActionRowBuilder().addComponents(userReplyBtn);
+                    await targetUser.send({ embeds: [userEmbed], components: [userRow] });
+                } catch (userDmErr) {
+                    logger.warn(`Could not DM user ${targetUserId}: ${userDmErr.message}`);
+                }
+            }
+
+            // Mark feedback as resolved
+            const feedbacks = gameLogic.getAllFeedbacks();
+            const feedback = feedbacks.find(f => f.id === feedbackId);
+            if (feedback) {
+                feedback.status = 'resolved';
+                if (!feedback.replies) feedback.replies = [];
+                feedback.replies.push({
+                    from: 'admin',
+                    content: `Đã duyệt ${totalApproved}/${totalAll} từ: ${result.added?.join(', ') || 'không có'}`,
+                    timestamp: new Date().toISOString()
+                });
+                gameLogic.saveFeedbacks(feedbacks);
+            }
+
+            // Clean up pending state
+            this._pendingWordApprovals.delete(feedbackId);
+
+            logger.info(`Admin approved ${totalApproved}/${totalAll} words from feedback ${feedbackId}`);
+        } catch (error) {
+            logger.error(`Failed to approve words for feedback ${feedbackId}: ${error.message}`);
+            try {
+                await interaction.followUp({ content: `❌ Lỗi khi duyệt từ: ${error.message}`, ephemeral: true });
+            } catch (e) {
+                // ignore follow-up errors
+            }
+        }
+    }
+
+    /**
+     * Handle "Từ chối tất cả" button
+     */
+    async handleRejectAllWords(interaction) {
+        if (interaction.user.id !== OWNER_ID) {
+            await interaction.reply({ content: '❌ Chỉ admin bot mới có thể thực hiện.', ephemeral: true });
+            return;
+        }
+
+        const parts = interaction.customId.split('_');
+        const targetUserId = parts[2];
+        const feedbackId = parts[3];
+
+        try {
+            // Update admin embed
+            const updatedEmbed = EmbedBuilder.from(interaction.message.embeds[0])
+                .setTitle('📬 Feedback — Đã từ chối tất cả')
+                .setColor(0xED4245);
+
+            // Disable all buttons
+            const disabledRow = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`approve_words_done_${feedbackId}`)
+                    .setLabel('✅ Duyệt')
+                    .setStyle(ButtonStyle.Secondary)
+                    .setDisabled(true),
+                new ButtonBuilder()
+                    .setCustomId(`reject_words_done_${feedbackId}`)
+                    .setLabel('❌ Đã từ chối')
+                    .setStyle(ButtonStyle.Danger)
+                    .setDisabled(true),
+                new ButtonBuilder()
+                    .setCustomId(`reply_feedback_${targetUserId}_${feedbackId}`)
+                    .setLabel('💬 Trả lời')
+                    .setStyle(ButtonStyle.Primary)
+            );
+
+            await interaction.update({ embeds: [updatedEmbed], components: [disabledRow] });
+
+            // Mark feedback as resolved
+            const feedbacks = gameLogic.getAllFeedbacks();
+            const feedback = feedbacks.find(f => f.id === feedbackId);
+            if (feedback) {
+                feedback.status = 'resolved';
+                gameLogic.saveFeedbacks(feedbacks);
+            }
+
+            // Clean up pending state
+            if (this._pendingWordApprovals) {
+                this._pendingWordApprovals.delete(feedbackId);
+            }
+
+            logger.info(`Admin rejected all words from feedback ${feedbackId}`);
+        } catch (error) {
+            logger.error(`Failed to reject words for feedback ${feedbackId}: ${error.message}`);
+            await interaction.reply({ content: `❌ Lỗi: ${error.message}`, ephemeral: true });
         }
     }
 
