@@ -141,7 +141,10 @@ User: xanh lục
 | Command | Mô tả |
 |---|---|
 | `/tratu [từ]` | Tra cứu nghĩa từ điển tiếng Việt qua [dict.minhqnd.com](https://dict.minhqnd.com) |
+| `/leaderboard` | Xem bảng xếp hạng người chơi (trong kênh hoặc toàn server) |
+| `/botstats` | Xem thống kê toàn hệ thống của Bot Nối Từ |
 | `/feedback` | Gửi báo cáo từ còn thiếu, báo lỗi hoặc đề xuất tính năng trực tiếp cho Admin |
+| `/addword [word]` | **[OWNER - DM]** Thêm từ mới trực tiếp vào `customWords.json` (hỗ trợ nhiều từ cách nhau bằng dấu phẩy) |
 
 ## 🏗️ Kiến Trúc Code
 
@@ -151,10 +154,11 @@ src/
 ├── gameEngine.js      # Logic core game nối từ & tính streak
 ├── gameLogic.js       # Interface giữa bot và game engine
 ├── db.js             # Database layer (SQLite better-sqlite3)
-├── wordProcessing.js # Xử lý chuẩn hóa từ & gọi API từ điển
+├── wordProcessing.js # Xử lý chuẩn hóa từ, merge từ điển & gọi API
 ├── utils.js          # Constants và logger (Winston)
 └── assets/
-    └── wordPairs.json # Bộ từ điển local
+    ├── wordPairs.json   # Bộ từ điển gốc (mặc định)
+    └── customWords.json # Bộ từ điển tùy chỉnh (từ được thêm qua /addword hoặc duyệt feedback)
 ```
 
 ### 🗂️ Cấu Trúc Dữ Liệu (SQLite)
@@ -165,17 +169,48 @@ Dữ liệu được lưu trong `data.db` (SQLite WAL mode):
 - **`channel_allowlist`**: Danh sách ID các kênh được kích hoạt chơi game nối từ
 - **`feedbacks`**: Danh sách các phản hồi, đóng góp từ người dùng gửi qua `/feedback`
 
-## 🔧 Phát Triển
+## 🔧 Phát Triển & Quản Trị Từ Điển
 
-### Thêm Từ Mới
-Từ điển được lưu trong `src/assets/wordPairs.json`. Để thêm từ mới:
+### Cơ Chế Từ Điển & Thêm Từ Mới
 
-Thêm vào file JSON theo format:
-   ```json
-   {
-     "từ_đầu": ["từ_cuối_1", "từ_cuối_2"]
-   }
-   ```
+Hệ thống từ điển gồm 2 file trong `src/assets/`:
+1. **`wordPairs.json`**: Từ điển gốc cố định của bot.
+2. **`customWords.json`**: Từ điển tùy chỉnh. Tất cả các từ mới được thêm thủ công hoặc được admin duyệt từ feedback sẽ được lưu vào file này.
+
+> Khi bot khởi động, hệ thống sẽ tự động gộp (merge) cả hai file vào bộ nhớ (`wordPairs` & `listWords`).
+
+---
+
+#### 1. Thêm từ nhanh qua lệnh `/addword` (Khuyên dùng)
+Dành cho **OWNER** trong tin nhắn riêng (DM) với bot:
+- Cú pháp: `/addword word: <danh sách từ>`
+- Hỗ trợ thêm 1 hoặc nhiều từ cách nhau bằng dấu phẩy (`,`) hoặc xuống dòng.
+  ```
+  /addword word: khô cá, khô bò, hải tú
+  ```
+- Bot sẽ tự động chuẩn hóa, kiểm tra 2 âm tiết, lưu vào `src/assets/customWords.json` và cập nhật tức thì vào ván chơi mà **không cần restart bot**.
+
+---
+
+#### 2. Duyệt từ đóng góp từ người chơi (`/feedback`)
+Khi người dùng gửi feedback loại **"Từ còn thiếu"**:
+- Bot tự động phân tích (auto-parse) các từ hợp lệ (2 âm tiết).
+- Gửi thông báo DM cho Admin kèm:
+  - **Select Menu**: Hiển thị danh sách từ đã parse, cho phép admin tick chọn / bỏ chọn từng từ muốn duyệt.
+  - **Nút `✅ Duyệt từ đã chọn`**: Tự động gọi `addWord()`, lưu vào `customWords.json` và gửi thông báo tổng hợp kèm nút reply cho người chơi.
+  - **Nút `📋 Duyệt tổng`**: Gom tất cả các từ pending từ toàn bộ feedback chưa duyệt để duyệt hàng loạt 1 lần.
+  - **Nút `❌ Từ chối tất cả`** & **`💬 Trả lời`**: Xử lý phản hồi hoặc trao đổi thêm với người dùng.
+
+---
+
+#### 3. Chỉnh sửa thủ công file `customWords.json`
+Bạn cũng có thể thêm trực tiếp vào file `src/assets/customWords.json` theo định dạng:
+```json
+{
+  "từ_đầu": ["từ_cuối_1", "từ_cuối_2"]
+}
+```
+*Lưu ý: Nếu sửa file trực tiếp bằng tay, cần khởi động lại bot để nạp lại dữ liệu vào RAM.*
 
 ### Testing
 ```bash
