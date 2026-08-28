@@ -483,6 +483,8 @@ class DiscordBot {
                     await this.handleSelectFeedbackType(interaction);
                 } else if (interaction.customId.startsWith('word_select_')) {
                     await this.handleWordSelectionChange(interaction);
+                } else if (interaction.customId.startsWith('bulk_word_select')) {
+                    await this.handleBulkWordSelect(interaction);
                 }
             } else if (interaction.isButton()) {
                 if (interaction.customId.startsWith('approve_words_') && !interaction.customId.startsWith('approve_words_done_')) {
@@ -499,6 +501,10 @@ class DiscordBot {
                     await this.handleResolveFeedback(interaction);
                 } else if (interaction.customId.startsWith('delete_feedback_')) {
                     await this.handleDeleteFeedback(interaction);
+                } else if (interaction.customId === 'bulk_review') {
+                    await this.handleBulkReview(interaction);
+                } else if (interaction.customId === 'bulk_approve') {
+                    await this.handleBulkApprove(interaction);
                 } else if (interaction.customId === 'back_to_feedback_list') {
                     await this.handleBackToFeedbackList(interaction);
                 }
@@ -1792,7 +1798,7 @@ class DiscordBot {
 
             components.push(new ActionRowBuilder().addComponents(selectMenu));
 
-            // Buttons row
+            // Buttons row 1: approve/reject/reply
             const approveBtn = new ButtonBuilder()
                 .setCustomId(`approve_words_${userId}_${feedbackId}`)
                 .setLabel(`✅ Duyệt từ đã chọn (${parsedWords.length})`)
@@ -1808,7 +1814,12 @@ class DiscordBot {
                 .setLabel('💬 Trả lời')
                 .setStyle(ButtonStyle.Primary);
 
-            components.push(new ActionRowBuilder().addComponents(approveBtn, rejectBtn, replyBtn));
+            const bulkBtn = new ButtonBuilder()
+                .setCustomId('bulk_review')
+                .setLabel('📋 Duyệt tổng')
+                .setStyle(ButtonStyle.Secondary);
+
+            components.push(new ActionRowBuilder().addComponents(approveBtn, rejectBtn, replyBtn, bulkBtn));
 
             // Store parsed words for later retrieval
             if (!this._pendingWordApprovals) this._pendingWordApprovals = new Map();
@@ -2095,6 +2106,273 @@ class DiscordBot {
         } catch (error) {
             logger.error(`Failed to reject words for feedback ${feedbackId}: ${error.message}`);
             await interaction.reply({ content: `❌ Lỗi: ${error.message}`, ephemeral: true });
+        }
+    }
+
+    /**
+     * Handle "Duyệt tổng" button — aggregate all pending missing_word feedbacks
+     */
+    async handleBulkReview(interaction) {
+        if (interaction.user.id !== OWNER_ID) {
+            await interaction.reply({ content: '❌ Chỉ admin bot mới có thể thực hiện.', ephemeral: true });
+            return;
+        }
+
+        try {
+            const feedbacks = gameLogic.getAllFeedbacks();
+            const pendingWordFeedbacks = feedbacks.filter(
+                f => f.status === 'pending' && f.content.startsWith('[Từ còn thiếu]')
+            );
+
+            if (pendingWordFeedbacks.length === 0) {
+                await interaction.reply({ content: '📭 Không có feedback "Từ còn thiếu" nào đang chờ duyệt.', ephemeral: true });
+                return;
+            }
+
+            // Parse all words from all pending feedbacks, tracking which user submitted each
+            const wordMap = new Map(); // word -> { users: Set<{userId, username, feedbackId}> }
+            const allParsedWords = [];
+
+            for (const fb of pendingWordFeedbacks) {
+                const rawContent = fb.content.replace('[Từ còn thiếu] ', '');
+                const rawItems = rawContent.split(/[,，;\n]+/).map(s => s.trim()).filter(Boolean);
+
+                for (const rawItem of rawItems) {
+                    const normalized = gameLogic.normalizeVietnamese(rawItem);
+                    const parts = normalized.split(/\s+/);
+                    if (parts.length === 2) {
+                        if (!wordMap.has(normalized)) {
+                            wordMap.set(normalized, { users: [] });
+                            allParsedWords.push(normalized);
+                        }
+                        const entry = wordMap.get(normalized);
+                        if (!entry.users.find(u => u.userId === fb.userId && u.feedbackId === fb.id)) {
+                            entry.users.push({ userId: fb.userId, username: fb.username, feedbackId: fb.id });
+                        }
+                    }
+                }
+            }
+
+            if (allParsedWords.length === 0) {
+                await interaction.reply({ content: '⚠️ Không parse được từ hợp lệ nào từ các feedback pending.', ephemeral: true });
+                return;
+            }
+
+            // Build embed
+            const embed = new EmbedBuilder()
+                .setTitle(`📋 Duyệt tổng — ${allParsedWords.length} từ từ ${pendingWordFeedbacks.length} feedback`)
+                .setDescription(
+                    allParsedWords.slice(0, 30).map(w => {
+                        const info = wordMap.get(w);
+                        const userNames = [...new Set(info.users.map(u => u.username))];
+                        return `• **${w}** _(${userNames.join(', ')})_`;
+                    }).join('\n').substring(0, 4000)
+                )
+                .setColor(0x5865F2)
+                .setTimestamp();
+
+            if (allParsedWords.length > 25) {
+                embed.addFields({
+                    name: '⚠️ Giới hạn',
+                    value: `Chỉ hiển thị 25/${allParsedWords.length} từ đầu tiên trong select menu. Các từ còn lại sẽ cần duyệt riêng.`,
+                    inline: false
+                });
+            }
+
+            // Select menu (max 25)
+            const selectOptions = allParsedWords.slice(0, 25).map(word => ({
+                label: word,
+                value: word,
+                description: wordMap.get(word).users.map(u => u.username).join(', ').substring(0, 50),
+                default: true
+            }));
+
+            const selectMenu = new StringSelectMenuBuilder()
+                .setCustomId('bulk_word_select')
+                .setPlaceholder('Chọn từ muốn duyệt (mặc định chọn hết)')
+                .setMinValues(0)
+                .setMaxValues(selectOptions.length)
+                .addOptions(selectOptions);
+
+            const approveBtn = new ButtonBuilder()
+                .setCustomId('bulk_approve')
+                .setLabel(`✅ Duyệt tất cả (${Math.min(allParsedWords.length, 25)})`)
+                .setStyle(ButtonStyle.Success);
+
+            const components = [
+                new ActionRowBuilder().addComponents(selectMenu),
+                new ActionRowBuilder().addComponents(approveBtn)
+            ];
+
+            // Store bulk state
+            if (!this._pendingBulkApproval) this._pendingBulkApproval = {};
+            this._pendingBulkApproval = {
+                allWords: allParsedWords.slice(0, 25),
+                selectedWords: [...allParsedWords.slice(0, 25)],
+                wordMap,
+                feedbackIds: pendingWordFeedbacks.map(f => f.id)
+            };
+
+            await interaction.reply({ embeds: [embed], components, ephemeral: true });
+            logger.info(`Admin opened bulk review: ${allParsedWords.length} words from ${pendingWordFeedbacks.length} feedbacks`);
+        } catch (error) {
+            logger.error(`Failed to open bulk review: ${error.message}`);
+            await interaction.reply({ content: `❌ Lỗi: ${error.message}`, ephemeral: true });
+        }
+    }
+
+    /**
+     * Handle bulk word select menu change
+     */
+    async handleBulkWordSelect(interaction) {
+        if (interaction.user.id !== OWNER_ID) {
+            await interaction.reply({ content: '❌ Chỉ admin bot mới có thể thực hiện.', ephemeral: true });
+            return;
+        }
+
+        const selectedWords = interaction.values;
+        if (this._pendingBulkApproval) {
+            this._pendingBulkApproval.selectedWords = selectedWords;
+        }
+
+        // Rebuild select menu with updated defaults
+        const allWords = this._pendingBulkApproval?.allWords || [];
+        const wordMap = this._pendingBulkApproval?.wordMap || new Map();
+
+        const selectOptions = allWords.map(word => ({
+            label: word,
+            value: word,
+            description: (wordMap.get(word)?.users?.map(u => u.username).join(', ') || '').substring(0, 50),
+            default: selectedWords.includes(word)
+        }));
+
+        const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId('bulk_word_select')
+            .setPlaceholder('Chọn từ muốn duyệt')
+            .setMinValues(0)
+            .setMaxValues(selectOptions.length)
+            .addOptions(selectOptions);
+
+        const approveBtn = new ButtonBuilder()
+            .setCustomId('bulk_approve')
+            .setLabel(`✅ Duyệt tất cả (${selectedWords.length})`)
+            .setStyle(ButtonStyle.Success);
+
+        await interaction.update({
+            components: [
+                new ActionRowBuilder().addComponents(selectMenu),
+                new ActionRowBuilder().addComponents(approveBtn)
+            ]
+        });
+    }
+
+    /**
+     * Handle bulk approve button
+     */
+    async handleBulkApprove(interaction) {
+        if (interaction.user.id !== OWNER_ID) {
+            await interaction.reply({ content: '❌ Chỉ admin bot mới có thể thực hiện.', ephemeral: true });
+            return;
+        }
+
+        const bulk = this._pendingBulkApproval;
+        if (!bulk || bulk.selectedWords.length === 0) {
+            await interaction.reply({ content: '⚠️ Không có từ nào được chọn.', ephemeral: true });
+            return;
+        }
+
+        try {
+            await interaction.deferUpdate();
+
+            // Add all selected words
+            const wordsToAdd = bulk.selectedWords.join(', ');
+            const result = gameLogic.addWord(wordsToAdd);
+
+            const totalApproved = result.added?.length || 0;
+
+            // Build result summary
+            let resultDesc = '';
+            if (totalApproved > 0) {
+                resultDesc += `✅ **Đã thêm (${totalApproved}):** ${result.added.map(w => `**${w}**`).join(', ')}\n`;
+            }
+            if (result.existing?.length > 0) {
+                resultDesc += `⚠️ **Đã có sẵn (${result.existing.length}):** ${result.existing.join(', ')}\n`;
+            }
+            if (result.invalid?.length > 0) {
+                resultDesc += `❌ **Không hợp lệ (${result.invalid.length}):** ${result.invalid.join(', ')}\n`;
+            }
+
+            // Update embed
+            const updatedEmbed = new EmbedBuilder()
+                .setTitle(`📋 Duyệt tổng — Hoàn tất`)
+                .setDescription(resultDesc || 'Không có từ nào được thêm.')
+                .setColor(totalApproved > 0 ? 0x57F287 : 0xED4245)
+                .setTimestamp();
+
+            const disabledBtn = new ButtonBuilder()
+                .setCustomId('bulk_approve_done')
+                .setLabel(`✅ Đã duyệt ${totalApproved} từ`)
+                .setStyle(ButtonStyle.Success)
+                .setDisabled(true);
+
+            await interaction.editReply({
+                embeds: [updatedEmbed],
+                components: [new ActionRowBuilder().addComponents(disabledBtn)]
+            });
+
+            // Notify each user whose words were approved
+            if (totalApproved > 0 && bulk.wordMap) {
+                // Group approved words by user
+                const userWordMap = new Map(); // userId -> { username, words: [], feedbackIds: Set }
+                for (const addedWord of result.added) {
+                    const info = bulk.wordMap.get(addedWord);
+                    if (info) {
+                        for (const user of info.users) {
+                            if (!userWordMap.has(user.userId)) {
+                                userWordMap.set(user.userId, { username: user.username, words: [], feedbackIds: new Set() });
+                            }
+                            const userData = userWordMap.get(user.userId);
+                            userData.words.push(addedWord);
+                            userData.feedbackIds.add(user.feedbackId);
+                        }
+                    }
+                }
+
+                // Send DM to each user
+                for (const [uid, data] of userWordMap) {
+                    try {
+                        const targetUser = await this.client.users.fetch(uid);
+                        const userEmbed = new EmbedBuilder()
+                            .setTitle('✅ Từ của bạn đã được thêm vào từ điển!')
+                            .setDescription(`Các từ sau đã được duyệt và có hiệu lực ngay lập tức:\n\n**${data.words.join(', ')}**\n\nCảm ơn bạn đã đóng góp phát triển Bot Nối Từ ❤️`)
+                            .setColor(0x57F287)
+                            .setFooter({ text: 'Bot Nối Từ 🐧' })
+                            .setTimestamp();
+
+                        await targetUser.send({ embeds: [userEmbed] });
+                    } catch (dmErr) {
+                        logger.warn(`Could not DM user ${uid}: ${dmErr.message}`);
+                    }
+                }
+            }
+
+            // Mark all related feedbacks as resolved
+            const feedbacks = gameLogic.getAllFeedbacks();
+            for (const fbId of bulk.feedbackIds) {
+                const fb = feedbacks.find(f => f.id === fbId);
+                if (fb) fb.status = 'resolved';
+            }
+            gameLogic.saveFeedbacks(feedbacks);
+
+            // Clean up
+            this._pendingBulkApproval = null;
+
+            logger.info(`Admin bulk approved ${totalApproved} words from ${bulk.feedbackIds.length} feedbacks`);
+        } catch (error) {
+            logger.error(`Failed to bulk approve: ${error.message}`);
+            try {
+                await interaction.followUp({ content: `❌ Lỗi: ${error.message}`, ephemeral: true });
+            } catch (e) { /* ignore */ }
         }
     }
 
