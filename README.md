@@ -12,7 +12,7 @@
 >
 > ⚡ **3 bước bắt đầu nhanh:**
 > 1. Vào kênh muốn chơi, gõ: `/noitu_add` *(yêu cầu quyền Quản lý máy chủ)*
-> 2. Chọn chế độ: `/noitu_mode` *(chơi với bot hoặc PvP với bạn bè)*
+> 2. Chọn chế độ ngay trên menu nút bấm: **Chơi với Bot** hoặc **Đấu PvP (Người vs Người)**
 > 3. Bắt đầu gõ từ nối tiếp ngay trong kênh!
 
 Bot Discord chơi game nối từ tiếng Việt với từ gồm 2 chữ. Hỗ trợ chơi cả trong kênh server và tin nhắn riêng (DM).
@@ -26,14 +26,14 @@ Bot Discord chơi game nối từ tiếng Việt với từ gồm 2 chữ. Hỗ 
 ### 🎯 Game Nối Từ
 - **Từ điển tiếng Việt**: Sử dụng bộ từ điển phong phú kết hợp API tra từ với hơn 357,000+ định nghĩa
 - **2 chế độ chơi**:
-  - **Bot vs User**: Bot tự động tìm từ tiếp theo
-  - **PvP (User vs User)**: Người chơi thi đấu với nhau
+  - **Bot vs User**: Bot tự động tìm từ tiếp theo (thay phiên nhau nối từ)
+  - **PvP (User vs User)**: Người chơi trong kênh tự do thi đấu với nhau, Bot làm trọng tài
 - **DM Support**: Có thể chơi riêng với bot qua tin nhắn trực tiếp
 - **Thống kê cá nhân**: Theo dõi chuỗi thắng, kỷ lục, số trận thắng
 
 ### 🛠️ Quản Lý Kênh
-- **Thêm/Xóa kênh**: Admin có thể thêm/xóa kênh để bot hoạt động
-- **Chế độ linh hoạt**: Chuyển đổi giữa bot mode và PvP mode (`/noitu_mode`)
+- **Thêm/Xóa kênh**: Admin có thể thêm/xóa kênh để bot hoạt động (`/noitu_add`, `/noitu_remove`)
+- **Chọn chế độ trực quan**: Bấm nút tương tác để đổi giữa chế độ Bot và PvP (`/noitu_add`, `/noitu_mode`)
 - **Reset game**: Bắt đầu lại ván mới bất cứ lúc nào (`/newgame`)
 
 ### 📚 Tiện Ích & Phản Hồi
@@ -130,9 +130,9 @@ User: xanh lục
 ### 🎯 Commands Chính
 | Command | Mô tả |
 |---|---|
-| `/noitu_add` | Thêm kênh để bot hoạt động *(Cần quyền Manage Server)* |
+| `/noitu_add` | Thêm kênh phòng game & hiện menu chọn chế độ qua 2 nút bấm *(Cần quyền Manage Server)* |
 | `/noitu_remove` | Xóa kênh khỏi game *(Cần quyền Manage Server)* |
-| `/noitu_mode [mode]` | Chọn chế độ chơi: `bot` (với bot) hoặc `pvp` (giữa người chơi) |
+| `/noitu_mode [mode]` | Chọn chế độ chơi: `bot` hoặc `pvp` (hoặc để trống để mở 2 nút bấm chọn) *(Cần quyền Manage Server)* |
 | `/newgame` | Bắt đầu ván mới |
 | `/stats` | Xem thống kê chuỗi thắng, kỷ lục |
 | `/help` | Hiển thị hướng dẫn sử dụng |

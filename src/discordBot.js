@@ -96,20 +96,27 @@ class DiscordBot {
             const welcomeEmbed = new EmbedBuilder()
                 .setTitle('🎉 Cảm ơn bạn đã mời Bot Nối Từ!')
                 .setDescription(
-                    'Xin chào! Cảm ơn bạn và server đã thêm Bot Nối Từ. Dưới đây là hướng dẫn nhanh để bắt đầu chơi ngay nhé 💚'
+                    'Xin chào! Cảm ơn bạn và server đã thêm Bot Nối Từ. Dưới đây là hướng dẫn nhanh để bắt đầu chơi:'
                 )
                 .addFields(
                     {
-                        name: '🎮 Để bắt đầu chơi',
+                        name: 'Bắt đầu chơi',
                         value: [
-                            '`/noitu_add` - Thêm kênh này làm phòng chơi nối từ (chỉ Admin)',
-                            '`/noitu_mode` - Chọn chế độ chơi (chơi với Bot hoặc PvP giữa các thành viên)',
+                            '`/noitu_add` - Thêm kênh làm phòng chơi nối từ (Admin)',
+                            '`/noitu_mode` - Đổi chế độ chơi bất cứ lúc nào (Admin)',
                             '`/newgame` - Bắt đầu ván mới / bỏ qua từ khó',
-                            'Hoặc nhắn tin riêng (DM) trực tiếp cho bot để chơi 1 mình!'
+                            'Hoặc nhắn tin riêng (DM) trực tiếp cho bot để chơi 1 mình.'
                         ].join('\n')
                     },
                     {
-                        name: '📖 Lệnh hữu ích',
+                        name: '2 Chế độ chơi',
+                        value: [
+                            '• **Chơi với Bot (Mặc định):** Người chơi và Bot thay phiên nhau nối từ.',
+                            '• **Đấu PvP (Người vs Người):** Các thành viên trong kênh tự do thi đấu với nhau, Bot làm trọng tài chấm điểm & đếm chuỗi.'
+                        ].join('\n')
+                    },
+                    {
+                        name: 'Lệnh hữu ích',
                         value: [
                             '`/leaderboard` - Xem bảng xếp hạng người chơi',
                             '`/stats` - Xem thống kê cá nhân',
@@ -120,7 +127,7 @@ class DiscordBot {
                         ].join('\n')
                     },
                     {
-                        name: '🔒 Quyền hạn cần thiết',
+                        name: 'Quyền hạn cần thiết',
                         value: 'Vui lòng đảm bảo Bot có đủ các quyền: **Xem kênh (View Channel)**, **Gửi tin nhắn (Send Messages)**, **Nhúng liên kết (Embed Links)** và **Thêm biểu cảm (Add Reactions)** để hoạt động tốt nhất.'
                     }
                 )
@@ -234,18 +241,18 @@ class DiscordBot {
             // },
             {
                 name: 'noitu_mode',
-                description: 'Chọn chế độ chơi cho kênh: bot hoặc pvp',
+                description: 'Chọn chế độ chơi cho kênh: Chơi với Bot hoặc PvP',
                 default_member_permissions: COMMAND_PERMISSIONS.MANAGE_GUILD,
                 contexts: [COMMAND_CONTEXTS.GUILD],
                 options: [
                     {
                         name: 'mode',
-                        description: 'Chế độ chơi (bot: user vs bot, pvp: user vs user)',
+                        description: 'Chế độ chơi (tùy chọn: bot hoặc pvp, để trống để mở menu nút bấm)',
                         type: 3, // STRING
-                        required: true,
+                        required: false,
                         choices: [
-                            { name: 'user vs bot', value: 'bot' },
-                            { name: 'user vs user (PvP)', value: 'pvp' }
+                            { name: 'Chơi với Bot (user vs bot)', value: 'bot' },
+                            { name: 'Đấu PvP (user vs user)', value: 'pvp' }
                         ]
                     }
                 ]
@@ -487,7 +494,9 @@ class DiscordBot {
                     await this.handleBulkWordSelect(interaction);
                 }
             } else if (interaction.isButton()) {
-                if (interaction.customId.startsWith('approve_words_') && !interaction.customId.startsWith('approve_words_done_')) {
+                if (interaction.customId.startsWith('set_mode_')) {
+                    await this.handleSetModeButton(interaction);
+                } else if (interaction.customId.startsWith('approve_words_') && !interaction.customId.startsWith('approve_words_done_')) {
                     await this.handleApproveWords(interaction);
                 } else if (interaction.customId.startsWith('reject_words_') && !interaction.customId.startsWith('reject_words_done_')) {
                     await this.handleRejectAllWords(interaction);
@@ -523,6 +532,61 @@ class DiscordBot {
         }
     }
 
+    buildModeSelectionPayload(channelId, currentMode = 'bot', currentWord = null, missingPerms = [], isAlreadyAdded = false) {
+        const isBot = currentMode !== 'pvp';
+        const modeLabel = isBot ? 'Chơi với Bot' : 'Đấu PvP (Người vs Người)';
+
+        const embed = new EmbedBuilder()
+            .setTitle('Cài Đặt Phòng Nối Từ')
+            .setColor(0x57F287)
+            .setDescription(
+                isAlreadyAdded
+                    ? `Kênh <#${channelId}> đã có trong danh sách phòng chơi.\n\n${currentWord ? `Từ hiện tại: **${currentWord}**` : ''}`
+                    : `Đã thêm kênh <#${channelId}> làm phòng chơi nối từ.\n\n${currentWord ? `Ván mới đã bắt đầu!\nTừ bắt đầu: **${currentWord}**` : ''}`
+            )
+            .addFields(
+                {
+                    name: 'Chọn chế độ chơi (Bấm nút bên dưới)',
+                    value: [
+                        '• **Chơi với Bot (Mặc định):** Người chơi nối từ trực tiếp với Bot (Bạn nối 1 từ ➔ Bot nối tiếp 1 từ).',
+                        '• **Đấu PvP (Người vs Người):** Các thành viên trong server tự do nối từ với nhau. Bot làm trọng tài kiểm tra từ, chấm điểm và ghi nhận chuỗi.'
+                    ].join('\n'),
+                    inline: false
+                }
+            );
+
+        if (missingPerms && missingPerms.length > 0) {
+            embed.addFields({
+                name: 'Lưu ý quyền hạn',
+                value: `Bot đang thiếu một số quyền trong kênh này:\n` +
+                    missingPerms.map(p => `• ${p}`).join('\n') +
+                    `\nVui lòng cấp đủ quyền để Bot hoạt động tốt nhất.`,
+                inline: false
+            });
+        }
+
+        embed.setFooter({
+            text: `Chế độ hiện tại: ${modeLabel} • Quản trị viên có thể bấm nút để đổi`
+        });
+
+        const botButton = new ButtonBuilder()
+            .setCustomId(`set_mode_bot_${channelId}`)
+            .setLabel(isBot ? 'Chơi với Bot (Đang chọn)' : 'Chơi với Bot')
+            .setStyle(isBot ? ButtonStyle.Success : ButtonStyle.Secondary);
+
+        const pvpButton = new ButtonBuilder()
+            .setCustomId(`set_mode_pvp_${channelId}`)
+            .setLabel(!isBot ? 'Đấu PvP (Đang chọn)' : 'Đấu PvP (Người vs Người)')
+            .setStyle(!isBot ? ButtonStyle.Success : ButtonStyle.Secondary);
+
+        const row = new ActionRowBuilder().addComponents(botButton, pvpButton);
+
+        return {
+            embeds: [embed],
+            components: [row]
+        };
+    }
+
     async handleNoituAdd(interaction) {
         if (this.isDirectMessage(interaction.channel)) {
             await interaction.reply({ content: '❌ Lệnh này chỉ dùng trong kênh server.', ephemeral: true });
@@ -535,8 +599,12 @@ class DiscordBot {
 
         const channelId = interaction.channel.id.toString();
         const channelAllowlist = this.getChannelAllowlist();
+        let isAlreadyAdded = false;
+        let currentWord = null;
+
         if (channelAllowlist.includes(channelId)) {
-            await interaction.reply({ content: '> **Phòng hiện tại đã có trong cơ sở dữ liệu!**', ephemeral: false });
+            isAlreadyAdded = true;
+            currentWord = this.getCurrentWord(interaction);
         } else {
             channelAllowlist.push(channelId);
             this.saveChannelAllowlist(channelAllowlist);
@@ -545,20 +613,20 @@ class DiscordBot {
                 channelName: interaction.channel?.name || channelId,
                 userName: interaction.user.username
             };
-            const newWord = gameLogic.resetChannelGame(channelId, context);
-            const missingPerms = this.getMissingPermissions(interaction.channel);
-            let replyContent = `> **Đã thêm phòng game nối từ, MoiChat sẽ trả lời mọi tin nhắn từ phòng này!**\n\n🎮 **Game mới đã bắt đầu!**\nTừ hiện tại: **${newWord}**`;
-            if (missingPerms.length > 0) {
-                replyContent += `\n\n⚠️ **Lưu ý: Bot đang thiếu một số quyền trong kênh này:**\n` +
-                    missingPerms.map(p => `• ❌ **${p}**`).join('\n') +
-                    `\nVui lòng cấp các quyền trên để Bot hoạt động đầy đủ tính năng!`;
-            }
-            await interaction.reply({
-                content: replyContent,
-                ephemeral: false
-            });
-            logger.info(`Thêm phòng mới ${channelId} và bắt đầu game với từ: ${newWord}`);
+            currentWord = gameLogic.resetChannelGame(channelId, context);
+            logger.info(`Thêm phòng mới ${channelId} và bắt đầu game với từ: ${currentWord}`);
         }
+
+        const channels = db.read('channels') || {};
+        const channelData = channels[channelId] || {};
+        const currentMode = channelData.mode || 'bot';
+        const missingPerms = this.getMissingPermissions(interaction.channel);
+
+        const payload = this.buildModeSelectionPayload(channelId, currentMode, currentWord, missingPerms, isAlreadyAdded);
+        await interaction.reply({
+            ...payload,
+            ephemeral: false
+        });
     }
 
     async handleNoituRemove(interaction) {
@@ -589,22 +657,22 @@ class DiscordBot {
 
     async handleHelp(interaction) {
         const helpEmbed = new EmbedBuilder()
-            .setTitle('🐧 Bot Nối Từ Tiếng Việt - Hướng dẫn sử dụng')
+            .setTitle('Bot Nối Từ Tiếng Việt - Hướng dẫn sử dụng')
             .setDescription('Game nối từ tiếng Việt 2 âm tiết — so tài từ vựng và thi đấu chuỗi nối từ!')
             .setColor(0x57F287)
             .addFields(
                 {
-                    name: '🎮 Lệnh Chơi Game & Quản Lý Kênh',
+                    name: 'Lệnh Chơi Game & Quản Lý Kênh',
                     value: [
-                        '`/noitu_add` — Thêm kênh hiện tại làm phòng nối từ *(Admin)*',
+                        '`/noitu_add` — Thêm phòng nối từ & chọn chế độ qua 2 nút bấm *(Admin)*',
+                        '`/noitu_mode` — Chuyển chế độ (Chơi với Bot / Đấu PvP) qua nút bấm *(Admin)*',
                         '`/noitu_remove` — Xóa phòng nối từ *(Admin)*',
-                        '`/noitu_mode` — Chuyển chế độ: Chơi với Bot hoặc PvP *(Admin)*',
                         '`/newgame` — Bắt đầu ván mới / Bỏ qua từ hiện tại'
                     ].join('\n'),
                     inline: false
                 },
                 {
-                    name: '🏆 Thống Kê & Bảng Xếp Hạng',
+                    name: 'Thống Kê & Bảng Xếp Hạng',
                     value: [
                         '`/leaderboard` — Xem bảng xếp hạng Top 10 *(theo chuỗi hoặc số trận thắng)*',
                         '`/stats` — Xem kỷ lục và thống kê cá nhân của bạn',
@@ -613,7 +681,7 @@ class DiscordBot {
                     inline: false
                 },
                 {
-                    name: '📖 Tiện Ích & Đóng Góp',
+                    name: 'Tiện Ích & Đóng Góp',
                     value: [
                         '`/tratu [từ]` — Tra cứu định nghĩa từ điển tiếng Việt',
                         '`/feedback` — Đóng góp từ còn thiếu, báo lỗi hoặc đề xuất tính năng',
@@ -622,12 +690,12 @@ class DiscordBot {
                     inline: false
                 },
                 {
-                    name: '📝 Luật Chơi Nhanh',
+                    name: 'Luật Chơi Nhanh',
                     value: '• Mỗi từ gồm đúng **2 âm tiết** (ví dụ: `học hỏi`, `hỏi han`).\n• Từ nối phải bắt đầu bằng **âm tiết cuối** của từ trước đó.\n• **Chế độ Bot:** Bạn và Bot thay phiên nối từ.\n• **Chế độ PvP:** Các thành viên trong kênh tự do nối từ với nhau.',
                     inline: false
                 }
             )
-            .setFooter({ text: 'Bot Nối Từ 🐧 | Chúc bạn chơi game vui vẻ!' })
+            .setFooter({ text: 'Bot Nối Từ | Chúc bạn chơi game vui vẻ!' })
             .setTimestamp();
 
         await interaction.reply({ embeds: [helpEmbed], ephemeral: false });
@@ -1119,26 +1187,95 @@ class DiscordBot {
 
     async handleNoituMode(interaction) {
         if (this.isDirectMessage(interaction.channel)) {
-            await interaction.reply({ content: 'Lệnh này chỉ dùng trong kênh server.', ephemeral: true });
+            await interaction.reply({ content: '❌ Lệnh này chỉ dùng trong kênh server.', ephemeral: true });
             return;
         }
         if (!this.hasGuildManagementPermission(interaction)) {
-            await interaction.reply({ content: '❌ Bạn cần quyền Manage Server để đổi chế độ.', ephemeral: true });
+            await this.replyNoPermission(interaction, '❌ Bạn cần quyền Manage Server để đổi chế độ.');
             return;
         }
-        const mode = interaction.options.getString('mode');
+
         const channelId = interaction.channel.id.toString();
+        const channelAllowlist = this.getChannelAllowlist();
+        let isAlreadyAdded = true;
+
+        if (!channelAllowlist.includes(channelId)) {
+            isAlreadyAdded = false;
+            channelAllowlist.push(channelId);
+            this.saveChannelAllowlist(channelAllowlist);
+            const context = {
+                guildName: interaction.guild?.name || 'Server',
+                channelName: interaction.channel?.name || channelId,
+                userName: interaction.user.username
+            };
+            gameLogic.resetChannelGame(channelId, context);
+        }
+
+        const modeOption = interaction.options.getString('mode');
         const channels = db.read('channels') || {};
         const ch = channels[channelId] || {};
-        ch.mode = mode;
-        channels[channelId] = ch;
-        db.store('channels', channels);
-        const label = mode === 'pvp' ? 'user vs user (PvP)' : 'user vs bot';
-        await interaction.reply({ content: `✅ Đã đặt chế độ cho kênh này: **${label}**.`, ephemeral: false });
 
-        const currentWord = this.getCurrentWord(interaction);
-        if (currentWord) {
-            await interaction.channel.send(`Từ hiện tại: **${currentWord}**`);
+        if (modeOption) {
+            ch.mode = modeOption;
+            channels[channelId] = ch;
+            db.store('channels', channels);
+            logger.info(`Admin ${interaction.user.tag || interaction.user.id} đã đổi mode phòng ${channelId} sang ${modeOption}`);
+        }
+
+        const currentMode = ch.mode || 'bot';
+        const currentWord = ch.word || this.getCurrentWord(interaction);
+        const missingPerms = this.getMissingPermissions(interaction.channel);
+
+        const payload = this.buildModeSelectionPayload(channelId, currentMode, currentWord, missingPerms, isAlreadyAdded);
+        await interaction.reply({ ...payload, ephemeral: false });
+    }
+
+    async handleSetModeButton(interaction) {
+        if (!this.hasGuildManagementPermission(interaction)) {
+            await interaction.reply({
+                content: '❌ Chỉ thành viên có quyền **Manage Server (Quản lý máy chủ)** mới có thể thay đổi chế độ chơi.',
+                ephemeral: true
+            });
+            return;
+        }
+
+        const isPvP = interaction.customId.startsWith('set_mode_pvp_');
+        const targetMode = isPvP ? 'pvp' : 'bot';
+        const targetChannelId = interaction.customId.replace(isPvP ? 'set_mode_pvp_' : 'set_mode_bot_', '');
+
+        const channelAllowlist = this.getChannelAllowlist();
+        if (!channelAllowlist.includes(targetChannelId)) {
+            channelAllowlist.push(targetChannelId);
+            this.saveChannelAllowlist(channelAllowlist);
+            const context = {
+                guildName: interaction.guild?.name || 'Server',
+                channelName: interaction.channel?.name || targetChannelId,
+                userName: interaction.user.username
+            };
+            gameLogic.resetChannelGame(targetChannelId, context);
+        }
+
+        const channels = db.read('channels') || {};
+        const ch = channels[targetChannelId] || {};
+        const oldMode = ch.mode || 'bot';
+
+        ch.mode = targetMode;
+        channels[targetChannelId] = ch;
+        db.store('channels', channels);
+
+        const currentWord = ch.word || (interaction.channel?.id === targetChannelId ? this.getCurrentWord(interaction) : null);
+        const missingPerms = interaction.channel ? this.getMissingPermissions(interaction.channel) : [];
+
+        const payload = this.buildModeSelectionPayload(targetChannelId, targetMode, currentWord, missingPerms, true);
+        await interaction.update(payload);
+
+        if (oldMode !== targetMode) {
+            const modeLabel = targetMode === 'pvp' ? '**Đấu PvP (Người vs Người)**' : '**Chơi với Bot**';
+            await interaction.followUp({
+                content: `Quản trị viên <@${interaction.user.id}> đã chuyển chế độ chơi phòng này sang ${modeLabel}.${currentWord ? `\nTừ hiện tại: **${currentWord}**` : ''}`,
+                ephemeral: false
+            });
+            logger.info(`Admin ${interaction.user.tag || interaction.user.id} đã đổi mode phòng ${targetChannelId} sang ${targetMode}`);
         }
     }
 
