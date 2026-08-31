@@ -273,11 +273,11 @@ class DiscordBot {
 
             // Danh sách status xoay vòng hiển thị trong thought bubble cạnh avatar
             const statuses = [
-                `🎮 Đã chơi ${totalGuessed} lượt từ`,
+                `🎮 Đã chơi ${totalGuessed} lượt với mọi người`,
                 '🐧 Bot Nối Từ Tiếng Việt',
                 '💡 Gõ /help để xem hướng dẫn',
-                `🌐 Phục vụ ${serverCount} máy chủ`,
-                '⚔️ Thử thách chuỗi nối từ dài nhất!'
+                `🌐 Đã có mặt tại ${serverCount} máy chủ`,
+                '⚔️ Cùng nhau nối từ!'
             ];
 
             const currentStatus = statuses[this._statusIndex % statuses.length];
