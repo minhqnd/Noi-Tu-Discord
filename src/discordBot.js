@@ -538,27 +538,27 @@ class DiscordBot {
 
         let descriptionText;
         if (isAlreadyAdded) {
-            descriptionText = `📌 Kênh <#${channelId}> đã có trong danh sách phòng chơi.`;
+            descriptionText = `Kênh <#${channelId}> đã có trong danh sách phòng chơi.`;
             if (currentWord) {
                 descriptionText += `\n\nTừ hiện tại: **${currentWord}**`;
             } else {
                 descriptionText += `\n\n⏳ Chưa có ván nào đang chạy. Gõ \`/newgame\` để bắt đầu chơi!`;
             }
         } else {
-            descriptionText = `✅ Đã thêm kênh <#${channelId}> làm phòng chơi nối từ.`;
+            descriptionText = `Đã thêm kênh <#${channelId}> làm phòng chơi nối từ.`;
             descriptionText += `\n\n⏳ Chọn chế độ chơi bên dưới, sau đó gõ \`/newgame\` để bắt đầu ván đầu tiên!`;
         }
 
         const embed = new EmbedBuilder()
-            .setTitle('⚙️ Cài Đặt Phòng Nối Từ')
+            .setTitle('Cài Đặt Phòng Nối Từ')
             .setColor(0x57F287)
             .setDescription(descriptionText)
             .addFields(
                 {
-                    name: '🎮 Chọn chế độ chơi (Bấm nút bên dưới)',
+                    name: 'Chọn chế độ chơi (Bấm nút bên dưới)',
                     value: [
-                        '• 🤖 **Chơi với Bot (Mặc định):** Người chơi nối từ trực tiếp với Bot (Bạn nối 1 từ ➔ Bot nối tiếp 1 từ).',
-                        '• ⚔️ **Đấu PvP (Người vs Người):** Các thành viên trong server tự do nối từ với nhau. Bot làm trọng tài kiểm tra từ, chấm điểm và ghi nhận chuỗi.'
+                        '• **Chơi với Bot (Mặc định):** Người chơi nối từ trực tiếp với Bot (Bạn nối 1 từ ➔ Bot nối tiếp 1 từ).',
+                        '• **Đấu PvP (Người vs Người):** Các thành viên trong server tự do nối từ với nhau. Bot làm trọng tài kiểm tra từ, chấm điểm và ghi nhận chuỗi.'
                     ].join('\n'),
                     inline: false
                 }
@@ -566,7 +566,7 @@ class DiscordBot {
 
         if (missingPerms && missingPerms.length > 0) {
             embed.addFields({
-                name: '⚠️ Lưu ý quyền hạn',
+                name: 'Lưu ý quyền hạn',
                 value: `Bot đang thiếu một số quyền trong kênh này:\n` +
                     missingPerms.map(p => `• ${p}`).join('\n') +
                     `\nVui lòng cấp đủ quyền để Bot hoạt động tốt nhất.`,
