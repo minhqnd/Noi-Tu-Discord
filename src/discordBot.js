@@ -146,8 +146,8 @@ class DiscordBot {
         await this.client.application.commands.set(this.getCommands());
         this.updateBotStatus();
 
-        // Định kỳ cập nhật trạng thái bot mỗi 1 phút
-        setInterval(() => this.updateBotStatus(), 1 * 60 * 1000);
+        // Định kỳ xoay vòng custom status (thought bubble) mỗi 30 giây
+        setInterval(() => this.updateBotStatus(), 30 * 1000);
 
         logger.info(`${this.client.user.tag} is now running!`);
     }
@@ -267,12 +267,27 @@ class DiscordBot {
             const correct = globalStats.total_words_guessed || 0;
             const wrong = globalStats.total_wrong_guesses || 0;
             const totalGuessed = (correct + wrong).toLocaleString('vi-VN');
+            const serverCount = this.client.guilds?.cache?.size || 0;
+
+            if (this._statusIndex === undefined) this._statusIndex = 0;
+
+            // Danh sách status xoay vòng hiển thị trong thought bubble cạnh avatar
+            const statuses = [
+                `🎮 Đã chơi ${totalGuessed} lượt từ`,
+                '🐧 Bot Nối Từ Tiếng Việt',
+                '💡 Gõ /help để xem hướng dẫn',
+                `🌐 Phục vụ ${serverCount} máy chủ`,
+                '⚔️ Thử thách chuỗi nối từ dài nhất!'
+            ];
+
+            const currentStatus = statuses[this._statusIndex % statuses.length];
+            this._statusIndex++;
 
             this.client.user.setPresence({
                 activities: [{
-                    name: '🎮 Nối từ Tiếng Việt',
-                    type: ActivityType.Playing,
-                    state: `Đã chơi ${totalGuessed} lượt cùng mọi người <3`,
+                    name: 'custom',
+                    type: ActivityType.Custom,
+                    state: currentStatus,
                 }],
                 status: 'online'
             });
