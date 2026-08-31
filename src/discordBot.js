@@ -536,14 +536,23 @@ class DiscordBot {
         const isBot = currentMode !== 'pvp';
         const modeLabel = isBot ? 'Chơi với Bot' : 'Đấu PvP (Người vs Người)';
 
+        let descriptionText;
+        if (isAlreadyAdded) {
+            descriptionText = `Kênh <#${channelId}> đã có trong danh sách phòng chơi.`;
+            if (currentWord) {
+                descriptionText += `\n\nTừ hiện tại: **${currentWord}**`;
+            } else {
+                descriptionText += `\n\n⏳ Chưa có ván nào đang chạy. Gõ \`/newgame\` để bắt đầu chơi!`;
+            }
+        } else {
+            descriptionText = `Đã thêm kênh <#${channelId}> làm phòng chơi nối từ.`;
+            descriptionText += `\n\n⏳ Chọn chế độ chơi bên dưới, sau đó gõ \`/newgame\` để bắt đầu ván đầu tiên!`;
+        }
+
         const embed = new EmbedBuilder()
             .setTitle('Cài Đặt Phòng Nối Từ')
             .setColor(0x57F287)
-            .setDescription(
-                isAlreadyAdded
-                    ? `Kênh <#${channelId}> đã có trong danh sách phòng chơi.\n\n${currentWord ? `Từ hiện tại: **${currentWord}**` : ''}`
-                    : `Đã thêm kênh <#${channelId}> làm phòng chơi nối từ.\n\n${currentWord ? `Ván mới đã bắt đầu!\nTừ bắt đầu: **${currentWord}**` : ''}`
-            )
+            .setDescription(descriptionText)
             .addFields(
                 {
                     name: 'Chọn chế độ chơi (Bấm nút bên dưới)',
@@ -608,13 +617,9 @@ class DiscordBot {
         } else {
             channelAllowlist.push(channelId);
             this.saveChannelAllowlist(channelAllowlist);
-            const context = {
-                guildName: interaction.guild?.name || 'Server',
-                channelName: interaction.channel?.name || channelId,
-                userName: interaction.user.username
-            };
-            currentWord = gameLogic.resetChannelGame(channelId, context);
-            logger.info(`Thêm phòng mới ${channelId} và bắt đầu game với từ: ${currentWord}`);
+            // Only add channel to allowlist — do NOT start a game yet
+            // Game will start when user sends /newgame or types the first word
+            logger.info(`Thêm phòng mới ${channelId} (chưa bắt đầu game)`);
         }
 
         const channels = db.read('channels') || {};
