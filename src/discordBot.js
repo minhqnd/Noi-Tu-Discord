@@ -1333,7 +1333,7 @@ class DiscordBot {
         const feedbackType = interaction.values[0];
 
         const placeholders = {
-            missing_word: 'Nhập từ cách nhau bằng dấu phẩy, ví dụ: khô cá, khô bò, bình minh',
+            missing_word: 'Bắt buộc: từ 2 âm tiết, cách nhau bằng dấu phẩy. VD: khô cá, khô bò, bình minh',
             bug: 'Mô tả lỗi bạn gặp phải: lỗi gì, khi nào xảy ra...',
             feature_request: 'Mô tả tính năng bạn muốn đề xuất...'
         };
@@ -1344,7 +1344,7 @@ class DiscordBot {
 
         const contentInput = new TextInputBuilder()
             .setCustomId('feedback_content')
-            .setLabel('Nội dung phản hồi')
+            .setLabel(feedbackType === 'missing_word' ? 'Từ còn thiếu (mỗi từ đúng 2 âm tiết)' : 'Nội dung phản hồi')
             .setStyle(TextInputStyle.Paragraph)
             .setPlaceholder(placeholders[feedbackType] || 'Mô tả chi tiết phản hồi của bạn...')
             .setRequired(true)
@@ -1788,7 +1788,8 @@ class DiscordBot {
 
     async handleFeedbackModalSubmit(interaction) {
         const feedbackType = interaction.customId.split('_').slice(2).join('_');
-        const content = interaction.fields.getTextInputValue('feedback_content');
+        const rawContent = interaction.fields.getTextInputValue('feedback_content');
+        const content = rawContent ? rawContent.trim() : '';
 
         const userId = interaction.user.id;
         const username = interaction.user.tag;
@@ -1801,53 +1802,95 @@ class DiscordBot {
         };
 
         const typeLabel = typeLabels[feedbackType] || 'Khác';
+
+        // Check if content is empty
+        if (!content) {
+            const embed = new EmbedBuilder()
+                .setTitle('❌ Nội dung không hợp lệ')
+                .setDescription('Nội dung phản hồi không được để trống.')
+                .setColor(0xED4245);
+            await interaction.reply({ embeds: [embed], ephemeral: true });
+            return;
+        }
+
+        // Strict format validation for missing_word
+        if (feedbackType === 'missing_word') {
+            const rawItems = content.split(/[,，;\n]+/).map(s => s.trim()).filter(Boolean);
+            const validWords = [];
+            const invalidItems = [];
+
+            for (const rawItem of rawItems) {
+                const normalized = gameLogic.normalizeVietnamese(rawItem);
+                const parts = normalized.split(/\s+/);
+                const isLettersOnly = /^[\p{L}\s]+$/u.test(rawItem);
+
+                if (parts.length === 2 && isLettersOnly) {
+                    validWords.push(normalized);
+                } else {
+                    invalidItems.push(rawItem);
+                }
+            }
+
+            if (rawItems.length === 0 || invalidItems.length > 0) {
+                const embed = new EmbedBuilder()
+                    .setTitle('❌ Sai format yêu cầu')
+                    .setDescription('Phản hồi đóng góp từ **bắt buộc phải theo đúng format** và chưa được gửi đi.')
+                    .setColor(0xED4245)
+                    .setTimestamp();
+
+                if (invalidItems.length > 0) {
+                    const invalidList = invalidItems.slice(0, 10).map(s => `• \`${s.substring(0, 50)}\``).join('\n');
+                    const remaining = invalidItems.length - 10;
+                    embed.addFields({
+                        name: '⚠️ Các mục không đúng format',
+                        value: invalidList + (remaining > 0 ? `\n... và ${remaining} mục khác` : ''),
+                        inline: false
+                    });
+                }
+
+                embed.addFields({
+                    name: '💡 Quy tắc format bắt buộc',
+                    value: '• Mỗi từ phải gồm **đúng 2 âm tiết** (tiếng Việt có nghĩa)\n' +
+                        '• Các từ phân cách nhau bằng **dấu phẩy** (`,`) hoặc **xuống dòng**\n' +
+                        '• Không gửi kèm chữ số hay ký tự đặc biệt\n\n' +
+                        '**Ví dụ đúng:** `khô cá, khô bò, bình minh`',
+                    inline: false
+                });
+
+                await interaction.reply({ embeds: [embed], ephemeral: true });
+                return;
+            }
+        } else if (content.length < 5) {
+            const embed = new EmbedBuilder()
+                .setTitle('❌ Nội dung quá ngắn')
+                .setDescription('Vui lòng mô tả chi tiết hơn (tối thiểu 5 ký tự) để chúng tôi có thể hỗ trợ.')
+                .setColor(0xED4245);
+            await interaction.reply({ embeds: [embed], ephemeral: true });
+            return;
+        }
+
         const fullContent = `[${typeLabel}] ${content}`;
 
         try {
             const feedbackId = gameLogic.storeFeedback(userId, username, fullContent, channelId);
 
-            // Pre-parse words for missing_word type to give user format feedback
-            let parsedWordCount = 0;
-            let hasInvalidFormat = false;
-            if (feedbackType === 'missing_word') {
-                const rawItems = content.split(/[,，;\n]+/).map(s => s.trim()).filter(Boolean);
-                for (const rawItem of rawItems) {
-                    const normalized = gameLogic.normalizeVietnamese(rawItem);
-                    const parts = normalized.split(/\s+/);
-                    if (parts.length === 2) {
-                        parsedWordCount++;
-                    }
-                }
-                if (parsedWordCount === 0) {
-                    hasInvalidFormat = true;
-                }
-            }
-
             let description = `Cảm ơn bạn đã gửi phản hồi! Chúng tôi sẽ xem xét và cải thiện.\n\n**Loại:** ${typeLabel}\n**ID phản hồi:** ${feedbackId}`;
 
-            if (feedbackType === 'missing_word' && parsedWordCount > 0) {
-                description += `\n\n📋 Đã nhận diện **${parsedWordCount}** từ hợp lệ. Admin sẽ xem xét và duyệt sớm!`;
+            if (feedbackType === 'missing_word') {
+                const rawItems = content.split(/[,，;\n]+/).map(s => s.trim()).filter(Boolean);
+                const uniqueWords = [...new Set(rawItems.map(item => gameLogic.normalizeVietnamese(item)))];
+                description += `\n\n📋 Đã nhận diện **${uniqueWords.length}** từ hợp lệ: ${uniqueWords.map(w => `\`${w}\``).join(', ')}. Admin sẽ xem xét và duyệt sớm!`;
             }
 
             const embed = new EmbedBuilder()
-                .setTitle(hasInvalidFormat ? '⚠️ Phản hồi đã gửi nhưng format chưa đúng' : '✅ Phản hồi đã được gửi')
+                .setTitle('✅ Phản hồi đã được gửi')
                 .setDescription(description)
-                .setColor(hasInvalidFormat ? 0xFFA500 : 0x00FF00)
+                .setColor(0x00FF00)
                 .setTimestamp();
-
-            if (hasInvalidFormat) {
-                embed.addFields({
-                    name: '💡 Hướng dẫn nhập từ đúng format',
-                    value: '**Mỗi từ gồm 2 âm tiết**, cách nhau bằng **dấu phẩy**.\n\n' +
-                        'Ví dụ: `khô cá, khô bò, bình minh`\n\n' +
-                        'Phản hồi vẫn được gửi tới admin, nhưng bạn có thể gửi lại với format đúng để được duyệt nhanh hơn!',
-                    inline: false
-                });
-            }
 
             await interaction.reply({ embeds: [embed], ephemeral: true });
 
-            // Set cooldown
+            // Set cooldown only upon successful feedback submission
             if (!this._feedbackCooldowns) this._feedbackCooldowns = new Map();
             this._feedbackCooldowns.set(userId, Date.now());
 
@@ -1888,8 +1931,11 @@ class DiscordBot {
         for (const rawItem of rawItems) {
             const normalized = gameLogic.normalizeVietnamese(rawItem);
             const parts = normalized.split(/\s+/);
-            if (parts.length === 2) {
-                parsedWords.push(normalized);
+            const isLettersOnly = /^[\p{L}\s]+$/u.test(rawItem);
+            if (parts.length === 2 && isLettersOnly) {
+                if (!parsedWords.includes(normalized)) {
+                    parsedWords.push(normalized);
+                }
             } else {
                 invalidItems.push(rawItem);
             }
