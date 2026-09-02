@@ -13,7 +13,7 @@ class GameEngine {
     // Build /newgame hint suffix when wordWrongCount reaches threshold
     getNewGameHint(wordWrongCount) {
         if (wordWrongCount >= GAME_CONSTANTS.WORD_WRONG_HINT_THRESHOLD) {
-            return '\n-# 🔄 Từ này quá khó? Gõ `/newgame` để đổi từ mới!';
+            return '\n-# 🔄 Từ này quá khó? Gõ `/hint` để nhận gợi ý hoặc `/newgame` để đổi từ mới!';
         }
         return '';
     }
@@ -23,9 +23,7 @@ class GameEngine {
         if (newStreak > 0 && newStreak % GAME_CONSTANTS.STREAK_PER_HINT === 0) {
             const result = db.addUserHint(userId, 1, GAME_CONSTANTS.MAX_HINTS);
             if (result.added) {
-                return `\n-# 🎁 Chuỗi đạt **${newStreak}**! Bạn nhận được **+1 lượt gợi ý** (\`/hint\`)! Kho: **${result.hints}/${GAME_CONSTANTS.MAX_HINTS}**`;
-            } else {
-                return `\n-# 🎁 Chuỗi đạt **${newStreak}**! Kho gợi ý của bạn đã đầy (**${GAME_CONSTANTS.MAX_HINTS}/${GAME_CONSTANTS.MAX_HINTS}**)`;
+                return `\n-# 🎁 Chuỗi đạt **${newStreak}**! Bạn nhận được **+1 lượt gợi ý**! Bạn hiện có: **${result.hints}/${GAME_CONSTANTS.MAX_HINTS}**`;
             }
         }
         return '';
@@ -197,7 +195,7 @@ class GameEngine {
 
         // Track player interaction
         db.trackPlayer(userId);
-        
+
         const startTime = Date.now();
         const normalizedPlayer = normalizeVietnamese(playerWord.trim());
         const logPfx = this.getLogPrefix(isDM, userId, gameData, context);
@@ -344,7 +342,7 @@ class GameEngine {
         // Validate in dictionary
         if (!this.validateWordInDictionary(playerWord)) {
             db.incrementStat('total_wrong_guesses', 1);
-            
+
             try {
                 // Lưu từ sai vào file wrong_words.txt ở thư mục gốc (hoặc thư mục data)
                 const logPath = path.join(__dirname, '..', 'wrong_words.txt');
@@ -354,7 +352,7 @@ class GameEngine {
             } catch (err) {
                 this.logger.error('Lỗi try-catch khi lưu từ sai:', err);
             }
-            
+
             userStats.wrongCount += 1;
             wordWrongCount += 1;
 
@@ -464,7 +462,7 @@ class GameEngine {
 
             // Check if this is an endword (no next word available)
             const nextWordAvailable = this.getWordStartingWith(this.lastWord(normalizedPlayer), history);
-            
+
             if (!nextWordAvailable) {
                 // User wins - they found an endword -> starts new game
                 db.incrementStat('total_games', 1);
@@ -476,8 +474,8 @@ class GameEngine {
                     word: newWord,
                     history: [],
                     wordWrongCount: 0,
-                    players: { 
-                        ...players, 
+                    players: {
+                        ...players,
                         [userId]: {
                             ...userStats,
                             currentStreak: userStats.currentStreak,
