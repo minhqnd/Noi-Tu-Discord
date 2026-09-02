@@ -2284,10 +2284,9 @@ class DiscordBot {
             if (totalApproved > 0) {
                 try {
                     const targetUser = await this.client.users.fetch(targetUserId);
-                    const addedList = result.added.join(', ');
                     const userEmbed = new EmbedBuilder()
                         .setTitle('✅ Từ của bạn đã được thêm vào từ điển!')
-                        .setDescription(`Các từ sau đã được duyệt và có hiệu lực ngay lập tức:\n\n**${addedList}**\n\nCảm ơn bạn đã đóng góp phát triển Bot Nối Từ ❤️`)
+                        .setDescription('Cảm ơn bạn đã đóng góp, từ đã được thêm và có hiệu lực ngay lập tức, chúc bạn chơi game vui vẻ <3')
                         .setColor(0x57F287)
                         .setFooter({ text: 'Bot Nối Từ 🐧' })
                         .setTimestamp();
@@ -2313,7 +2312,7 @@ class DiscordBot {
                 if (!feedback.replies) feedback.replies = [];
                 feedback.replies.push({
                     from: 'admin',
-                    content: `Đã duyệt ${totalApproved}/${totalAll} từ: ${result.added?.join(', ') || 'không có'}`,
+                    content: 'Cảm ơn bạn đã đóng góp, từ đã được thêm và có hiệu lực ngay lập tức, chúc bạn chơi game vui vẻ <3',
                     timestamp: new Date().toISOString()
                 });
                 gameLogic.saveFeedbacks(feedbacks);
@@ -2629,7 +2628,7 @@ class DiscordBot {
                         const replyFeedbackId = [...data.feedbackIds][0];
                         const userEmbed = new EmbedBuilder()
                             .setTitle('✅ Từ của bạn đã được thêm vào từ điển!')
-                            .setDescription(`Các từ sau đã được duyệt và có hiệu lực ngay lập tức:\n\n**${data.words.join(', ')}**\n\nCảm ơn bạn đã đóng góp phát triển Bot Nối Từ ❤️`)
+                            .setDescription('Cảm ơn bạn đã đóng góp, từ đã được thêm và có hiệu lực ngay lập tức, chúc bạn chơi game vui vẻ <3')
                             .setColor(0x57F287)
                             .setFooter({ text: 'Bot Nối Từ 🐧' })
                             .setTimestamp();
@@ -2657,7 +2656,7 @@ class DiscordBot {
                     if (!fb.replies) fb.replies = [];
                     fb.replies.push({
                         from: 'admin',
-                        content: `[Duyệt tổng] Đã duyệt ${totalApproved} từ: ${result.added?.join(', ') || 'không có'}`,
+                        content: 'Cảm ơn bạn đã đóng góp, từ đã được thêm và có hiệu lực ngay lập tức, chúc bạn chơi game vui vẻ <3',
                         timestamp: new Date().toISOString()
                     });
                 }
