@@ -43,7 +43,8 @@ class DB {
                 best_streak INTEGER DEFAULT 0,
                 wins INTEGER DEFAULT 0,
                 wrong_count INTEGER DEFAULT 0,
-                word_wrong_count INTEGER DEFAULT 0
+                word_wrong_count INTEGER DEFAULT 0,
+                hints INTEGER DEFAULT 0
             );
 
             CREATE TABLE IF NOT EXISTS channel_allowlist (
@@ -92,6 +93,10 @@ class DB {
             this.db.exec(`ALTER TABLE users ADD COLUMN word_wrong_count INTEGER DEFAULT 0`);
             logger.info('Migration: added word_wrong_count column to users table');
         }
+        if (!userCols.find(c => c.name === 'hints')) {
+            this.db.exec(`ALTER TABLE users ADD COLUMN hints INTEGER DEFAULT 0`);
+            logger.info('Migration: added hints column to users table');
+        }
 
         // Backfill tracked_players from existing channels and users data
         try {
@@ -136,11 +141,19 @@ class DB {
             getUser: this.db.prepare('SELECT * FROM users WHERE user_id = ?'),
             getAllUsers: this.db.prepare('SELECT * FROM users'),
             upsertUser: this.db.prepare(`
-                INSERT INTO users (user_id, word, history, current_streak, best_streak, wins, wrong_count, word_wrong_count)
-                VALUES (@user_id, @word, @history, @current_streak, @best_streak, @wins, @wrong_count, @word_wrong_count)
+                INSERT INTO users (user_id, word, history, current_streak, best_streak, wins, wrong_count, word_wrong_count, hints)
+                VALUES (@user_id, @word, @history, @current_streak, @best_streak, @wins, @wrong_count, @word_wrong_count, @hints)
                 ON CONFLICT(user_id) DO UPDATE SET
                     word = @word, history = @history, current_streak = @current_streak,
-                    best_streak = @best_streak, wins = @wins, wrong_count = @wrong_count, word_wrong_count = @word_wrong_count
+                    best_streak = @best_streak, wins = @wins, wrong_count = @wrong_count, word_wrong_count = @word_wrong_count, hints = @hints
+            `),
+            getUserHints: this.db.prepare('SELECT hints FROM users WHERE user_id = ?'),
+            addUserHint: this.db.prepare(`
+                INSERT INTO users (user_id, hints) VALUES (@user_id, @amount)
+                ON CONFLICT(user_id) DO UPDATE SET hints = MIN(hints + @amount, @max_hints)
+            `),
+            useUserHint: this.db.prepare(`
+                UPDATE users SET hints = hints - 1 WHERE user_id = ? AND hints > 0
             `),
 
             // Channel Allowlist
@@ -206,6 +219,7 @@ class DB {
             wins: row.wins || 0,
             wrongCount: row.wrong_count || 0,
             wordWrongCount: row.word_wrong_count || 0,
+            hints: row.hints || 0,
         };
     }
 
@@ -230,6 +244,7 @@ class DB {
             wins: data.wins || 0,
             wrong_count: data.wrongCount || 0,
             word_wrong_count: data.wordWrongCount || 0,
+            hints: data.hints || 0,
         };
     }
 
@@ -494,6 +509,65 @@ class DB {
         } catch (error) {
             logger.error('Error fetching tracked players count:', error);
             return 0;
+        }
+    }
+
+    /**
+     * Get user hints count.
+     * @param {string} userId
+     * @returns {number}
+     */
+    getUserHints(userId) {
+        if (!userId) return 0;
+        try {
+            const row = this._stmts.getUserHints.get(userId.toString());
+            return row ? (row.hints || 0) : 0;
+        } catch (error) {
+            logger.error(`Error fetching hints for user ${userId}:`, error);
+            return 0;
+        }
+    }
+
+    /**
+     * Add hints for a user (capped at maxHints).
+     * @param {string} userId
+     * @param {number} amount
+     * @param {number} maxHints
+     * @returns {{ added: boolean, hints: number }}
+     */
+    addUserHint(userId, amount = 1, maxHints = 3) {
+        if (!userId) return { added: false, hints: 0 };
+        try {
+            const current = this.getUserHints(userId);
+            if (current >= maxHints) {
+                return { added: false, hints: current };
+            }
+            this._stmts.addUserHint.run({
+                user_id: userId.toString(),
+                amount: amount,
+                max_hints: maxHints
+            });
+            const updated = this.getUserHints(userId);
+            return { added: updated > current, hints: updated };
+        } catch (error) {
+            logger.error(`Error adding hints for user ${userId}:`, error);
+            return { added: false, hints: 0 };
+        }
+    }
+
+    /**
+     * Consume 1 hint from user if available.
+     * @param {string} userId
+     * @returns {boolean}
+     */
+    useUserHint(userId) {
+        if (!userId) return false;
+        try {
+            const result = this._stmts.useUserHint.run(userId.toString());
+            return result.changes > 0;
+        } catch (error) {
+            logger.error(`Error using hint for user ${userId}:`, error);
+            return false;
         }
     }
 

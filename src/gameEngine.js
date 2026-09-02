@@ -18,6 +18,26 @@ class GameEngine {
         return '';
     }
 
+    // Award hint token when streak reaches milestones (e.g. 10, 20, 30...)
+    checkHintReward(userId, newStreak) {
+        if (newStreak > 0 && newStreak % GAME_CONSTANTS.STREAK_PER_HINT === 0) {
+            const result = db.addUserHint(userId, 1, GAME_CONSTANTS.MAX_HINTS);
+            if (result.added) {
+                return `\n-# 🎁 Chuỗi đạt **${newStreak}**! Bạn nhận được **+1 lượt gợi ý** (\`/hint\`)! Kho: **${result.hints}/${GAME_CONSTANTS.MAX_HINTS}**`;
+            } else {
+                return `\n-# 🎁 Chuỗi đạt **${newStreak}**! Kho gợi ý của bạn đã đầy (**${GAME_CONSTANTS.MAX_HINTS}/${GAME_CONSTANTS.MAX_HINTS}**)`;
+            }
+        }
+        return '';
+    }
+
+    // Get a valid next word suggestion for current game
+    getHint(currentWord, history = []) {
+        if (!currentWord) return null;
+        const last = this.lastWord(currentWord);
+        return this.getWordStartingWith(last, history);
+    }
+
     getLogPrefix(isDM, userId, gameData, context) {
         if (context) {
             if (isDM) {
@@ -445,11 +465,12 @@ class GameEngine {
                     wins: wins,
                     showWins: true
                 });
+                const hintBonus = this.checkHintReward(userId, userStats.currentStreak);
 
                 return {
                     type: RESPONSE_TYPES.SUCCESS,
                     code: RESPONSE_CODES.WIN,
-                    message: `${statsLine}\n🏆 **THẮNG!** Từ "${this.lastWord(normalizedPlayer)}" không còn từ nào để nối tiếp!`,
+                    message: `${statsLine}\n🏆 **THẮNG!** Từ "${this.lastWord(normalizedPlayer)}" không còn từ nào để nối tiếp!${hintBonus}`,
                     currentWord: newWord,
                     gameData: newGameData
                 };
@@ -468,11 +489,12 @@ class GameEngine {
                 currentStreak: userStats.currentStreak || 0,
                 bestStreak: userStats.bestStreak || 0
             });
+            const hintBonus = this.checkHintReward(userId, userStats.currentStreak);
 
             return {
                 type: RESPONSE_TYPES.SUCCESS,
                 code: RESPONSE_CODES.OK,
-                message: statsLine,
+                message: `${statsLine}${hintBonus}`,
                 gameData: newGameData
             };
         }
@@ -518,11 +540,12 @@ class GameEngine {
                 bestStreak: best,
                 isDM: isDM
             });
+            const hintBonus = this.checkHintReward(userId, nextStreak);
 
             return {
                 type: RESPONSE_TYPES.SUCCESS,
                 code: RESPONSE_CODES.OK,
-                message: `${statsLine}\n**BẠN ĐÃ THẮNG!** Từ cuối "${this.lastWord(normalizedPlayer)}" không còn từ nào để nối tiếp.`,
+                message: `${statsLine}\n**BẠN ĐÃ THẮNG!** Từ cuối "${this.lastWord(normalizedPlayer)}" không còn từ nào để nối tiếp.${hintBonus}`,
                 currentWord: newWord,
                 gameData: newGameData
             };
@@ -605,11 +628,12 @@ class GameEngine {
             bestStreak: userStats.bestStreak,
             isDM: isDM
         });
+        const hintBonus = this.checkHintReward(userId, userStats.currentStreak);
 
         return {
             type: RESPONSE_TYPES.SUCCESS,
             code: RESPONSE_CODES.OK,
-            message: statsLine,
+            message: `${statsLine}${hintBonus}`,
             currentWord: currentWord,
             gameData: newGameData
         };

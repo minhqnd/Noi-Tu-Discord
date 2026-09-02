@@ -166,6 +166,52 @@ function saveFeedbacks(feedbacks) {
     db.store('feedbacks', feedbacks);
 }
 
+function getHint(idChannel, idUser, isDM = false) {
+    if (isDM) {
+        if (!idUser) return { success: false, code: 'no_game', message: 'Chưa có thông tin người chơi.' };
+        const users = db.read('users') || {};
+        const userData = users[idUser.toString()];
+        if (!userData || !userData.word) {
+            return { success: false, code: 'no_game', message: 'Bạn chưa có ván đấu nào đang diễn ra trong DM. Hãy nhắn 1 từ bất kỳ để bắt đầu!' };
+        }
+        const suggestion = gameEngine.getHint(userData.word, userData.history || []);
+        if (!suggestion) {
+            return {
+                success: false,
+                code: 'no_continuation',
+                currentWord: userData.word,
+                message: `Từ hiện tại **"${userData.word}"** không còn từ nào để nối tiếp. Bạn có thể dùng \`/newgame\` để đổi từ mới!`
+            };
+        }
+        return {
+            success: true,
+            currentWord: userData.word,
+            suggestedWord: suggestion
+        };
+    } else {
+        if (!idChannel) return { success: false, code: 'no_game', message: 'Chưa có thông tin kênh.' };
+        const channels = db.read('channels') || {};
+        const chData = channels[idChannel.toString()];
+        if (!chData || !chData.word) {
+            return { success: false, code: 'no_game', message: 'Kênh này chưa có ván đấu nào đang diễn ra. Hãy nhắn 1 từ bất kỳ hoặc dùng \`/newgame\` để bắt đầu!' };
+        }
+        const suggestion = gameEngine.getHint(chData.word, chData.history || []);
+        if (!suggestion) {
+            return {
+                success: false,
+                code: 'no_continuation',
+                currentWord: chData.word,
+                message: `Từ hiện tại **"${chData.word}"** không còn từ nào để nối tiếp. Bạn có thể dùng \`/newgame\` để đổi từ mới!`
+            };
+        }
+        return {
+            success: true,
+            currentWord: chData.word,
+            suggestedWord: suggestion
+        };
+    }
+}
+
 module.exports = {
     // Game logic functions
     checkChannel,
@@ -176,6 +222,7 @@ module.exports = {
     getAllFeedbacks,
     markFeedbackAsReviewed,
     saveFeedbacks,
+    getHint,
     tratu,
     addWord,
     normalizeVietnamese

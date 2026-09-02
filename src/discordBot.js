@@ -4,6 +4,7 @@ const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder
 const { setupLogger, GAME_CONSTANTS, PERMISSIONS } = require('./utils');
 const gameLogic = require('./gameLogic');
 const db = require('./db');
+const topggService = require('./topggService');
 
 const logger = setupLogger('discord_bot');
 const OWNER_ID = process.env.OWNER_ID;
@@ -189,6 +190,11 @@ class DiscordBot {
             {
                 name: 'newgame',
                 description: 'Reset nối từ - bắt đầu game mới',
+                contexts: [COMMAND_CONTEXTS.GUILD, COMMAND_CONTEXTS.BOT_DM]
+            },
+            {
+                name: 'hint',
+                description: 'Nhận gợi ý từ nối tiếp (yêu cầu có lượt tích lũy & vote Top.gg)',
                 contexts: [COMMAND_CONTEXTS.GUILD, COMMAND_CONTEXTS.BOT_DM]
             },
             {
@@ -478,6 +484,9 @@ class DiscordBot {
                     case 'newgame':
                         await this.handleNewgame(interaction);
                         break;
+                    case 'hint':
+                        await this.handleHint(interaction);
+                        break;
                     case 'stats':
                         await this.handleStats(interaction);
                         break;
@@ -719,7 +728,8 @@ class DiscordBot {
                         '`/noitu_add` — Thêm phòng nối từ & chọn chế độ qua 2 nút bấm *(Admin)*',
                         '`/noitu_mode` — Chuyển chế độ (Chơi với Bot / Đấu PvP) qua nút bấm *(Admin)*',
                         '`/noitu_remove` — Xóa phòng nối từ *(Admin)*',
-                        '`/newgame` — Bắt đầu ván mới / Bỏ qua từ hiện tại'
+                        '`/newgame` — Bắt đầu ván mới / Bỏ qua từ hiện tại',
+                        '`/hint` — Gợi ý từ nối tiếp (tích lũy từ chuỗi & vote Top.gg)'
                     ].join('\n'),
                     inline: false
                 },
@@ -894,14 +904,112 @@ class DiscordBot {
         }
     }
 
+    async handleHint(interaction) {
+        const userId = interaction.user.id;
+        const isDM = this.isDirectMessage(interaction.channel);
+        const channelId = interaction.channel?.id?.toString();
+
+        // Check channel allowlist if not DM
+        if (!isDM && !this.isChannelAllowed(channelId)) {
+            return await interaction.reply({
+                content: '> **Kênh này chưa được thêm vào game nối từ!** Hãy nhờ Quản trị viên dùng lệnh `/noitu_add` để bắt đầu.',
+                ephemeral: true
+            });
+        }
+
+        // Get game hint
+        const hintResult = gameLogic.getHint(channelId, userId, isDM);
+        if (!hintResult.success) {
+            return await interaction.reply({
+                content: `> ${hintResult.message}`,
+                ephemeral: true
+            });
+        }
+
+        const userHints = db.getUserHints(userId);
+        const voteUrl = topggService.getVoteUrl();
+
+        // Case 1: User has 0 hints in inventory
+        if (userHints < 1) {
+            const row = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setLabel('🌟 Vote Bot trên Top.gg')
+                    .setStyle(ButtonStyle.Link)
+                    .setURL(voteUrl)
+            );
+
+            return await interaction.reply({
+                content: [
+                    '💡 **Bạn chưa có lượt gợi ý nào!**',
+                    `> Kho hiện tại của bạn: **0/${GAME_CONSTANTS.MAX_HINTS}** lượt.`,
+                    `> 🎯 **Cách nhận lượt gợi ý:** Cứ mỗi mốc **10 từ nối đúng** trong chuỗi (10, 20, 30...), bạn sẽ được thưởng **+1 lượt gợi ý** (tối đa giữ ${GAME_CONSTANTS.MAX_HINTS} lượt).`,
+                    '',
+                    '-# 🌟 Bạn có thể Vote cho Bot trên Top.gg để ủng hộ chúng mình phát triển thêm nhé!'
+                ].join('\n'),
+                components: [row],
+                ephemeral: true
+            });
+        }
+
+        // Case 2: User has >= 1 hints, check Top.gg vote status
+        const voteCheck = await topggService.checkUserVote(userId);
+        if (!voteCheck.hasVoted) {
+            const row = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setLabel('🗳️ Vote ngay trên Top.gg (Mở khóa 12h)')
+                    .setStyle(ButtonStyle.Link)
+                    .setURL(voteUrl)
+            );
+
+            return await interaction.reply({
+                content: [
+                    '🔒 **Lượt gợi ý chưa được mở khóa!**',
+                    `> Bạn đang có **${userHints}/${GAME_CONSTANTS.MAX_HINTS}** lượt gợi ý sẵn sàng trong kho.`,
+                    '> 🗳️ Để sử dụng gợi ý, bạn cần **Vote cho bot trên Top.gg** (mỗi 12 tiếng vote 1 lần).',
+                    '',
+                    '👉 **Bấm nút bên dưới để Vote**, sau đó quay lại gõ lệnh `/hint` để nhận từ nối tiếp nhé!'
+                ].join('\n'),
+                components: [row],
+                ephemeral: true
+            });
+        }
+
+        // Case 3: User has hints AND has voted on Top.gg
+        db.useUserHint(userId);
+        const remainingHints = db.getUserHints(userId);
+
+        logger.info(`[Hint] User @${interaction.user.username} (${userId}) used hint: '${hintResult.currentWord}' -> '${hintResult.suggestedWord}'. Remaining: ${remainingHints}`);
+
+        return await interaction.reply({
+            content: [
+                '💡 **GỢI Ý TỪ NỐI TIẾP (Bí mật):**',
+                `> Từ hiện tại trong phòng: **${hintResult.currentWord}**`,
+                `> Bạn có thể nối tiếp bằng: **${hintResult.suggestedWord}**`,
+                '',
+                `- ℹ️ Bạn còn lại **${remainingHints}/${GAME_CONSTANTS.MAX_HINTS}** lượt gợi ý. *(Tin nhắn này chỉ mình bạn nhìn thấy)*`
+            ].join('\n'),
+            ephemeral: true
+        });
+    }
+
     async handleStats(interaction) {
         const userId = interaction.user.id;
+        const hints = db.getUserHints(userId);
+        let voteBadge = '⏳ Đang kiểm tra...';
+        try {
+            const voteCheck = await topggService.checkUserVote(userId);
+            voteBadge = voteCheck.hasVoted ? '✅ Đã Vote' : '❌ Chưa Vote';
+        } catch (e) {
+            voteBadge = '❓ Chưa kiểm tra';
+        }
+        const hintLine = `> 💡 Lượt gợi ý: **${hints}/${GAME_CONSTANTS.MAX_HINTS}** | Top.gg: **${voteBadge}**`;
+
         if (this.isDirectMessage(interaction.channel)) {
             const users = db.read('users') || {};
             const dataUser = users[userId] || { word: null, history: [], currentStreak: 0, bestStreak: 0, wins: 0, wrongCount: 0 };
             const heading = `Thống kê của ${interaction.user}`;
             const stats = `> Chuỗi hiện tại: **${dataUser.currentStreak || 0}** | Cao nhất: **${dataUser.bestStreak || 0}** | Thắng: **${dataUser.wins || 0}**`;
-            await interaction.reply({ content: `${heading}\n${stats}`, ephemeral: false });
+            await interaction.reply({ content: `${heading}\n${stats}\n${hintLine}`, ephemeral: false });
 
             if (dataUser.word) {
                 await interaction.channel.send(`Từ hiện tại: **${dataUser.word}**`);
@@ -914,7 +1022,7 @@ class DiscordBot {
             const me = players[userId] || { currentStreak: 0, bestStreak: 0, wins: 0, wrongCount: 0 };
             const heading = `Thống kê của ${interaction.user} trong kênh này`;
             const stats = `> Chuỗi hiện tại: **${me.currentStreak || 0}** | Cao nhất: **${me.bestStreak || 0}** | Thắng: **${me.wins || 0}**`;
-            await interaction.reply({ content: `${heading}\n${stats}`, ephemeral: false });
+            await interaction.reply({ content: `${heading}\n${stats}\n${hintLine}`, ephemeral: false });
 
             if (ch.word) {
                 await interaction.channel.send(`Từ hiện tại: **${ch.word}**`);
