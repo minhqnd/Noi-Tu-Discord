@@ -3033,7 +3033,8 @@ class DiscordBot {
                     .setColor(response.type === 'success' ? 0x00FF00 : response.type === 'error' ? (response.streakReset || response.code === 'loss' ? 0xFF0000 : 0xFFFF00) : 0x0099FF);
                 await message.reply({ embeds: [embed] });
                 if (response.currentWord) {
-                    await message.channel.send(`Từ hiện tại: **${response.currentWord}**`);
+                    const label = response.type === 'success' ? 'Từ mới' : 'Từ hiện tại';
+                    await message.channel.send(`${label}: **${response.currentWord}**`);
                 }
             } else {
                 if (this.isChannelAllowed(channelId)) {
@@ -3093,7 +3094,8 @@ class DiscordBot {
                             .setColor(response.type === 'success' ? 0x00FF00 : response.type === 'error' ? (response.streakReset || response.code === 'loss' ? 0xFF0000 : 0xFFFF00) : 0x0099FF);
                         await message.reply({ embeds: [embed] });
                         if (response.currentWord) {
-                            await message.channel.send(`Từ hiện tại: **${response.currentWord}**`);
+                            const label = response.type === 'success' ? 'Từ mới' : 'Từ hiện tại';
+                            await message.channel.send(`${label}: **${response.currentWord}**`);
                         }
                     }
                 }
@@ -3118,7 +3120,7 @@ class DiscordBot {
                     .setColor(0x00FF00);
                 await message.reply({ embeds: [embed] });
                 if (response.currentWord) {
-                    await message.channel.send(`🎮 **Game mới bắt đầu!**\nTừ hiện tại: **${response.currentWord}**`);
+                    await message.channel.send(`**Game mới bắt đầu!**\nTừ hiện tại: **${response.currentWord}**`);
                 }
             } else {
                 const reactionEmoji = response.code === 'invalid_format' ? '⚠️' : response.type === 'error' ? '❌' : 'ℹ️';
