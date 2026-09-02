@@ -2411,40 +2411,69 @@ class DiscordBot {
                 return;
             }
 
-            // Parse all words from all pending feedbacks, tracking which user submitted each
-            const wordMap = new Map(); // word -> { users: Set<{userId, username, feedbackId}> }
-            const allParsedWords = [];
+            // Collect feedbacks and words in batches (max 25 words due to Discord SelectMenu limit)
+            const wordMap = new Map(); // word -> { users: [{ userId, username, feedbackId }] }
+            const batchWords = [];
+            const batchFeedbacks = [];
 
             for (const fb of pendingWordFeedbacks) {
                 const rawContent = fb.content.replace('[Từ còn thiếu] ', '');
                 const rawItems = rawContent.split(/[,，;\n]+/).map(s => s.trim()).filter(Boolean);
+                const fbWords = [];
 
                 for (const rawItem of rawItems) {
                     const normalized = gameLogic.normalizeVietnamese(rawItem);
                     const parts = normalized.split(/\s+/);
                     if (parts.length === 2) {
-                        if (!wordMap.has(normalized)) {
-                            wordMap.set(normalized, { users: [] });
-                            allParsedWords.push(normalized);
-                        }
-                        const entry = wordMap.get(normalized);
-                        if (!entry.users.find(u => u.userId === fb.userId && u.feedbackId === fb.id)) {
-                            entry.users.push({ userId: fb.userId, username: fb.username, feedbackId: fb.id });
-                        }
+                        fbWords.push(normalized);
+                    }
+                }
+
+                if (fbWords.length === 0) {
+                    // Empty or non 2-word feedback: include in batch so it doesn't block the pending queue
+                    batchFeedbacks.push(fb);
+                    continue;
+                }
+
+                // Check how many new unique words this feedback would introduce
+                const newWords = fbWords.filter(w => !wordMap.has(w));
+
+                // If adding this feedback exceeds 25 words, leave it for the next batch
+                if (batchWords.length > 0 && batchWords.length + newWords.length > 25) {
+                    break;
+                }
+
+                batchFeedbacks.push(fb);
+                for (const w of fbWords) {
+                    if (!wordMap.has(w)) {
+                        if (batchWords.length >= 25) break;
+                        wordMap.set(w, { users: [] });
+                        batchWords.push(w);
+                    }
+                    const entry = wordMap.get(w);
+                    if (entry && !entry.users.find(u => u.userId === fb.userId && u.feedbackId === fb.id)) {
+                        entry.users.push({ userId: fb.userId, username: fb.username, feedbackId: fb.id });
                     }
                 }
             }
 
-            if (allParsedWords.length === 0) {
-                await interaction.reply({ content: '⚠️ Không parse được từ hợp lệ nào từ các feedback pending.', ephemeral: true });
+            if (batchWords.length === 0) {
+                const msg = '⚠️ Không parse được từ hợp lệ nào từ các feedback pending.';
+                if (interaction.deferred || interaction.replied) {
+                    await interaction.followUp({ content: msg, ephemeral: true });
+                } else {
+                    await interaction.reply({ content: msg, ephemeral: true });
+                }
                 return;
             }
 
+            const remainingCount = pendingWordFeedbacks.length - batchFeedbacks.length;
+
             // Build embed
             const embed = new EmbedBuilder()
-                .setTitle(`📋 Duyệt tổng — ${allParsedWords.length} từ từ ${pendingWordFeedbacks.length} feedback`)
+                .setTitle(`📋 Duyệt tổng — Đợt này: ${batchWords.length} từ (${batchFeedbacks.length}/${pendingWordFeedbacks.length} feedback)`)
                 .setDescription(
-                    allParsedWords.slice(0, 30).map(w => {
+                    batchWords.map(w => {
                         const info = wordMap.get(w);
                         const userNames = [...new Set(info.users.map(u => u.username))];
                         return `• **${w}** _(${userNames.join(', ')})_`;
@@ -2453,19 +2482,19 @@ class DiscordBot {
                 .setColor(0x5865F2)
                 .setTimestamp();
 
-            if (allParsedWords.length > 25) {
+            if (remainingCount > 0) {
                 embed.addFields({
-                    name: '⚠️ Giới hạn',
-                    value: `Chỉ hiển thị 25/${allParsedWords.length} từ đầu tiên trong select menu. Các từ còn lại sẽ cần duyệt riêng.`,
+                    name: '📦 Duyệt lần lượt theo đợt (tối đa 25 từ/đợt)',
+                    value: `Đợt này xử lý **${batchWords.length} từ** từ **${batchFeedbacks.length} feedback**.\nCòn lại **${remainingCount} feedback** đang chờ. Sau khi duyệt xong đợt này bot sẽ hiển thị nút để duyệt tiếp.`,
                     inline: false
                 });
             }
 
             // Select menu (max 25)
-            const selectOptions = allParsedWords.slice(0, 25).map(word => ({
+            const selectOptions = batchWords.map(word => ({
                 label: word,
                 value: word,
-                description: wordMap.get(word).users.map(u => u.username).join(', ').substring(0, 50),
+                description: (wordMap.get(word)?.users?.map(u => u.username).join(', ') || '').substring(0, 50),
                 default: true
             }));
 
@@ -2478,7 +2507,7 @@ class DiscordBot {
 
             const approveBtn = new ButtonBuilder()
                 .setCustomId('bulk_approve')
-                .setLabel(`✅ Duyệt tất cả (${Math.min(allParsedWords.length, 25)})`)
+                .setLabel(`✅ Duyệt đợt này (${batchWords.length})`)
                 .setStyle(ButtonStyle.Success);
 
             const components = [
@@ -2489,17 +2518,25 @@ class DiscordBot {
             // Store bulk state
             if (!this._pendingBulkApproval) this._pendingBulkApproval = {};
             this._pendingBulkApproval = {
-                allWords: allParsedWords.slice(0, 25),
-                selectedWords: [...allParsedWords.slice(0, 25)],
+                allWords: [...batchWords],
+                selectedWords: [...batchWords],
                 wordMap,
-                feedbackIds: pendingWordFeedbacks.map(f => f.id)
+                feedbackIds: batchFeedbacks.map(f => f.id)
             };
 
-            await interaction.reply({ embeds: [embed], components, ephemeral: true });
-            logger.info(`Admin opened bulk review: ${allParsedWords.length} words from ${pendingWordFeedbacks.length} feedbacks`);
+            if (interaction.deferred || interaction.replied) {
+                await interaction.followUp({ embeds: [embed], components, ephemeral: true });
+            } else {
+                await interaction.reply({ embeds: [embed], components, ephemeral: true });
+            }
+            logger.info(`Admin opened bulk review batch: ${batchWords.length} words from ${batchFeedbacks.length} feedbacks (${remainingCount} remaining)`);
         } catch (error) {
             logger.error(`Failed to open bulk review: ${error.message}`);
-            await interaction.reply({ content: `❌ Lỗi: ${error.message}`, ephemeral: true });
+            if (interaction.deferred || interaction.replied) {
+                await interaction.followUp({ content: `❌ Lỗi: ${error.message}`, ephemeral: true });
+            } else {
+                await interaction.reply({ content: `❌ Lỗi: ${error.message}`, ephemeral: true });
+            }
         }
     }
 
@@ -2537,7 +2574,7 @@ class DiscordBot {
 
         const approveBtn = new ButtonBuilder()
             .setCustomId('bulk_approve')
-            .setLabel(`✅ Duyệt tất cả (${selectedWords.length})`)
+            .setLabel(`✅ Duyệt đợt này (${selectedWords.length})`)
             .setStyle(ButtonStyle.Success);
 
         await interaction.update({
@@ -2584,24 +2621,6 @@ class DiscordBot {
                 resultDesc += `❌ **Không hợp lệ (${result.invalid.length}):** ${result.invalid.join(', ')}\n`;
             }
 
-            // Update embed
-            const updatedEmbed = new EmbedBuilder()
-                .setTitle(`📋 Duyệt tổng — Hoàn tất`)
-                .setDescription(resultDesc || 'Không có từ nào được thêm.')
-                .setColor(totalApproved > 0 ? 0x57F287 : 0xED4245)
-                .setTimestamp();
-
-            const disabledBtn = new ButtonBuilder()
-                .setCustomId('bulk_approve_done')
-                .setLabel(`✅ Đã duyệt ${totalApproved} từ`)
-                .setStyle(ButtonStyle.Success)
-                .setDisabled(true);
-
-            await interaction.editReply({
-                embeds: [updatedEmbed],
-                components: [new ActionRowBuilder().addComponents(disabledBtn)]
-            });
-
             // Notify each user whose words were approved
             if (totalApproved > 0 && bulk.wordMap) {
                 // Group approved words by user
@@ -2647,7 +2666,7 @@ class DiscordBot {
                 }
             }
 
-            // Mark all related feedbacks as resolved + save reply history
+            // Mark feedbacks in THIS batch as resolved + save reply history
             const feedbacks = gameLogic.getAllFeedbacks();
             for (const fbId of bulk.feedbackIds) {
                 const fb = feedbacks.find(f => f.id === fbId);
@@ -2663,10 +2682,50 @@ class DiscordBot {
             }
             gameLogic.saveFeedbacks(feedbacks);
 
-            // Clean up
+            // Clean up pending state
             this._pendingBulkApproval = null;
 
-            logger.info(`Admin bulk approved ${totalApproved} words from ${bulk.feedbackIds.length} feedbacks`);
+            // Check remaining pending feedbacks
+            const remainingCount = feedbacks.filter(
+                f => f.status === 'pending' && f.content.startsWith('[Từ còn thiếu]')
+            ).length;
+
+            if (remainingCount > 0) {
+                resultDesc += `\n📦 **Còn lại ${remainingCount} feedback đang chờ.** Bấm nút bên dưới để duyệt tiếp đợt sau!`;
+            } else {
+                resultDesc += `\n🎉 **Đã duyệt hết tất cả feedback "Từ còn thiếu"!**`;
+            }
+
+            // Update embed with result and continuation button
+            const updatedEmbed = new EmbedBuilder()
+                .setTitle(`📋 Duyệt tổng — Hoàn tất đợt`)
+                .setDescription(resultDesc || 'Không có từ nào được thêm.')
+                .setColor(totalApproved > 0 ? 0x57F287 : 0xED4245)
+                .setTimestamp();
+
+            const actionButtons = [
+                new ButtonBuilder()
+                    .setCustomId('bulk_approve_done')
+                    .setLabel(`✅ Đã duyệt ${totalApproved} từ`)
+                    .setStyle(ButtonStyle.Success)
+                    .setDisabled(true)
+            ];
+
+            if (remainingCount > 0) {
+                actionButtons.push(
+                    new ButtonBuilder()
+                        .setCustomId('bulk_review')
+                        .setLabel(`⏭️ Duyệt tiếp (${remainingCount} feedback còn lại)`)
+                        .setStyle(ButtonStyle.Primary)
+                );
+            }
+
+            await interaction.editReply({
+                embeds: [updatedEmbed],
+                components: [new ActionRowBuilder().addComponents(actionButtons)]
+            });
+
+            logger.info(`Admin bulk approved ${totalApproved} words from ${bulk.feedbackIds.length} feedbacks (${remainingCount} remaining)`);
         } catch (error) {
             logger.error(`Failed to bulk approve: ${error.message}`);
             try {
