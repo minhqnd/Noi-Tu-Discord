@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActivityType, ChannelType, Partials, PermissionFlagsBits } = require('discord.js');
 const { setupLogger, GAME_CONSTANTS, PERMISSIONS } = require('./utils');
 const gameLogic = require('./gameLogic');
@@ -2515,14 +2517,14 @@ class DiscordBot {
                 new ActionRowBuilder().addComponents(approveBtn)
             ];
 
-            // Store bulk state
-            if (!this._pendingBulkApproval) this._pendingBulkApproval = {};
-            this._pendingBulkApproval = {
+            // Store bulk state on disk (persists across PM2 clusters and restarts)
+            const bulkState = {
                 allWords: [...batchWords],
                 selectedWords: [...batchWords],
                 wordMap,
                 feedbackIds: batchFeedbacks.map(f => f.id)
             };
+            this._saveBulkState(bulkState);
 
             if (interaction.deferred || interaction.replied) {
                 await interaction.followUp({ embeds: [embed], components, ephemeral: true });
@@ -2540,6 +2542,46 @@ class DiscordBot {
         }
     }
 
+    _saveBulkState(bulkState) {
+        try {
+            const filePath = path.join(__dirname, '..', 'data_bulk.json');
+            if (!bulkState) {
+                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+                this._pendingBulkApproval = null;
+                return;
+            }
+            const serializable = {
+                allWords: bulkState.allWords || [],
+                selectedWords: bulkState.selectedWords || [],
+                wordMap: bulkState.wordMap instanceof Map ? Object.fromEntries(bulkState.wordMap) : (bulkState.wordMap || {}),
+                feedbackIds: bulkState.feedbackIds || []
+            };
+            fs.writeFileSync(filePath, JSON.stringify(serializable), 'utf-8');
+            this._pendingBulkApproval = bulkState;
+        } catch (e) {
+            logger.error(`Error saving bulk state: ${e.message}`);
+        }
+    }
+
+    _loadBulkState() {
+        try {
+            const filePath = path.join(__dirname, '..', 'data_bulk.json');
+            if (fs.existsSync(filePath)) {
+                const raw = fs.readFileSync(filePath, 'utf-8');
+                const data = JSON.parse(raw);
+                return {
+                    allWords: data.allWords || [],
+                    selectedWords: data.selectedWords || [],
+                    wordMap: new Map(Object.entries(data.wordMap || {})),
+                    feedbackIds: data.feedbackIds || []
+                };
+            }
+        } catch (e) {
+            logger.error(`Error loading bulk state: ${e.message}`);
+        }
+        return this._pendingBulkApproval || null;
+    }
+
     /**
      * Handle bulk word select menu change
      */
@@ -2549,40 +2591,67 @@ class DiscordBot {
             return;
         }
 
-        const selectedWords = interaction.values;
-        if (this._pendingBulkApproval) {
-            this._pendingBulkApproval.selectedWords = selectedWords;
+        try {
+            const bulk = this._loadBulkState();
+            const currentMenu = interaction.message?.components?.[0]?.components?.[0];
+            const messageOptions = currentMenu?.options || [];
+            const selectedWords = interaction.values || [];
+
+            // Update selectedWords in bulk state on disk
+            if (bulk) {
+                bulk.selectedWords = selectedWords;
+                this._saveBulkState(bulk);
+            }
+
+            // Build options: preserve existing options from Discord message, fallback to bulk.allWords
+            let selectOptions = [];
+            if (messageOptions.length > 0) {
+                selectOptions = messageOptions.map(opt => ({
+                    label: opt.label,
+                    value: opt.value,
+                    description: opt.description || '',
+                    default: selectedWords.includes(opt.value)
+                }));
+            } else if (bulk && bulk.allWords?.length > 0) {
+                const wordMap = bulk.wordMap || new Map();
+                selectOptions = bulk.allWords.map(word => ({
+                    label: word,
+                    value: word,
+                    description: (wordMap.get(word)?.users?.map(u => u.username).join(', ') || '').substring(0, 50),
+                    default: selectedWords.includes(word)
+                }));
+            }
+
+            if (selectOptions.length === 0) {
+                await interaction.reply({ content: '⚠️ Phiên duyệt không còn tồn tại. Vui lòng mở lại "Duyệt tổng".', ephemeral: true }).catch(() => {});
+                return;
+            }
+
+            const selectMenu = new StringSelectMenuBuilder()
+                .setCustomId('bulk_word_select')
+                .setPlaceholder('Chọn từ muốn duyệt')
+                .setMinValues(0)
+                .setMaxValues(selectOptions.length)
+                .addOptions(selectOptions);
+
+            const approveBtn = new ButtonBuilder()
+                .setCustomId('bulk_approve')
+                .setLabel(`✅ Duyệt đợt này (${selectedWords.length})`)
+                .setStyle(ButtonStyle.Success)
+                .setDisabled(selectedWords.length === 0);
+
+            await interaction.update({
+                components: [
+                    new ActionRowBuilder().addComponents(selectMenu),
+                    new ActionRowBuilder().addComponents(approveBtn)
+                ]
+            });
+        } catch (error) {
+            logger.error(`Failed to handle bulk word select: ${error.message}`);
+            if (!interaction.replied && !interaction.deferred) {
+                await interaction.reply({ content: `❌ Lỗi khi chọn từ: ${error.message}`, ephemeral: true }).catch(() => {});
+            }
         }
-
-        // Rebuild select menu with updated defaults
-        const allWords = this._pendingBulkApproval?.allWords || [];
-        const wordMap = this._pendingBulkApproval?.wordMap || new Map();
-
-        const selectOptions = allWords.map(word => ({
-            label: word,
-            value: word,
-            description: (wordMap.get(word)?.users?.map(u => u.username).join(', ') || '').substring(0, 50),
-            default: selectedWords.includes(word)
-        }));
-
-        const selectMenu = new StringSelectMenuBuilder()
-            .setCustomId('bulk_word_select')
-            .setPlaceholder('Chọn từ muốn duyệt')
-            .setMinValues(0)
-            .setMaxValues(selectOptions.length)
-            .addOptions(selectOptions);
-
-        const approveBtn = new ButtonBuilder()
-            .setCustomId('bulk_approve')
-            .setLabel(`✅ Duyệt đợt này (${selectedWords.length})`)
-            .setStyle(ButtonStyle.Success);
-
-        await interaction.update({
-            components: [
-                new ActionRowBuilder().addComponents(selectMenu),
-                new ActionRowBuilder().addComponents(approveBtn)
-            ]
-        });
     }
 
     /**
@@ -2594,14 +2663,32 @@ class DiscordBot {
             return;
         }
 
-        const bulk = this._pendingBulkApproval;
-        if (!bulk || bulk.selectedWords.length === 0) {
-            await interaction.reply({ content: '⚠️ Không có từ nào được chọn.', ephemeral: true });
+        if (this._isBulkApproving) {
+            await interaction.reply({ content: '⏳ Đang xử lý duyệt từ, vui lòng đợi trong giây lát...', ephemeral: true }).catch(() => {});
             return;
         }
 
+        const bulk = this._loadBulkState();
+        if (!bulk || !bulk.selectedWords || bulk.selectedWords.length === 0) {
+            await interaction.reply({ content: '⚠️ Không có từ nào được chọn hoặc phiên duyệt đã hoàn tất.', ephemeral: true }).catch(() => {});
+            return;
+        }
+
+        this._isBulkApproving = true;
+
         try {
-            await interaction.deferUpdate();
+            // Immediately lock UI button so user cannot double-click
+            await interaction.update({
+                components: [
+                    new ActionRowBuilder().addComponents(
+                        new ButtonBuilder()
+                            .setCustomId('bulk_approving_in_progress')
+                            .setLabel('⏳ Đang xử lý duyệt từ...')
+                            .setStyle(ButtonStyle.Secondary)
+                            .setDisabled(true)
+                    )
+                ]
+            });
 
             // Add all selected words
             const wordsToAdd = bulk.selectedWords.join(', ');
@@ -2682,8 +2769,8 @@ class DiscordBot {
             }
             gameLogic.saveFeedbacks(feedbacks);
 
-            // Clean up pending state
-            this._pendingBulkApproval = null;
+            // Clean up pending state on disk
+            this._saveBulkState(null);
 
             // Check remaining pending feedbacks
             const remainingCount = feedbacks.filter(
@@ -2731,6 +2818,8 @@ class DiscordBot {
             try {
                 await interaction.followUp({ content: `❌ Lỗi: ${error.message}`, ephemeral: true });
             } catch (e) { /* ignore */ }
+        } finally {
+            this._isBulkApproving = false;
         }
     }
 
