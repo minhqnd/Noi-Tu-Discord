@@ -926,48 +926,88 @@ class DiscordBot {
             });
         }
 
-        const userHints = db.getUserHints(userId);
+        let userHints = db.getUserHints(userId);
         const voteUrl = topggService.getVoteUrl();
+        const voteCheck = await topggService.checkUserVote(userId);
+        let voteClaimed = db.getUserVoteClaimed(userId);
+        let claimedVoteBonus = false;
+
+        if (!voteCheck.hasVoted) {
+            // Khi Top.gg đã hết chu kỳ 12h (voted = 0), reset cờ để sẵn sàng nhận thưởng cho lần vote kế tiếp
+            if (voteClaimed) {
+                db.setUserVoteClaimed(userId, 0);
+                voteClaimed = 0;
+            }
+        } else {
+            // Top.gg báo đã vote: nếu chưa nhận thưởng của lượt vote này thì cộng ngay +1 lượt
+            if (!voteClaimed) {
+                db.addUserHint(userId, 1, GAME_CONSTANTS.MAX_HINTS);
+                db.setUserVoteClaimed(userId, 1);
+                userHints = db.getUserHints(userId);
+                claimedVoteBonus = true;
+                logger.info(`[Hint] User @${interaction.user.username} (${userId}) claimed +1 vote reward. Hints now: ${userHints}`);
+            }
+        }
 
         // Case 1: User has 0 hints in inventory
         if (userHints < 1) {
-            const row = new ActionRowBuilder().addComponents(
-                new ButtonBuilder()
-                    .setLabel('🌟 Vote Bot trên Top.gg')
-                    .setStyle(ButtonStyle.Link)
-                    .setURL(voteUrl)
-            );
+            if (!voteCheck.hasVoted) {
+                // Chưa vote: Kêu gọi vote ngay để nhận +1 lượt
+                const row = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder()
+                        .setLabel('🗳️ Vote ngay để nhận +1 lượt')
+                        .setStyle(ButtonStyle.Link)
+                        .setURL(voteUrl)
+                );
 
-            return await interaction.reply({
-                content: [
-                    '💡 **Bạn chưa có lượt gợi ý nào!**',
-                    `> Kho hiện tại của bạn: **0/${GAME_CONSTANTS.MAX_HINTS}** lượt.`,
-                    `> 🎯 **Cách nhận lượt gợi ý:** Cứ mỗi mốc **10 từ nối đúng** trong chuỗi (10, 20, 30...), bạn sẽ được thưởng **+1 lượt gợi ý** (tối đa giữ ${GAME_CONSTANTS.MAX_HINTS} lượt).`,
-                    '',
-                    '-# 🌟 Bạn có thể Vote cho Bot trên Top.gg để ủng hộ chúng mình phát triển thêm nhé!'
-                ].join('\n'),
-                components: [row],
-                ephemeral: true
-            });
+                return await interaction.reply({
+                    content: [
+                        '💡 **Bạn chưa có lượt gợi ý nào!**',
+                        `> Lượt gợi ý hiện tại của bạn: **0/${GAME_CONSTANTS.MAX_HINTS}** lượt.`,
+                        '> 🗳️ Hãy **Vote cho Bot trên Top.gg ngay** để được nhận **+1 lượt gợi ý** miễn phí nhé!',
+                        `> 🎯 Hoặc cứ mỗi mốc **10 từ nối đúng** trong chuỗi (10, 20, 30...), bạn cũng được thưởng **+1 lượt gợi ý** (tối đa giữ ${GAME_CONSTANTS.MAX_HINTS} lượt).`
+                    ].join('\n'),
+                    components: [row],
+                    ephemeral: true
+                });
+            } else {
+                // Đã vote rồi (và đã dùng hết lượt trong 12h này)
+                const row = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder()
+                        .setLabel('🌟 Vote Bot trên Top.gg')
+                        .setStyle(ButtonStyle.Link)
+                        .setURL(voteUrl)
+                );
+
+                return await interaction.reply({
+                    content: [
+                        '💡 **Bạn chưa có lượt gợi ý nào!**',
+                        `> Lượt gợi ý hiện tại của bạn: **0/${GAME_CONSTANTS.MAX_HINTS}** lượt.`,
+                        '> Hôm nay bạn đã vote rồi! Vui lòng quay lại **Vote sau mỗi 12 tiếng** để nhận thêm **+1 lượt gợi ý** nhé.',
+                        `> Trong lúc chờ, bạn có thể cày chuỗi: cứ mỗi mốc **10 từ nối đúng** trong chuỗi sẽ được thưởng **+1 lượt gợi ý**!`
+                    ].join('\n'),
+                    components: [row],
+                    ephemeral: true
+                });
+            }
         }
 
         // Case 2: User has >= 1 hints, check Top.gg vote status
-        const voteCheck = await topggService.checkUserVote(userId);
         if (!voteCheck.hasVoted) {
             const row = new ActionRowBuilder().addComponents(
                 new ButtonBuilder()
-                    .setLabel('🗳️ Vote ngay trên Top.gg (Mở khóa 12h)')
+                    .setLabel('🗳️ Vote ngay trên Top.gg')
                     .setStyle(ButtonStyle.Link)
                     .setURL(voteUrl)
             );
 
             return await interaction.reply({
                 content: [
-                    '🔒 **Lượt gợi ý chưa được mở khóa!**',
+                    '🔒 **Lượt gợi ý chưa dùng được!**',
                     `> Bạn đang có **${userHints}/${GAME_CONSTANTS.MAX_HINTS}** lượt gợi ý sẵn sàng trong kho.`,
-                    '> 🗳️ Để sử dụng gợi ý, bạn cần **Vote cho bot trên Top.gg** (mỗi 12 tiếng vote 1 lần).',
+                    '> Để sử dụng gợi ý, bạn cần **Vote cho bot trên Top.gg**.',
                     '',
-                    '👉 **Bấm nút bên dưới để Vote**, sau đó quay lại gõ lệnh `/hint` để nhận từ nối tiếp nhé!'
+                    '👉 **Bấm nút bên dưới để Vote**, sau đó quay lại gõ lệnh `/hint` để nhận gợi ý nhé!'
                 ].join('\n'),
                 components: [row],
                 ephemeral: true
@@ -978,16 +1018,26 @@ class DiscordBot {
         db.useUserHint(userId);
         const remainingHints = db.getUserHints(userId);
 
-        logger.info(`[Hint] User @${interaction.user.username} (${userId}) used hint: '${hintResult.currentWord}' -> '${hintResult.suggestedWord}'. Remaining: ${remainingHints}`);
+        const words = hintResult.suggestedWords || [hintResult.suggestedWord];
+        const wordsFormatted = words.map(w => `• **${w}**`).join('\n');
+
+        logger.info(`[Hint] User @${interaction.user.username} (${userId}) used hint for '${hintResult.currentWord}': [${words.join(', ')}]. Remaining: ${remainingHints}`);
+
+        const replyLines = [
+            '💡 **GỢI Ý TỪ NỐI TIẾP:**',
+            `> Từ hiện tại: **${hintResult.currentWord}**`,
+            `> Bạn có thể nối tiếp bằng một trong các từ sau:`,
+            wordsFormatted,
+            '',
+            `- Bạn còn lại **${remainingHints}/${GAME_CONSTANTS.MAX_HINTS}** lượt gợi ý.`
+        ];
+
+        if (claimedVoteBonus) {
+            replyLines.push('-# 🎉 Cảm ơn bạn đã Vote Top.gg! Bạn đã được cộng **+1 lượt gợi ý**!');
+        }
 
         return await interaction.reply({
-            content: [
-                '💡 **GỢI Ý TỪ NỐI TIẾP (Bí mật):**',
-                `> Từ hiện tại trong phòng: **${hintResult.currentWord}**`,
-                `> Bạn có thể nối tiếp bằng: **${hintResult.suggestedWord}**`,
-                '',
-                `- ℹ️ Bạn còn lại **${remainingHints}/${GAME_CONSTANTS.MAX_HINTS}** lượt gợi ý. *(Tin nhắn này chỉ mình bạn nhìn thấy)*`
-            ].join('\n'),
+            content: replyLines.join('\n'),
             ephemeral: true
         });
     }
@@ -2731,7 +2781,7 @@ class DiscordBot {
             }
 
             if (selectOptions.length === 0) {
-                await interaction.reply({ content: '⚠️ Phiên duyệt không còn tồn tại. Vui lòng mở lại "Duyệt tổng".', ephemeral: true }).catch(() => {});
+                await interaction.reply({ content: '⚠️ Phiên duyệt không còn tồn tại. Vui lòng mở lại "Duyệt tổng".', ephemeral: true }).catch(() => { });
                 return;
             }
 
@@ -2757,7 +2807,7 @@ class DiscordBot {
         } catch (error) {
             logger.error(`Failed to handle bulk word select: ${error.message}`);
             if (!interaction.replied && !interaction.deferred) {
-                await interaction.reply({ content: `❌ Lỗi khi chọn từ: ${error.message}`, ephemeral: true }).catch(() => {});
+                await interaction.reply({ content: `❌ Lỗi khi chọn từ: ${error.message}`, ephemeral: true }).catch(() => { });
             }
         }
     }
@@ -2772,13 +2822,13 @@ class DiscordBot {
         }
 
         if (this._isBulkApproving) {
-            await interaction.reply({ content: '⏳ Đang xử lý duyệt từ, vui lòng đợi trong giây lát...', ephemeral: true }).catch(() => {});
+            await interaction.reply({ content: '⏳ Đang xử lý duyệt từ, vui lòng đợi trong giây lát...', ephemeral: true }).catch(() => { });
             return;
         }
 
         const bulk = this._loadBulkState();
         if (!bulk || !bulk.selectedWords || bulk.selectedWords.length === 0) {
-            await interaction.reply({ content: '⚠️ Không có từ nào được chọn hoặc phiên duyệt đã hoàn tất.', ephemeral: true }).catch(() => {});
+            await interaction.reply({ content: '⚠️ Không có từ nào được chọn hoặc phiên duyệt đã hoàn tất.', ephemeral: true }).catch(() => { });
             return;
         }
 

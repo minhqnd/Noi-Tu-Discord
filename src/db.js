@@ -44,7 +44,8 @@ class DB {
                 wins INTEGER DEFAULT 0,
                 wrong_count INTEGER DEFAULT 0,
                 word_wrong_count INTEGER DEFAULT 0,
-                hints INTEGER DEFAULT 0
+                hints INTEGER DEFAULT 0,
+                last_vote_claim INTEGER DEFAULT 0
             );
 
             CREATE TABLE IF NOT EXISTS channel_allowlist (
@@ -97,6 +98,10 @@ class DB {
             this.db.exec(`ALTER TABLE users ADD COLUMN hints INTEGER DEFAULT 0`);
             logger.info('Migration: added hints column to users table');
         }
+        if (!userCols.find(c => c.name === 'last_vote_claim')) {
+            this.db.exec(`ALTER TABLE users ADD COLUMN last_vote_claim INTEGER DEFAULT 0`);
+            logger.info('Migration: added last_vote_claim column to users table');
+        }
 
         // Backfill tracked_players from existing channels and users data
         try {
@@ -141,11 +146,12 @@ class DB {
             getUser: this.db.prepare('SELECT * FROM users WHERE user_id = ?'),
             getAllUsers: this.db.prepare('SELECT * FROM users'),
             upsertUser: this.db.prepare(`
-                INSERT INTO users (user_id, word, history, current_streak, best_streak, wins, wrong_count, word_wrong_count, hints)
-                VALUES (@user_id, @word, @history, @current_streak, @best_streak, @wins, @wrong_count, @word_wrong_count, @hints)
+                INSERT INTO users (user_id, word, history, current_streak, best_streak, wins, wrong_count, word_wrong_count, hints, last_vote_claim)
+                VALUES (@user_id, @word, @history, @current_streak, @best_streak, @wins, @wrong_count, @word_wrong_count, @hints, @last_vote_claim)
                 ON CONFLICT(user_id) DO UPDATE SET
                     word = @word, history = @history, current_streak = @current_streak,
-                    best_streak = @best_streak, wins = @wins, wrong_count = @wrong_count, word_wrong_count = @word_wrong_count, hints = @hints
+                    best_streak = @best_streak, wins = @wins, wrong_count = @wrong_count, word_wrong_count = @word_wrong_count,
+                    hints = @hints, last_vote_claim = @last_vote_claim
             `),
             getUserHints: this.db.prepare('SELECT hints FROM users WHERE user_id = ?'),
             addUserHint: this.db.prepare(`
@@ -154,6 +160,11 @@ class DB {
             `),
             useUserHint: this.db.prepare(`
                 UPDATE users SET hints = hints - 1 WHERE user_id = ? AND hints > 0
+            `),
+            getUserLastVoteClaim: this.db.prepare('SELECT last_vote_claim FROM users WHERE user_id = ?'),
+            setUserLastVoteClaim: this.db.prepare(`
+                INSERT INTO users (user_id, last_vote_claim) VALUES (?, ?)
+                ON CONFLICT(user_id) DO UPDATE SET last_vote_claim = excluded.last_vote_claim
             `),
 
             // Channel Allowlist
@@ -220,6 +231,7 @@ class DB {
             wrongCount: row.wrong_count || 0,
             wordWrongCount: row.word_wrong_count || 0,
             hints: row.hints || 0,
+            lastVoteClaim: row.last_vote_claim || 0,
         };
     }
 
@@ -245,6 +257,7 @@ class DB {
             wrong_count: data.wrongCount || 0,
             word_wrong_count: data.wordWrongCount || 0,
             hints: data.hints || 0,
+            last_vote_claim: data.lastVoteClaim || data.last_vote_claim || 0,
         };
     }
 
@@ -569,6 +582,44 @@ class DB {
             logger.error(`Error using hint for user ${userId}:`, error);
             return false;
         }
+    }
+
+    /**
+     * Get user's last vote claim timestamp.
+     * @param {string} userId
+     * @returns {number}
+     */
+    getUserLastVoteClaim(userId) {
+        if (!userId) return 0;
+        try {
+            const row = this._stmts.getUserLastVoteClaim.get(userId.toString());
+            return row ? (row.last_vote_claim || 0) : 0;
+        } catch (error) {
+            logger.error(`Error fetching last_vote_claim for user ${userId}:`, error);
+            return 0;
+        }
+    }
+
+    /**
+     * Set user's last vote claim timestamp or state.
+     * @param {string} userId
+     * @param {number} timestamp
+     */
+    setUserLastVoteClaim(userId, timestamp = Date.now()) {
+        if (!userId) return;
+        try {
+            this._stmts.setUserLastVoteClaim.run(userId.toString(), timestamp);
+        } catch (error) {
+            logger.error(`Error updating last_vote_claim for user ${userId}:`, error);
+        }
+    }
+
+    getUserVoteClaimed(userId) {
+        return this.getUserLastVoteClaim(userId);
+    }
+
+    setUserVoteClaimed(userId, claimed = 1) {
+        this.setUserLastVoteClaim(userId, claimed);
     }
 
     /**

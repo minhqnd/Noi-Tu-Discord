@@ -166,7 +166,7 @@ function saveFeedbacks(feedbacks) {
     db.store('feedbacks', feedbacks);
 }
 
-function getHint(idChannel, idUser, isDM = false) {
+function getHint(idChannel, idUser, isDM = false, count = 3) {
     if (isDM) {
         if (!idUser) return { success: false, code: 'no_game', message: 'Chưa có thông tin người chơi.' };
         const users = db.read('users') || {};
@@ -174,8 +174,8 @@ function getHint(idChannel, idUser, isDM = false) {
         if (!userData || !userData.word) {
             return { success: false, code: 'no_game', message: 'Bạn chưa có ván đấu nào đang diễn ra trong DM. Hãy nhắn 1 từ bất kỳ để bắt đầu!' };
         }
-        const suggestion = gameEngine.getHint(userData.word, userData.history || []);
-        if (!suggestion) {
+        const suggestions = gameEngine.getHints(userData.word, userData.history || [], count);
+        if (!suggestions || suggestions.length === 0) {
             return {
                 success: false,
                 code: 'no_continuation',
@@ -186,7 +186,8 @@ function getHint(idChannel, idUser, isDM = false) {
         return {
             success: true,
             currentWord: userData.word,
-            suggestedWord: suggestion
+            suggestedWords: suggestions,
+            suggestedWord: suggestions[0]
         };
     } else {
         if (!idChannel) return { success: false, code: 'no_game', message: 'Chưa có thông tin kênh.' };
@@ -195,8 +196,8 @@ function getHint(idChannel, idUser, isDM = false) {
         if (!chData || !chData.word) {
             return { success: false, code: 'no_game', message: 'Kênh này chưa có ván đấu nào đang diễn ra. Hãy nhắn 1 từ bất kỳ hoặc dùng \`/newgame\` để bắt đầu!' };
         }
-        const suggestion = gameEngine.getHint(chData.word, chData.history || []);
-        if (!suggestion) {
+        const suggestions = gameEngine.getHints(chData.word, chData.history || [], count);
+        if (!suggestions || suggestions.length === 0) {
             return {
                 success: false,
                 code: 'no_continuation',
@@ -207,7 +208,8 @@ function getHint(idChannel, idUser, isDM = false) {
         return {
             success: true,
             currentWord: chData.word,
-            suggestedWord: suggestion
+            suggestedWords: suggestions,
+            suggestedWord: suggestions[0]
         };
     }
 }

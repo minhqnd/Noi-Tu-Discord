@@ -31,11 +31,42 @@ class GameEngine {
         return '';
     }
 
+    // Get up to `count` valid next word suggestions for current game
+    getHints(currentWord, history = [], count = 3) {
+        if (!currentWord) return [];
+        const start = this.lastWord(currentWord);
+        const possibleWords = wordPairs[start] || [];
+        const historySet = history instanceof Set ? history : new Set(history);
+
+        if (possibleWords.length === 0) return [];
+
+        // Lọc các từ chưa được sử dụng trong lịch sử
+        const availableWords = possibleWords.filter(secondWord => {
+            const fullWord = `${start} ${secondWord}`;
+            return !historySet.has(fullWord);
+        });
+
+        if (availableWords.length === 0) return [];
+
+        // Lọc các từ mà từ cuối có thể tiếp tục nối tiếp
+        const validWords = availableWords.filter(secondWord => {
+            return wordPairs[secondWord] && wordPairs[secondWord].length > 0;
+        });
+
+        if (validWords.length === 0) return [];
+
+        const nonRepeatingWords = validWords.filter(secondWord => secondWord !== start);
+        const pool = nonRepeatingWords.length > 0 ? nonRepeatingWords : validWords;
+
+        // Trộn ngẫu nhiên và lấy tối đa `count` từ
+        const shuffled = [...pool].sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, count).map(secondWord => `${start} ${secondWord}`);
+    }
+
     // Get a valid next word suggestion for current game
     getHint(currentWord, history = []) {
-        if (!currentWord) return null;
-        const last = this.lastWord(currentWord);
-        return this.getWordStartingWith(last, history);
+        const hints = this.getHints(currentWord, history, 1);
+        return hints.length > 0 ? hints[0] : null;
     }
 
     getLogPrefix(isDM, userId, gameData, context) {
