@@ -25,6 +25,9 @@ class TopggService {
      * @returns {Promise<{ hasVoted: boolean, error?: string }>}
      */
     async checkUserVote(userId) {
+        // [DEV MOCK] Luôn trả về true để test giao diện (comment dòng dưới lại khi chạy thật)
+        // return { hasVoted: true };
+
         if (!userId) {
             return { hasVoted: false, error: 'MISSING_USER_ID' };
         }

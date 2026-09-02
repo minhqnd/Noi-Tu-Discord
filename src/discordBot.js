@@ -964,8 +964,8 @@ class DiscordBot {
                     content: [
                         '💡 **Bạn chưa có lượt gợi ý nào!**',
                         `> Lượt gợi ý hiện tại của bạn: **0/${GAME_CONSTANTS.MAX_HINTS}** lượt.`,
-                        '> - Hãy **Vote cho Bot trên Top.gg ngay** để được nhận **+1 lượt gợi ý** miễn phí nhé!',
-                        `> - Hoặc cứ mỗi mốc **10 từ nối đúng** trong chuỗi (10, 20, 30...), bạn cũng được thưởng **+1 lượt gợi ý** (tối đa giữ ${GAME_CONSTANTS.MAX_HINTS} lượt).`
+                        '> - **Vote cho Bot trên Top.gg ngay** để được nhận **+1 lượt gợi ý** miễn phí!',
+                        `> - Hoặc cứ mỗi mốc **10 từ nối đúng** được thưởng **+1 lượt gợi ý** (tối đa ${GAME_CONSTANTS.MAX_HINTS} lượt).`
                     ].join('\n'),
                     components: [row],
                     ephemeral: true
@@ -1019,21 +1019,21 @@ class DiscordBot {
         const remainingHints = db.getUserHints(userId);
 
         const words = hintResult.suggestedWords || [hintResult.suggestedWord];
-        const wordsFormatted = words.map(w => `• **${w}**`).join('\n');
+        const wordsFormatted = words.map(w => `> - **${w}**`).join('\n');
 
         logger.info(`[Hint] User @${interaction.user.username} (${userId}) used hint for '${hintResult.currentWord}': [${words.join(', ')}]. Remaining: ${remainingHints}`);
 
         const replyLines = [
-            '💡 **GỢI Ý TỪ NỐI TIẾP:**',
-            `> Từ hiện tại: **${hintResult.currentWord}**`,
-            `> Bạn có thể nối tiếp bằng một trong các từ sau:`,
+            // '💡 **GỢI Ý TỪ NỐI TIẾP:**',
+            ` Từ hiện tại: **${hintResult.currentWord}**`,
+            ` Bạn có thể nối tiếp bằng một trong các từ sau:`,
             wordsFormatted,
             '',
             `- Bạn còn lại **${remainingHints}/${GAME_CONSTANTS.MAX_HINTS}** lượt gợi ý.`
         ];
 
         if (claimedVoteBonus) {
-            replyLines.push('-# 🎉 Cảm ơn bạn đã Vote Top.gg! Bạn đã được cộng **+1 lượt gợi ý**!');
+            replyLines.push('-# 🎉 Cảm ơn bạn đã Vote ủng hộ bot!');
         }
 
         return await interaction.reply({
@@ -3113,6 +3113,9 @@ class DiscordBot {
         try {
             if (response.code === 'ok') {
                 await message.react('✅');
+                if (response.hintBonus) {
+                    await message.reply({ content: response.hintBonus.trim() });
+                }
             } else if (response.code === 'win') {
                 await message.react('🏆');
                 const embed = new EmbedBuilder()

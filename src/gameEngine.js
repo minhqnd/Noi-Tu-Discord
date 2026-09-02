@@ -524,6 +524,7 @@ class GameEngine {
                 type: RESPONSE_TYPES.SUCCESS,
                 code: RESPONSE_CODES.OK,
                 message: `${statsLine}${hintBonus}`,
+                hintBonus: hintBonus,
                 gameData: newGameData
             };
         }
