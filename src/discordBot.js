@@ -964,8 +964,8 @@ class DiscordBot {
                     content: [
                         '💡 **Bạn chưa có lượt gợi ý nào!**',
                         `> Lượt gợi ý hiện tại của bạn: **0/${GAME_CONSTANTS.MAX_HINTS}** lượt.`,
-                        '> 🗳️ Hãy **Vote cho Bot trên Top.gg ngay** để được nhận **+1 lượt gợi ý** miễn phí nhé!',
-                        `> 🎯 Hoặc cứ mỗi mốc **10 từ nối đúng** trong chuỗi (10, 20, 30...), bạn cũng được thưởng **+1 lượt gợi ý** (tối đa giữ ${GAME_CONSTANTS.MAX_HINTS} lượt).`
+                        '> - Hãy **Vote cho Bot trên Top.gg ngay** để được nhận **+1 lượt gợi ý** miễn phí nhé!',
+                        `> - Hoặc cứ mỗi mốc **10 từ nối đúng** trong chuỗi (10, 20, 30...), bạn cũng được thưởng **+1 lượt gợi ý** (tối đa giữ ${GAME_CONSTANTS.MAX_HINTS} lượt).`
                     ].join('\n'),
                     components: [row],
                     ephemeral: true
@@ -983,8 +983,8 @@ class DiscordBot {
                     content: [
                         '💡 **Bạn chưa có lượt gợi ý nào!**',
                         `> Lượt gợi ý hiện tại của bạn: **0/${GAME_CONSTANTS.MAX_HINTS}** lượt.`,
-                        '> Hôm nay bạn đã vote rồi! Vui lòng quay lại **Vote sau mỗi 12 tiếng** để nhận thêm **+1 lượt gợi ý** nhé.',
-                        `> Trong lúc chờ, bạn có thể cày chuỗi: cứ mỗi mốc **10 từ nối đúng** trong chuỗi sẽ được thưởng **+1 lượt gợi ý**!`
+                        '> - Hôm nay bạn đã vote rồi! Vui lòng quay lại **Vote sau mỗi 12 tiếng** để nhận thêm **+1 lượt gợi ý** nhé.',
+                        `> - Trong lúc chờ, bạn có thể cày chuỗi: cứ mỗi mốc **10 từ nối đúng** trong chuỗi sẽ được thưởng **+1 lượt gợi ý**!`
                     ].join('\n'),
                     components: [row],
                     ephemeral: true
@@ -1005,7 +1005,7 @@ class DiscordBot {
                 content: [
                     '🔒 **Lượt gợi ý chưa dùng được!**',
                     `> Bạn đang có **${userHints}/${GAME_CONSTANTS.MAX_HINTS}** lượt gợi ý sẵn sàng trong kho.`,
-                    '> Để sử dụng gợi ý, bạn cần **Vote cho bot trên Top.gg**.',
+                    '> - Để sử dụng gợi ý, bạn cần **Vote cho bot trên Top.gg**.',
                     '',
                     '👉 **Bấm nút bên dưới để Vote**, sau đó quay lại gõ lệnh `/hint` để nhận gợi ý nhé!'
                 ].join('\n'),

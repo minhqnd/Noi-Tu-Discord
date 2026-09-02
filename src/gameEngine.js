@@ -23,7 +23,7 @@ class GameEngine {
         if (newStreak > 0 && newStreak % GAME_CONSTANTS.STREAK_PER_HINT === 0) {
             const result = db.addUserHint(userId, 1, GAME_CONSTANTS.MAX_HINTS);
             if (result.added) {
-                return `\n-# 🎁 Chuỗi đạt **${newStreak}**! Bạn nhận được **+1 lượt gợi ý**! Bạn hiện có: **${result.hints}/${GAME_CONSTANTS.MAX_HINTS}**`;
+                return `\n-# 🎁 Chuỗi đạt **${newStreak}**! Bạn nhận được **+1 lượt gợi ý**! Hiện có: **${result.hints}/${GAME_CONSTANTS.MAX_HINTS}**`;
             }
         }
         return '';
