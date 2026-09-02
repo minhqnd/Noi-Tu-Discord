@@ -1052,7 +1052,7 @@ class DiscordBot {
         } catch (e) {
             voteBadge = '❓ Chưa kiểm tra';
         }
-        const hintLine = `> 💡 Lượt gợi ý: **${hints}/${GAME_CONSTANTS.MAX_HINTS}** | Top.gg: **${voteBadge}**`;
+        const hintLine = `> Lượt gợi ý: **${hints}/${GAME_CONSTANTS.MAX_HINTS}**`;
 
         if (this.isDirectMessage(interaction.channel)) {
             const users = db.read('users') || {};
