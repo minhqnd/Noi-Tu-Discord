@@ -2026,9 +2026,10 @@ class DiscordBot {
         history += `**📝 Phản hồi gốc** (${feedback.username}):\n> ${feedback.content.substring(0, 300)}\n\n`;
 
         // Previous replies
+        let previousReplies = [];
         if (feedback.replies && feedback.replies.length > 0) {
             // Show all replies except the latest one (which we'll highlight)
-            const previousReplies = feedback.replies.slice(0, -1);
+            previousReplies = feedback.replies.slice(0, -1);
             for (const reply of previousReplies) {
                 const label = reply.from === 'admin' ? '💬 Admin' : `👤 ${feedback.username}`;
                 history += `**${label}:**\n> ${reply.content.substring(0, 300)}\n\n`;
@@ -2036,7 +2037,9 @@ class DiscordBot {
         }
 
         // Latest message (highlighted)
-        const latestLabel = latestFrom === 'admin' ? '💬 Admin (mới nhất)' : `👤 ${feedback.username} (mới nhất)`;
+        const latestLabel = latestFrom === 'admin'
+            ? (previousReplies.length > 0 ? '💬 Admin (mới nhất)' : '💬 Admin')
+            : (previousReplies.length > 0 ? `👤 ${feedback.username} (mới nhất)` : `👤 ${feedback.username}`);
         history += `**${latestLabel}:**\n${latestContent.substring(0, 500)}`;
 
         embed.setDescription(history.substring(0, 4000));
@@ -2445,16 +2448,27 @@ class DiscordBot {
 
             await interaction.editReply({ embeds: [updatedEmbed], components: [disabledRow] });
 
+            const thankMessage = 'Cảm ơn bạn đã đóng góp, từ đã được thêm và có hiệu lực ngay lập tức, chúc bạn chơi game vui vẻ <3';
+
+            // Mark feedback as resolved
+            const feedbacks = gameLogic.getAllFeedbacks();
+            const feedback = feedbacks.find(f => f.id === feedbackId);
+            if (feedback) {
+                feedback.status = 'resolved';
+                if (!feedback.replies) feedback.replies = [];
+                feedback.replies.push({
+                    from: 'admin',
+                    content: thankMessage,
+                    timestamp: new Date().toISOString()
+                });
+                gameLogic.saveFeedbacks(feedbacks);
+            }
+
             // Notify user via DM if words were added
             if (totalApproved > 0) {
                 try {
                     const targetUser = await this.client.users.fetch(targetUserId);
-                    const userEmbed = new EmbedBuilder()
-                        .setTitle('✅ Từ của bạn đã được thêm vào từ điển!')
-                        .setDescription('Cảm ơn bạn đã đóng góp, từ đã được thêm và có hiệu lực ngay lập tức, chúc bạn chơi game vui vẻ <3')
-                        .setColor(0x57F287)
-                        .setFooter({ text: 'Bot Nối Từ 🐧' })
-                        .setTimestamp();
+                    const userEmbed = this._buildConversationEmbed(feedback, thankMessage, 'admin');
 
                     const userReplyBtn = new ButtonBuilder()
                         .setCustomId(`userreply_${feedbackId}`)
@@ -2467,20 +2481,6 @@ class DiscordBot {
                 } catch (userDmErr) {
                     logger.warn(`Could not DM user ${targetUserId}: ${userDmErr.message}`);
                 }
-            }
-
-            // Mark feedback as resolved
-            const feedbacks = gameLogic.getAllFeedbacks();
-            const feedback = feedbacks.find(f => f.id === feedbackId);
-            if (feedback) {
-                feedback.status = 'resolved';
-                if (!feedback.replies) feedback.replies = [];
-                feedback.replies.push({
-                    from: 'admin',
-                    content: 'Cảm ơn bạn đã đóng góp, từ đã được thêm và có hiệu lực ngay lập tức, chúc bạn chơi game vui vẻ <3',
-                    timestamp: new Date().toISOString()
-                });
-                gameLogic.saveFeedbacks(feedbacks);
             }
 
             // Clean up pending state
@@ -2872,6 +2872,27 @@ class DiscordBot {
             }
 
             // Notify each user whose words were approved
+            const thankMessage = 'Cảm ơn bạn đã đóng góp, từ đã được thêm và có hiệu lực ngay lập tức, chúc bạn chơi game vui vẻ <3';
+
+            // Mark feedbacks in THIS batch as resolved + save reply history
+            const feedbacks = gameLogic.getAllFeedbacks();
+            for (const fbId of bulk.feedbackIds) {
+                const fb = feedbacks.find(f => f.id === fbId);
+                if (fb) {
+                    fb.status = 'resolved';
+                    if (!fb.replies) fb.replies = [];
+                    fb.replies.push({
+                        from: 'admin',
+                        content: thankMessage,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            }
+            gameLogic.saveFeedbacks(feedbacks);
+
+            // Clean up pending state on disk
+            this._saveBulkState(null);
+
             if (totalApproved > 0 && bulk.wordMap) {
                 // Group approved words by user
                 const userWordMap = new Map(); // userId -> { username, words: [], feedbackIds: Set }
@@ -2889,51 +2910,28 @@ class DiscordBot {
                     }
                 }
 
-                // Send DM to each user
+                // Send DM to each user using _buildConversationEmbed
                 for (const [uid, data] of userWordMap) {
                     try {
                         const targetUser = await this.client.users.fetch(uid);
-                        // Use first feedbackId for reply thread
-                        const replyFeedbackId = [...data.feedbackIds][0];
-                        const userEmbed = new EmbedBuilder()
-                            .setTitle('✅ Từ của bạn đã được thêm vào từ điển!')
-                            .setDescription('Cảm ơn bạn đã đóng góp, từ đã được thêm và có hiệu lực ngay lập tức, chúc bạn chơi game vui vẻ <3')
-                            .setColor(0x57F287)
-                            .setFooter({ text: 'Bot Nối Từ 🐧' })
-                            .setTimestamp();
+                        for (const fbId of data.feedbackIds) {
+                            const feedback = feedbacks.find(f => f.id === fbId);
+                            const userEmbed = this._buildConversationEmbed(feedback, thankMessage, 'admin');
 
-                        const userReplyBtn = new ButtonBuilder()
-                            .setCustomId(`userreply_${replyFeedbackId}`)
-                            .setLabel('Trả lời')
-                            .setStyle(ButtonStyle.Primary)
-                            .setEmoji('💬');
+                            const userReplyBtn = new ButtonBuilder()
+                                .setCustomId(`userreply_${fbId}`)
+                                .setLabel('Trả lời')
+                                .setStyle(ButtonStyle.Primary)
+                                .setEmoji('💬');
 
-                        const userRow = new ActionRowBuilder().addComponents(userReplyBtn);
-                        await targetUser.send({ embeds: [userEmbed], components: [userRow] });
+                            const userRow = new ActionRowBuilder().addComponents(userReplyBtn);
+                            await targetUser.send({ embeds: [userEmbed], components: [userRow] });
+                        }
                     } catch (dmErr) {
                         logger.warn(`Could not DM user ${uid}: ${dmErr.message}`);
                     }
                 }
             }
-
-            // Mark feedbacks in THIS batch as resolved + save reply history
-            const feedbacks = gameLogic.getAllFeedbacks();
-            for (const fbId of bulk.feedbackIds) {
-                const fb = feedbacks.find(f => f.id === fbId);
-                if (fb) {
-                    fb.status = 'resolved';
-                    if (!fb.replies) fb.replies = [];
-                    fb.replies.push({
-                        from: 'admin',
-                        content: 'Cảm ơn bạn đã đóng góp, từ đã được thêm và có hiệu lực ngay lập tức, chúc bạn chơi game vui vẻ <3',
-                        timestamp: new Date().toISOString()
-                    });
-                }
-            }
-            gameLogic.saveFeedbacks(feedbacks);
-
-            // Clean up pending state on disk
-            this._saveBulkState(null);
 
             // Check remaining pending feedbacks
             const remainingCount = feedbacks.filter(
