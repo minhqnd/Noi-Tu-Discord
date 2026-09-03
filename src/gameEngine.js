@@ -65,9 +65,26 @@ class GameEngine {
         const nonRepeatingWords = validWords.filter(secondWord => secondWord !== start);
         const pool = nonRepeatingWords.length > 0 ? nonRepeatingWords : validWords;
 
-        // Trộn ngẫu nhiên và lấy tối đa `count` từ
-        const shuffled = [...pool].sort(() => 0.5 - Math.random());
-        return shuffled.slice(0, count).map(secondWord => `${start} ${secondWord}`);
+        // Đếm số từ có thể ghép tiếp theo (chưa dùng trong history)
+        const scored = pool.map(secondWord => {
+            const nextPairs = wordPairs[secondWord] || [];
+            let continuations = 0;
+            for (const thirdWord of nextPairs) {
+                if (!historySet.has(`${secondWord} ${thirdWord}`)) {
+                    continuations++;
+                }
+            }
+            return {
+                secondWord,
+                continuations,
+                rand: Math.random()
+            };
+        });
+
+        // Sắp xếp giảm dần theo số từ có thể ghép tiếp theo (hòa điểm thì ngẫu nhiên để đa dạng)
+        scored.sort((a, b) => b.continuations - a.continuations || a.rand - b.rand);
+
+        return scored.slice(0, count).map(item => `${start} ${item.secondWord}`);
     }
 
     // Get a valid next word suggestion for current game
