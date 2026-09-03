@@ -13,14 +13,15 @@ class GameEngine {
     // Build /newgame hint suffix when wordWrongCount reaches threshold
     getNewGameHint(wordWrongCount) {
         if (wordWrongCount >= GAME_CONSTANTS.WORD_WRONG_HINT_THRESHOLD) {
-            return '\n-# 🔄 Từ này quá khó? Gõ `/newgame` để đổi từ mới!';
+            return '\n-# 🔄 Từ này quá khó? Gõ `/hint` để nhận gợi ý hoặc `/newgame` để đổi từ mới!';
         }
         return '';
     }
 
-    // Suggest /hint when user is on their last remaining guess (2nd wrong guess)
-    getHintCommandSuggestion(remainingGuesses) {
-        if (remainingGuesses === 1) {
+    // Suggest /hint when user is on their last remaining guess (2nd wrong guess),
+    // but only if the word hasn't reached the global hard-word threshold yet
+    getHintCommandSuggestion(remainingGuesses, wordWrongCount = 0) {
+        if (remainingGuesses === 1 && wordWrongCount < GAME_CONSTANTS.WORD_WRONG_HINT_THRESHOLD) {
             return '\n-# 💡 Đang bí từ? Dùng `/hint` để nhận gợi ý!';
         }
         return '';
@@ -341,7 +342,7 @@ class GameEngine {
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.REPEATED,
-                    message: `**Từ này đã được trả lời trước đó!**. Bạn còn **${remaining}** lần đoán.${this.getHintCommandSuggestion(remaining)}${this.getNewGameHint(wordWrongCount)}`,
+                    message: `**Từ này đã được trả lời trước đó!**. Bạn còn **${remaining}** lần đoán.${this.getHintCommandSuggestion(remaining, wordWrongCount)}${this.getNewGameHint(wordWrongCount)}`,
                     currentWord: currentWord,
                     gameData: newGameData
                 };
@@ -439,7 +440,7 @@ class GameEngine {
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.NOT_IN_DICT,
-                    message: `**Từ không có trong bộ từ điển!** Bạn còn **${remaining}** lần đoán.${this.getHintCommandSuggestion(remaining)}\n-# 💡 Nếu bạn nghĩ từ này tồn tại, hãy dùng \`/feedback\` để báo cho chúng mình!${this.getNewGameHint(wordWrongCount)}`,
+                    message: `**Từ không có trong bộ từ điển!** Bạn còn **${remaining}** lần đoán.${this.getHintCommandSuggestion(remaining, wordWrongCount)}\n-# 💡 Nếu bạn nghĩ từ này tồn tại, hãy dùng \`/feedback\` để báo cho chúng mình!${this.getNewGameHint(wordWrongCount)}`,
                     currentWord: currentWord,
                     gameData: newGameData
                 };
