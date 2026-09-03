@@ -908,6 +908,9 @@ class DiscordBot {
         const userId = interaction.user.id;
         const isDM = this.isDirectMessage(interaction.channel);
         const channelId = interaction.channel?.id?.toString();
+        const location = isDM ? 'DM' : `${interaction.guild?.name || 'Server'} > #${interaction.channel?.name || channelId}`;
+
+        logger.info(`[Hint] User @${interaction.user.username} (${userId}) executed /hint in [${location}]`);
 
         // Check channel allowlist if not DM
         if (!isDM && !this.isChannelAllowed(channelId)) {
@@ -951,6 +954,7 @@ class DiscordBot {
 
         // Case 1: User has 0 hints in inventory
         if (userHints < 1) {
+            logger.info(`[Hint] User @${interaction.user.username} (${userId}) has 0 hints (voted: ${voteCheck.hasVoted})`);
             if (!voteCheck.hasVoted) {
                 // Chưa vote: Kêu gọi vote ngay để nhận +1 lượt
                 const row = new ActionRowBuilder().addComponents(
@@ -994,6 +998,7 @@ class DiscordBot {
 
         // Case 2: User has >= 1 hints, check Top.gg vote status
         if (!voteCheck.hasVoted) {
+            logger.info(`[Hint] User @${interaction.user.username} (${userId}) has ${userHints} hints but has not voted on Top.gg`);
             const row = new ActionRowBuilder().addComponents(
                 new ButtonBuilder()
                     .setLabel('🗳️ Vote ngay trên Top.gg')
