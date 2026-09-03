@@ -114,8 +114,8 @@ class DiscordBot {
                     {
                         name: '2 Chế độ chơi',
                         value: [
-                            '• **Chơi với Bot (Mặc định):** Người chơi và Bot thay phiên nhau nối từ.',
-                            '• **Đấu PvP (Người vs Người):** Các thành viên trong kênh tự do thi đấu với nhau, Bot làm trọng tài chấm điểm & đếm chuỗi.'
+                            '• **Chơi cùng Bot (Mặc định):** Người chơi nối tiếp từ cùng sự tham gia của Bot cho từ tiếp theo.',
+                            '• **Đấu PvP (Người vs Người):** Các thành viên trong kênh tự do nối từ với nhau, Bot làm trọng tài kiểm tra từ, chấm điểm và ghi nhận chuỗi.'
                         ].join('\n')
                     },
                     {
@@ -249,7 +249,7 @@ class DiscordBot {
             // },
             {
                 name: 'noitu_mode',
-                description: 'Chọn chế độ chơi cho kênh: Chơi với Bot hoặc PvP',
+                description: 'Chọn chế độ chơi cho kênh: Chơi cùng Bot hoặc PvP',
                 default_member_permissions: COMMAND_PERMISSIONS.MANAGE_GUILD,
                 contexts: [COMMAND_CONTEXTS.GUILD],
                 options: [
@@ -259,7 +259,7 @@ class DiscordBot {
                         type: 3, // STRING
                         required: false,
                         choices: [
-                            { name: 'Chơi với Bot (user vs bot)', value: 'bot' },
+                            { name: 'Chơi cùng Bot (user vs bot)', value: 'bot' },
                             { name: 'Đấu PvP (user vs user)', value: 'pvp' }
                         ]
                     }
@@ -569,7 +569,7 @@ class DiscordBot {
                 {
                     name: 'Chọn chế độ chơi',
                     value: [
-                        '• **Chơi với Bot (Mặc định):** Người chơi nối từ trực tiếp với Bot (Bạn nối 1 từ ➔ Bot nối tiếp 1 từ).',
+                        '• **Chơi cùng Bot (Mặc định):** Người chơi nối từ trực tiếp với Bot (Bạn nối 1 từ ➔ Bot nối tiếp 1 từ).',
                         '• **Đấu PvP (Người vs Người):** Các thành viên trong server tự do nối từ với nhau. Bot làm trọng tài kiểm tra từ, chấm điểm và ghi nhận chuỗi.'
                     ].join('\n'),
                     inline: false
@@ -588,7 +588,7 @@ class DiscordBot {
 
         const botButton = new ButtonBuilder()
             .setCustomId(`setup_mode_bot_${channelId}`)
-            .setLabel('Chơi với Bot')
+            .setLabel('Chơi cùng Bot')
             .setStyle(ButtonStyle.Primary);
 
         const pvpButton = new ButtonBuilder()
@@ -606,7 +606,7 @@ class DiscordBot {
 
     buildModeSelectionPayload(channelId, currentMode = 'bot', currentWord = null, missingPerms = [], isAlreadyAdded = false) {
         const isBot = currentMode !== 'pvp';
-        const modeLabel = isBot ? 'Chơi với Bot' : 'Đấu PvP (Người vs Người)';
+        const modeLabel = isBot ? 'Chơi cùng Bot' : 'Đấu PvP (Người vs Người)';
 
         let descriptionText = `Kênh <#${channelId}> đã có trong danh sách phòng chơi.`;
         if (currentWord) {
@@ -621,7 +621,7 @@ class DiscordBot {
                 {
                     name: 'Chọn chế độ chơi (Bấm nút bên dưới)',
                     value: [
-                        '• **Chơi với Bot (Mặc định):** Người chơi nối từ trực tiếp với Bot (Bạn nối 1 từ ➔ Bot nối tiếp 1 từ).',
+                        '• **Chơi cùng Bot (Mặc định):** Người chơi nối từ với sự tham gia Bot cho từ tiếp theo (Bạn nối 1 từ ➔ Bot nối tiếp 1 từ).',
                         '• **Đấu PvP (Người vs Người):** Các thành viên trong server tự do nối từ với nhau. Bot làm trọng tài kiểm tra từ, chấm điểm và ghi nhận chuỗi.'
                     ].join('\n'),
                     inline: false
@@ -644,7 +644,7 @@ class DiscordBot {
 
         const botButton = new ButtonBuilder()
             .setCustomId(`set_mode_bot_${channelId}`)
-            .setLabel(isBot ? 'Chơi với Bot (Đang chọn)' : 'Chơi với Bot')
+            .setLabel(isBot ? 'Chơi cùng Bot (Đang chọn)' : 'Chơi cùng Bot')
             .setStyle(isBot ? ButtonStyle.Success : ButtonStyle.Secondary);
 
         const pvpButton = new ButtonBuilder()
@@ -726,7 +726,7 @@ class DiscordBot {
                     name: 'Lệnh Chơi Game & Quản Lý Kênh',
                     value: [
                         '`/noitu_add` — Thêm phòng nối từ & chọn chế độ qua 2 nút bấm *(Admin)*',
-                        '`/noitu_mode` — Chuyển chế độ (Chơi với Bot / Đấu PvP) qua nút bấm *(Admin)*',
+                        '`/noitu_mode` — Chuyển chế độ (Chơi cùng Bot / Đấu PvP) qua nút bấm *(Admin)*',
                         '`/noitu_remove` — Xóa phòng nối từ *(Admin)*',
                         '`/newgame` — Bắt đầu ván mới / Bỏ qua từ hiện tại',
                         '`/hint` — Gợi ý từ nối tiếp (tích lũy từ chuỗi & vote Top.gg)'
@@ -1480,7 +1480,7 @@ class DiscordBot {
         channels[targetChannelId] = ch;
         db.store('channels', channels);
 
-        const modeLabel = targetMode === 'pvp' ? '**Đấu PvP (Người vs Người)**' : '**Chơi với Bot**';
+        const modeLabel = targetMode === 'pvp' ? '**Đấu PvP (Người vs Người)**' : '**Chơi cùng Bot**';
 
         // Update the setup embed to show completed setup
         const missingPerms = interaction.channel ? this.getMissingPermissions(interaction.channel) : [];
@@ -1535,7 +1535,7 @@ class DiscordBot {
         await interaction.update(payload);
 
         if (oldMode !== targetMode) {
-            const modeLabel = targetMode === 'pvp' ? '**Đấu PvP (Người vs Người)**' : '**Chơi với Bot**';
+            const modeLabel = targetMode === 'pvp' ? '**Đấu PvP (Người vs Người)**' : '**Chơi cùng Bot**';
             await interaction.followUp({
                 content: `Quản trị viên <@${interaction.user.id}> đã chuyển chế độ chơi phòng này sang ${modeLabel}.${currentWord ? `\nTừ hiện tại: **${currentWord}**` : ''}`,
                 ephemeral: false

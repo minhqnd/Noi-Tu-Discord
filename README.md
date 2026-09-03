@@ -12,7 +12,7 @@
 >
 > ⚡ **3 bước bắt đầu nhanh:**
 > 1. Vào kênh muốn chơi, gõ: `/noitu_add` *(yêu cầu quyền Quản lý máy chủ)*
-> 2. Chọn chế độ ngay trên menu nút bấm: **Chơi với Bot** hoặc **Đấu PvP (Người vs Người)**
+> 2. Chọn chế độ ngay trên menu nút bấm: **Chơi cùng Bot** hoặc **Đấu PvP (Người vs Người)**
 > 3. Bắt đầu gõ từ nối tiếp ngay trong kênh!
 
 Bot Discord chơi game nối từ tiếng Việt với từ gồm 2 chữ. Hỗ trợ chơi cả trong kênh server và tin nhắn riêng (DM).
