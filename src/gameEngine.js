@@ -709,8 +709,8 @@ class GameEngine {
             wordWrongCount: 0,
             ...(isDM ? {
                 currentStreak: 0,
-                bestStreak: 0,
-                wins: 0,
+                bestStreak: gameData.bestStreak || 0,
+                wins: gameData.wins || 0,
                 wrongCount: 0
             } : {
                 players: gameData.players || {}

@@ -24,6 +24,8 @@ class DB {
         // Enable WAL mode for better concurrent read performance
         this.db.pragma('journal_mode = WAL');
         this.db.pragma('busy_timeout = 5000');
+        // Autocheckpoint at 100 pages (~400KB) to flush data into data.db more frequently
+        this.db.pragma('wal_autocheckpoint = 100');
 
         this.db.exec(`
             CREATE TABLE IF NOT EXISTS channels (
@@ -623,12 +625,19 @@ class DB {
     }
 
     /**
-     * Close the database connection gracefully.
+     * Close the database connection gracefully and flush WAL to disk.
      */
     close() {
         if (this.db) {
+            try {
+                // TRUNCATE checkpoint flushes all WAL pages into data.db and shrinks data.db-wal to 0 bytes
+                this.db.pragma('wal_checkpoint(TRUNCATE)');
+            } catch (error) {
+                logger.error(`Failed to flush WAL checkpoint on close: ${error.message}`);
+            }
             this.db.close();
-            logger.info('SQLite database closed');
+            this.db = null;
+            logger.info('SQLite database closed and flushed');
         }
     }
 }
@@ -636,5 +645,10 @@ class DB {
 // Export singleton instance
 const db = new DB();
 db.initialize();
+
+// Ensure DB is closed and WAL is flushed if process exits synchronously
+process.on('exit', () => {
+    db.close();
+});
 
 module.exports = db;

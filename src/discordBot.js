@@ -3003,7 +3003,7 @@ class DiscordBot {
 
                 if (!existingUserData || !existingUserData.word) {
                     // First-time user: send welcome + start game
-                    const response = gameLogic.checkUser(userMessage, userId, context);
+                    const startingWord = gameLogic.resetUserGame(userId, context);
 
                     const welcomeEmbed = new EmbedBuilder()
                         .setTitle('👋 Chào mừng bạn đến với Nối Từ!')
@@ -3024,9 +3024,17 @@ class DiscordBot {
 
                     await message.reply({ embeds: [welcomeEmbed] });
 
-                    if (response.currentWord) {
-                        await message.channel.send(`Từ bắt đầu: **${response.currentWord}**\nHãy nối tiếp bằng từ bắt đầu bởi **"${response.currentWord.split(' ').pop()}"** nhé!`);
+                    if (startingWord) {
+                        const lastWord = startingWord.split(' ').pop();
+                        await message.channel.send(`Từ bắt đầu: **${startingWord}**\nHãy nối tiếp bằng từ bắt đầu bởi **"${lastWord}"** nhé!`);
                     }
+                    return;
+                }
+
+                if (userMessage === '/newgame' || userMessage === 'newgame') {
+                    const newWord = gameLogic.resetUserGame(userId, context);
+                    const lastWord = newWord.split(' ').pop();
+                    await message.reply(`🎮 **Game mới đã bắt đầu!**\nTừ bắt đầu: **${newWord}**\nHãy nối tiếp bằng từ bắt đầu bởi **"${lastWord}"** nhé!`);
                     return;
                 }
 
