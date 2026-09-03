@@ -61,6 +61,11 @@ class DiscordBot {
         // Welcome message when invited to a new server
         this.client.on('guildCreate', async (guild) => {
             await this.onGuildCreate(guild);
+            this.postTopggStats();
+        });
+
+        this.client.on('guildDelete', () => {
+            this.postTopggStats();
         });
     }
 
@@ -152,7 +157,22 @@ class DiscordBot {
         // Định kỳ xoay vòng custom status (thought bubble) mỗi 30 giây
         setInterval(() => this.updateBotStatus(), 30 * 1000);
 
+        // Cập nhật số lượng server lên Top.gg và lặp lại định kỳ mỗi 30 phút
+        this.postTopggStats();
+        setInterval(() => this.postTopggStats(), 30 * 60 * 1000);
+
         logger.info(`${this.client.user.tag} is now running!`);
+    }
+
+    async postTopggStats() {
+        try {
+            const serverCount = this.client.guilds?.cache?.size || 0;
+            if (serverCount > 0) {
+                await topggService.postServerCount(serverCount);
+            }
+        } catch (error) {
+            logger.error(`Error posting stats to Top.gg: ${error.message}`);
+        }
     }
 
     getCommands() {

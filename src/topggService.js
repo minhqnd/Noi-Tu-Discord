@@ -5,7 +5,7 @@ const logger = setupLogger('topgg_service');
 class TopggService {
     constructor() {
         this.botId = GAME_CONSTANTS.TOPGG_BOT_ID || '1076547168099385436';
-        this.voteUrl = GAME_CONSTANTS.TOPGG_VOTE_URL || `https://top.gg/bot/${this.botId}/vote`;
+        this.voteUrl = GAME_CONSTANTS.TOPGG_VOTE_URL || `https://top.gg/bot/${this.botId}`;
         // In-memory cache: userId -> { hasVoted: boolean, expiresAt: number }
         this.cache = new Map();
         this.cacheTtlMs = 60 * 1000; // 1 minute cache
@@ -100,6 +100,47 @@ class TopggService {
      */
     clearCache() {
         this.cache.clear();
+    }
+
+    /**
+     * Post current server count to Top.gg
+     * @param {number} serverCount 
+     * @param {number} [shardCount]
+     * @returns {Promise<boolean>}
+     */
+    async postServerCount(serverCount, shardCount = 0) {
+        const token = process.env.TOPGG_TOKEN;
+        if (!token) {
+            logger.warn('TOPGG_TOKEN is not configured. Cannot post server count to Top.gg.');
+            return false;
+        }
+
+        if (!serverCount || serverCount <= 0) {
+            return false;
+        }
+
+        const rawToken = token.trim();
+        const payload = { server_count: serverCount };
+        if (shardCount > 0) {
+            payload.shard_count = shardCount;
+        }
+
+        try {
+            const url = `https://top.gg/api/bots/${this.botId}/stats`;
+            await axios.post(url, payload, {
+                headers: {
+                    Authorization: rawToken,
+                    'Content-Type': 'application/json',
+                    'User-Agent': `Noi-Tu-Discord-Bot/${this.botId}`
+                },
+                timeout: 7000
+            });
+            logger.info(`Successfully posted server count (${serverCount}) to Top.gg`);
+            return true;
+        } catch (error) {
+            logger.error(`Failed to post server count to Top.gg: ${error.response?.data?.error || error.message}`);
+            return false;
+        }
     }
 }
 
