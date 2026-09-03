@@ -356,10 +356,11 @@ class GameEngine {
 
                 const remaining = GAME_CONSTANTS.MAX_WRONG_COUNT - userStats.wrongCount;
                 this.logger.info(`${logPfx} [${mode}] ERROR REPEATED '${playerWord}' (còn: ${remaining})`);
+                const remainingText = userStats.currentStreak > 0 ? ` Bạn còn **${remaining}** lần đoán.` : '';
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.REPEATED,
-                    message: `**Từ này đã được trả lời trước đó!**. Bạn còn **${remaining}** lần đoán.${this.getHintCommandSuggestion(remaining, wordWrongCount)}${this.getNewGameHint(wordWrongCount)}`,
+                    message: `**Từ này đã được trả lời trước đó!**${remainingText}${this.getHintCommandSuggestion(remaining, wordWrongCount)}${this.getNewGameHint(wordWrongCount)}`,
                     currentWord: currentWord,
                     gameData: newGameData
                 };
@@ -454,10 +455,11 @@ class GameEngine {
 
                 const remaining = GAME_CONSTANTS.MAX_WRONG_COUNT - userStats.wrongCount;
                 this.logger.info(`${logPfx} [${mode}] ERROR NOT_IN_DICT '${playerWord}' (còn: ${remaining})`);
+                const remainingText = userStats.currentStreak > 0 ? ` Bạn còn **${remaining}** lần đoán.` : '';
                 return {
                     type: RESPONSE_TYPES.ERROR,
                     code: RESPONSE_CODES.NOT_IN_DICT,
-                    message: `**Từ không có trong bộ từ điển!** Bạn còn **${remaining}** lần đoán.${this.getHintCommandSuggestion(remaining, wordWrongCount)}\n-# 💡 Nếu bạn nghĩ từ này tồn tại, hãy dùng \`/feedback\` để báo cho chúng mình!${this.getNewGameHint(wordWrongCount)}`,
+                    message: `**Từ không có trong bộ từ điển!**${remainingText}${this.getHintCommandSuggestion(remaining, wordWrongCount)}\n-# 💡 Nếu bạn nghĩ từ này tồn tại, hãy dùng \`/feedback\` để báo cho chúng mình!${this.getNewGameHint(wordWrongCount)}`,
                     currentWord: currentWord,
                     gameData: newGameData
                 };
