@@ -13,7 +13,7 @@ const GAME_CONSTANTS = {
     STREAK_PER_HINT: 10, // Award 1 hint every 10 streaks
     MAX_HINTS: 3, // Maximum hints a user can hold
     TOPGG_BOT_ID: process.env.TOPGG_BOT_ID || '1076547168099385436',
-    TOPGG_VOTE_URL: 'https://top.gg/bot/1076547168099385436/vote',
+    TOPGG_VOTE_URL: 'https://top.gg/bot/1076547168099385436',
     MAX_MESSAGE_LOG_LENGTH: 80,
     DICTIONARY_LOOKUP_TIMEOUT_MS: 5000,
     DICTIONARY_LOOKUP_MAX_CONTENT_LENGTH: 128 * 1024,
